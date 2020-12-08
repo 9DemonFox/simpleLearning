@@ -5,7 +5,7 @@ from numpy.random import normal as Normal
 from numpy.random import uniform as Uniform
 from sklearn.preprocessing import normalize
 
-DATAPATH = "SALP_DATA.npy"
+DATAPATH = "data/salp/SALP_DATA.npy"
 GROUPINDEX = "INDEX.npy"
 
 dataset_num = 100  # 数据集数量
@@ -200,4 +200,3 @@ if __name__ == "__main__":
     predictY = svr.predict(testX[1])
     err = mean_squared_error(predictY, testY[1])
     print()
-    pass
