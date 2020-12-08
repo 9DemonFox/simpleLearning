@@ -1,13 +1,43 @@
 import unittest
 
+# other package
+from sklearn.metrics import mean_squared_error
+
+# model
 from ahp.AHP import AHPModel
+# dataloader
+from data.salp.dataLoder import SalpDataLoder
+from salp.SALP import SVRModel
 
 
-class MyTestCase(unittest.TestCase):
+class SAPTestCase(unittest.TestCase):
+    def testDataLoder(self):
+        dataloader = SalpDataLoder()
+        trainX, trainY = dataloader.loadTrainData()
+        testX, testY = dataloader.loadTestData()
+        # 验证数据集形状
+        assert trainX.shape == (100, 100)
+        assert trainY.shape == (100,)
+        assert testX.shape == (100, 100)
+        assert testY.shape == (100,)
+        pass
+
+    def testSVRModel(self):
+        dataloader = SalpDataLoder()
+        trainX, trainY = dataloader.loadTrainData()
+        testX, testY = dataloader.loadTestData()
+        model = SVRModel()
+        model.fit(trainX=trainX, trainY=trainY)
+        predictY = model.predict(predictX=testX)
+        assert (mean_squared_error(testY, predictY) < 1)
+        pass
+
+
+class AHPTestCase(unittest.TestCase):
     def test_something(self):
         self.assertEqual(True, True)
 
-    def testAHPModel1(self):
+    def testATPModel1(self):
         # 输入数据
         trainX = {'method': 'eigenvalue',
                   'name': '合理使用留成利润',
@@ -42,7 +72,7 @@ class MyTestCase(unittest.TestCase):
     └── 集体福利[0.751]"""
         assert result.strip() == expect.strip()
 
-    def testAHPModel2(self):
+    def testATPModel2(self):
         trainX = {'criteria': ['子准则层1', '子准则层2', '子准则层3', '子准则层4', '子准则层5'],
                   'method': 'eigenvalue',
                   'name': '画像',
