@@ -1,5 +1,6 @@
 # pycharm ide files
 /.idea/
 
-# 
-__pycache__/
+# .gitignore file only inform git which new files should not be tracked. Do not remove from repository files already tracked.
+# 也就是说, 如果文件夹在.gitignore之前创建,那么依旧会被追踪
+*__pycache__*
