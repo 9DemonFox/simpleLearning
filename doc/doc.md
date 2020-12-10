@@ -1,3 +1,47 @@
+# 1. 梯度提升机 (Gradient Boosting Machine)
+
+论文中将梯度提升机算法作为参照，与其他算法进行对比，且使用了两种损失函数，分别是：
+
+- Quadric 损失函数
+    $$
+    L(y_i, f_i(x)) = (y_i - f_i(x))^2 / 2
+    $$
+
+- Laplace 损失函数
+    $$
+    L(y_i, f_i(x)) = |y_i- f_i(x)|
+    $$
+
+## 1.1 GBM 参数说明
+
+因论文中并没指出所使用的参数设置，故某些参数凭经验设置，且因用 `scikit-learn` 实现，故某些参数保持默认。
+
+```
+loss: default="ls"
+有均方差"ls", 绝对损失"lad", Huber损失"huber"和分位数损失"quantile"。
+
+n_estimators: int, default=100
+也就是弱学习器的最大迭代次数，或者说最大的弱学习器的个数。
+一般来说n_estimators太小，容易欠拟合，n_estimators太大，又容易过拟合，一般选择一个适中的数值
+
+learning_rate: float, default=0.1
+学习率，即每个弱学习器的权重缩减系数。
+
+max_depth: int, default=3
+单个回归估计量的最大深度。最大深度限制了树中的节点数。默认为3.
+
+min_samples_split: int or float, default=2 
+分割一个内部节点所需的最小样本数：
+如果是int，则考虑min_samples_split作为最小值。
+如果是float，那么min_samples_split是一个分数，而ceil(min_samples_split * n_samples)是每个分割的最小样本数。
+
+subsample：float, default=1.0
+子采样，如果取值为1，则全部样本都使用，等于没有使用子采样。如果取值小于1，则只有一部分样本会去做拟合。选择小于1的比例可以减少方差，即防止过拟合，但是会增加样本拟合的偏差，因此取值不能太低。推荐在[0.5, 0.8]之间，默认是1.0，即不使用子采样。
+...
+```
+
+
+
 # 3. SALP
 
 该论文中提到了其它相关的方法，SVR

@@ -5,10 +5,42 @@ from sklearn.metrics import mean_squared_error
 
 # model
 from ahp.AHP import AHPModel
+from salp.SALP import SVRModel
+from gbm.GBM import GBMModel
+from ga.ga import GAModel
+
 # dataloader
 from data.salp.dataLoder import SalpDataLoder
-from salp.SALP import SVRModel
-from ga.ga import GAModel
+from data.gbm.dataLoader import GBMDataLoader
+
+
+class GBMTestCase(unittest.TestCase):
+    def testDataLoader(self):
+        dataloader = GBMDataLoader()
+        trainX, trainY = dataloader.loadTrainData()
+        testX, testY = dataloader.loadTestData()
+        assert trainX.shape == (16, 10)
+        assert trainY.shape == (16,)
+        assert testX.shape == (2, 10)
+        assert testY.shape == (2,)
+        pass
+
+    def testGBMModel(self):
+        dataloader = GBMDataLoader()
+        trainX, trainY = dataloader.loadTrainData()
+        testX, testY = dataloader.loadTestData()
+        params = {'n_estimators': 500,
+                  'max_depth': 4,
+                  'min_samples_split': 5,
+                  'learning_rate': 0.01,
+                  'loss': 'ls'}
+
+        gbm_model = GBMModel(**params)
+        # gbm_model = GBMModel()
+        gbm_model.fit(trainX=trainX, trainY=trainY)
+        predictY = gbm_model.predict(predictX=testX)
+        assert (mean_squared_error(testY, predictY) < 1)
+        pass
 
 class GATestCase(unittest.TestCase):
     def testGAModel(self):
