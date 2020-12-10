@@ -175,3 +175,26 @@ max_iter ： int，optional（默认值= -1）
                                   '子准则层5': ['主要理化指标Cpk*', '体细胞Cpk*', '微生物Cpk*']}}
 ```
 
+# 8. GA 遗传算法
+用于求解函数最值问题
+## 8.1 GA参数说明，默认采用
+```
+c:int,必选
+指定求函数的最大值或最小值，‘1’为求最大值，‘0’为求最小值
+F:function,必选
+指定所要求最值的函数表达式
+n:int,必选
+指定函数所含变量个数
+ranges:array,必选
+指定各个变量的取值范围
+precisions:int,可选（默认值 = 24）
+指定精度
+N_GENERATIONS:int,可选（默认值 = 50）
+指定迭代轮数
+POP_SIZE:int,可选（默认值 = 200）
+指定种群大小
+MUTATION_RATE:float,可选（默认值 = 0.005）
+指定变异概率
+CROSSOVER_RATE:float,可选（默认值 = 0.8）
+指定交叉概率
+```
