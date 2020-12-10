@@ -14,7 +14,7 @@ def get_fitness(c,pop,F,n,precisions,ranges,POP_SIZE):
     x = translateDNA(pop,n,ranges,precisions,POP_SIZE)
     pred = F(x)
     if c==1:
-        return (pred - np.min(pred)) + 1e-3 #减去最小的适应度是为了防止适应度出现负数，通过这一步fitness的范围为[0, np.max(pred)-np.min(pred)],最后在加上一个很小的数防止出现为0的适应度
+        return (pred - np.min(pred)) + 1e-3 
     if c==0:
         return -(pred - np.max(pred)) + 1e-3
 
@@ -36,7 +36,7 @@ def translateDNA(pop,n,ranges,precisions,POP_SIZE):
     x_pop = np.ones((n,POP_SIZE,precisions))
     x = np.ones((n,POP_SIZE))
     for i in range(n):
-        x_pop[i] = np.array(pop[:,i::n])#奇数列表示X
+        x_pop[i] = np.array(pop[:,i::n])
 	
     for i in range(n):
 	    x[i] = x_pop[i].dot(2**np.arange(precisions)[::-1])/float(2**precisions-1)*(ranges[i][1]-ranges[i][0])+ranges[i][0]
@@ -53,13 +53,13 @@ def crossover_and_mutation(pop, CROSSOVER_RATE,POP_SIZE,precisions, MUTATION_RAT
     """
     new_pop = []
 
-    for father in pop:		#遍历种群中的每一个个体，将该个体作为父亲
-        child = father		#孩子先得到父亲的全部基因（这里我把一串二进制串的那些0，1称为基因）
-        if np.random.rand() < CROSSOVER_RATE:			#产生子代时不是必然发生交叉，而是以一定的概率发生交叉
-            mother = pop[np.random.randint(POP_SIZE)]	#再种群中选择另一个个体，并将该个体作为母亲
-            cross_points = np.random.randint(low=0, high=precisions*2)	#随机产生交叉的点
-            child[cross_points:] = mother[cross_points:]		#孩子得到位于交叉点后的母亲的基因
-        mutation(child, MUTATION_RATE,precisions)	#每个后代有一定的机率发生变异
+    for father in pop:		
+        child = father		
+        if np.random.rand() < CROSSOVER_RATE:			
+            mother = pop[np.random.randint(POP_SIZE)]	
+            cross_points = np.random.randint(low=0, high=precisions*2)	
+            child[cross_points:] = mother[cross_points:]		
+        mutation(child, MUTATION_RATE,precisions)	
         new_pop.append(child)
     return new_pop
 
@@ -69,9 +69,9 @@ def mutation(child, MUTATION_RATE,precisions):
     变异
 
     """
-    if np.random.rand() < MUTATION_RATE: 				#以MUTATION_RATE的概率进行变异
-        mutate_point = np.random.randint(0,precisions)	#随机产生一个实数，代表要变异基因的位置
-        child[mutate_point] = child[mutate_point]^1 	#将变异点的二进制为反转
+    if np.random.rand() < MUTATION_RATE: 				
+        mutate_point = np.random.randint(0,precisions)	
+        child[mutate_point] = child[mutate_point]^1 	
 
 def select(pop, fitness,POP_SIZE):  
     """
@@ -122,17 +122,15 @@ def print_info(c,pop,F,n,precisions,ranges,POP_SIZE):
 
 def ga(c,F,n,ranges,precisions,N_GENERATIONS,POP_SIZE,MUTATION_RATE, CROSSOVER_RATE):
 
-	pop = np.random.randint(n, size=(POP_SIZE, precisions*n)) #matrix (POP_SIZE, DNA_SIZE)
-	for _ in range(N_GENERATIONS):#迭代N代
-		#x = translateDNA(pop,F,n,precisions,ranges,POP_SIZE)
+	pop = np.random.randint(n, size=(POP_SIZE, precisions*n)) 
+	for _ in range(N_GENERATIONS):
+		
 		pop = np.array(crossover_and_mutation(pop, CROSSOVER_RATE,POP_SIZE,precisions, MUTATION_RATE))
-		#F_values = F(translateDNA(pop)[0], translateDNA(pop)[1])#x, y --> Z matrix
+		
 		fitness = get_fitness(c,pop,F,n,precisions,ranges,POP_SIZE)
-		pop = select(pop, fitness,POP_SIZE) #选择生成新的种群
+		pop = select(pop, fitness,POP_SIZE) 
 	
 	return print_info(c,pop,F,n,precisions,ranges,POP_SIZE)
-	#plt.ioff()
-	#plot_3d(ax)
   
 class GAModel(Model):
     def _init_(self):
@@ -200,7 +198,6 @@ if __name__ == '__main__':
     F = F
     n = 3
     ranges = np.array([[-3,3],[-3,3],[0,4]])
-    #print(ranges.type)
     precisions = 24
     N_GENERATIONS = 50
     POP_SIZE = 200
@@ -208,4 +205,4 @@ if __name__ == '__main__':
     CROSSOVER_RATE = 0.8
     model = GAModel()
     model.fit(c=c,F=F,n=n,ranges=ranges,precisions=precisions,N_GENERATIONS=N_GENERATIONS,POP_SIZE=POP_SIZE,MUTATION_RATE=MUTATION_RATE, CROSSOVER_RATE=CROSSOVER_RATE)
-    #ga(0,F,3,[[-3,3],[-3,3],[0,4]],24,50,200,0.005,0.8)
+
