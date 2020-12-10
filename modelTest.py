@@ -5,14 +5,14 @@ from sklearn.metrics import mean_squared_error
 
 # model
 from ahp.AHP import AHPModel
-from salp.SALP import SVRModel
-from gbm.GBM import GBMModel
-from ga.ga import GAModel
-
+from data.gbm.dataLoader import GBMDataLoader
 # dataloader
 from data.salp.dataLoder import SalpDataLoder
-from data.gbm.dataLoader import GBMDataLoader
-
+from ga.ga import GAModel
+from gbm.GBM import GBMModel
+from salp.SALP import SVRModel
+import warnings
+warnings.filterwarnings("ignore")
 
 class GBMTestCase(unittest.TestCase):
     def testDataLoader(self):
@@ -42,19 +42,25 @@ class GBMTestCase(unittest.TestCase):
         assert (mean_squared_error(testY, predictY) < 1)
         pass
 
+
 class GATestCase(unittest.TestCase):
     def testGAModel(self):
         import numpy as np
         model = GAModel()
+
         def F(x):
-	        return 3*(1-x[0])**2*np.exp(-(x[0]**2)-(x[1]+1)**2)- 10*(x[0]/5 - x[0]**3 - x[1]**5)*np.exp(-x[0]**2-x[1]**2)- 1/3**np.exp(-(x[0]+1)**2 - x[1]**2) - (x[2]-3)**2   
+            return 3 * (1 - x[0]) ** 2 * np.exp(-(x[0] ** 2) - (x[1] + 1) ** 2) - 10 * (
+                        x[0] / 5 - x[0] ** 3 - x[1] ** 5) * np.exp(-x[0] ** 2 - x[1] ** 2) - 1 / 3 ** np.exp(
+                -(x[0] + 1) ** 2 - x[1] ** 2) - (x[2] - 3) ** 2
+
         c = 1
         F = F
         n = 3
-        ranges = np.array([[-3,3],[-3,3],[0,4]])
-        value,x = model.fit(c=c,F=F,n=n,ranges=ranges)
+        ranges = np.array([[-3, 3], [-3, 3], [0, 4]])
+        value, x = model.fit(c=c, F=F, n=n, ranges=ranges)
         assert (F(x) == value)
         pass
+
 
 class SAPTestCase(unittest.TestCase):
     def testDataLoder(self):

@@ -1,2 +1,5 @@
+# pycharm ide files
 /.idea/
-/_pycache_/
+
+# 
+__pycache__/
