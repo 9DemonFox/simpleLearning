@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
 
-from data.gbm.dataLoader import GBMDataLoader
+from data.ibrt.dataLoader import IBRTDataLoader
 from model import Model
 """"
 class IBRTModel(Model):
@@ -247,22 +247,28 @@ if __name__ == '__main__':
     from sklearn.metrics import mean_absolute_error
     import matplotlib.pyplot as plt
 
-    # boston = load_boston()
-    # y = boston['target']
-    # X = boston['data']
-    data = pd.read_excel("../data/ibrt/test.xlsx")
+    ibrt = IBRTModel(10, 0, 1.0, 2)
+    ibrt_loader = IBRTDataLoader(datapath="../data/ibrt/test.xlsx")
+
+    trainX, trainY = ibrt_loader.loadTrainData()
+    testX, testY = ibrt_loader.loadTestData()
+
+    ibrt.fit(trainX, trainY)
+    predictY = ibrt.predict(testX)
+    print(mean_absolute_error(testY, predictY))
+
+
+
+
+    """data = pd.read_excel("../data/ibrt/test.xlsx")
     valid_data = np.array(data.iloc[1:])
     valid_data = fra_Data(valid_data, 3)
     X = valid_data[:, 1:-1]
     y = valid_data[:, -1]
-    print(X)
+    print(X)"""
 
-    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
-    mean_absolute_error_list = []
-    # print(mean_absolute_error(y_test, y_pred))
-    # plt.scatter(np.arange(y_pred.shape[0]), y_test - y_pred)
-    # plt.show()
-
+    #10折交叉验证
+    """mean_absolute_error_list = []
     kf = KFold(n_splits=10, shuffle=False)
     for train_index, test_index in kf.split(X):
         print('train_index:%s , test_index: %s ' % (train_index, test_index))
@@ -270,20 +276,12 @@ if __name__ == '__main__':
         testX = X[test_index]
         trainY = y[train_index]
         testY = y[test_index]
-        """params = {
-            'n_iter': 100,
-            'gamma' : 0,
-            'lamda' : 1.0,
-            'max_depth' : 2,
-            'trees' : [],
-            'eta_trees' : []
-        }"""
         f = IBRTModel(100, 0, 1.0, 2)
         f.fit(trainX, trainY)
         predictY = f.predict(testX)
         print(predictY)
         mean_absolute_error_list.append(mean_absolute_error(testY, predictY))
-    print(np.mean(mean_absolute_error_list))
+    print(np.mean(mean_absolute_error_list))"""
 
 
 
