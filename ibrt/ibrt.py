@@ -247,11 +247,12 @@ if __name__ == '__main__':
     from sklearn.metrics import mean_absolute_error
     import matplotlib.pyplot as plt
 
-    ibrt = IBRTModel(10, 0, 1.0, 2)
+    ibrt = IBRTModel(20, 0, 1.0, 2)
     ibrt_loader = IBRTDataLoader(datapath="../data/ibrt/test.xlsx")
 
     trainX, trainY = ibrt_loader.loadTrainData()
     testX, testY = ibrt_loader.loadTestData()
+    print(trainX.shape,testX.shape)
 
     ibrt.fit(trainX, trainY)
     predictY = ibrt.predict(testX)

@@ -6,8 +6,10 @@ from sklearn.metrics import mean_squared_error
 # model
 from ahp.AHP import AHPModel
 from data.gbm.dataLoader import GBMDataLoader
+from ibrt.ibrt import IBRTModel
 # dataloader
 from data.salp.dataLoder import SalpDataLoder
+from data.ibrt.dataLoader import IBRTDataLoader
 from ga.ga import GAModel
 from gbm.GBM import GBMModel
 from salp.SALP import SVRModel
@@ -83,6 +85,28 @@ class SAPTestCase(unittest.TestCase):
         predictY = model.predict(predictX=testX)
         assert (mean_squared_error(testY, predictY) < 1)
         pass
+
+class IBRTTestCase(unittest.TestCase):
+    def testDataLoader(self):
+        dataloader = IBRTDataLoader()
+        trainX, trainY = dataloader.loadTrainData()
+        testX, testY = dataloader.loadTestData()
+        assert trainX.shape == (48, 10)
+        assert trainY.shape == (48,)
+        assert testX.shape == (6, 10)
+        assert testY.shape == (6,)
+        pass
+
+    def testIBRTModel(self):
+        dataloader = IBRTDataLoader()
+        trainX, trainY = dataloader.loadTrainData()
+        testX, testY = dataloader.loadTestData()
+        ibrt = IBRTModel(20, 0, 1.0, 2)
+        ibrt.fit(trainX, trainY)
+        predictY = ibrt.predict(testX)
+        assert (mean_squared_error(testY, predictY) < 10)
+        pass
+
 
 
 class AHPTestCase(unittest.TestCase):
