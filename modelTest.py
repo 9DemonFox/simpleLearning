@@ -5,15 +5,69 @@ from sklearn.metrics import mean_squared_error
 
 # model
 from ahp.AHP import AHPModel
-from data.gbm.dataLoader import GBMDataLoader
-# dataloader
-from data.salp.dataLoder import SalpDataLoder
 from ga.ga import GAModel
 from gbm.GBM import GBMModel
 from salp.SALP import SVRModel
+from mert.mert import MERTModel
+from rebet.rebet import REBETModel
+# dataloader
+from data.salp.dataLoder import SalpDataLoder
+from data.gbm.dataLoader import GBMDataLoader
+from data.mert.dataLoder import MERTDataLoder
+from data.rebet.dataLoder import REBETDataLoder
 import warnings
 warnings.filterwarnings("ignore")
 
+class REBETTestCase(unittest.TestCase):
+    def testDataLoder(self):
+        dataloader = REBETDataLoder(datapath1="./data/rebet/data_train.csv",datapath2="./data/rebet/data_test.csv")
+        trainX, trainY = dataloader.loadTrainData()
+        testX, testY = dataloader.loadTestData()
+        # 验证数据集形状
+        assert trainX.shape == (5000, 3)
+        assert trainY.shape == (5000, 1)
+        assert testX.shape == (500, 3)
+        assert testY.shape == (500, 1)
+        pass
+
+    def testREBETModel(self):
+        import numpy as np
+        dataloader = REBETDataLoder(datapath1="./data/rebet/data_train.csv",datapath2="./data/rebet/data_test.csv")
+        trainX, trainY = dataloader.loadTrainData()
+        testX, testY = dataloader.loadTestData()
+        n = 100
+        epoch = 5
+        model = REBETModel(n=n)
+        model.fit(trainX=trainX, trainY=trainY,epoch=epoch)
+        predictY = model.predict(predictX=testX,predictY=testY)
+        assert (np.mean(testY-predictY) < 1)
+        pass
+    
+class MERTTestCase(unittest.TestCase):
+    def testDataLoder(self):
+        dataloader = MERTDataLoder(datapath1="./data/mert/data_train.csv",datapath2="./data/mert/data_test.csv")
+        trainX, trainY = dataloader.loadTrainData()
+        testX, testY = dataloader.loadTestData()
+        # 验证数据集形状
+        assert trainX.shape == (5000, 3)
+        assert trainY.shape == (5000, 1)
+        assert testX.shape == (500, 3)
+        assert testY.shape == (500, 1)
+        pass
+
+    def testMERTModel(self):
+        import numpy as np
+        dataloader = MERTDataLoder(datapath1="./data/mert/data_train.csv",datapath2="./data/mert/data_test.csv")
+        trainX, trainY = dataloader.loadTrainData()
+        testX, testY = dataloader.loadTestData()
+        n = 100
+        epoch = 5
+        model = MERTModel(n=n)
+        model.fit(trainX=trainX, trainY=trainY,epoch=epoch)
+        predictY = model.predict(predictX=testX,predictY=testY)
+        assert (np.mean(testY-predictY) < 1)
+        pass
+    
 class GBMTestCase(unittest.TestCase):
     def testDataLoader(self):
         dataloader = GBMDataLoader()
