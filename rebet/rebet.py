@@ -207,7 +207,7 @@ class REBETModel(Model):
 
         self.clf2 = tree.DecisionTreeRegressor(criterion='mse', random_state=0, ccp_alpha=0.1, max_depth=(10))
         self.clf2.fit(trainX, y0)
-        tree.plot_tree(self.clf2, filled=True)
+        #tree.plot_tree(self.clf2, filled=True)
         x0 = self.clf2.predict(trainX).reshape(N, 1)
         for j in range(self.n):
             x0[j * m:(j + 1) * m, 0:1] = x0[j * m:(j + 1) * m, 0:1] + np.dot(z[j], self.u[j])
