@@ -16,11 +16,13 @@ from data.gbm.dataLoader import GBMDataLoader
 from data.mert.dataLoder import MERTDataLoder
 from data.rebet.dataLoder import REBETDataLoder
 import warnings
+
 warnings.filterwarnings("ignore")
+
 
 class REBETTestCase(unittest.TestCase):
     def testDataLoder(self):
-        dataloader = REBETDataLoder(datapath1="./data/rebet/data_train.csv",datapath2="./data/rebet/data_test.csv")
+        dataloader = REBETDataLoder(datapath1="./data/rebet/data_train.csv", datapath2="./data/rebet/data_test.csv")
         trainX, trainY = dataloader.loadTrainData()
         testX, testY = dataloader.loadTestData()
         # 验证数据集形状
@@ -32,20 +34,21 @@ class REBETTestCase(unittest.TestCase):
 
     def testREBETModel(self):
         import numpy as np
-        dataloader = REBETDataLoder(datapath1="./data/rebet/data_train.csv",datapath2="./data/rebet/data_test.csv")
+        dataloader = REBETDataLoder(datapath1="./data/rebet/data_train.csv", datapath2="./data/rebet/data_test.csv")
         trainX, trainY = dataloader.loadTrainData()
         testX, testY = dataloader.loadTestData()
         n = 100
         epoch = 5
         model = REBETModel(n=n)
-        model.fit(trainX=trainX, trainY=trainY,epoch=epoch)
-        predictY = model.predict(predictX=testX,predictY=testY)
-        assert (np.mean(testY-predictY) < 1)
+        model.fit(trainX=trainX, trainY=trainY, epoch=epoch)
+        predictY = model.predict(predictX=testX, predictY=testY)
+        assert (np.mean(testY - predictY) < 1)
         pass
-    
+
+
 class MERTTestCase(unittest.TestCase):
     def testDataLoder(self):
-        dataloader = MERTDataLoder(datapath1="./data/mert/data_train.csv",datapath2="./data/mert/data_test.csv")
+        dataloader = MERTDataLoder(datapath1="./data/mert/data_train.csv", datapath2="./data/mert/data_test.csv")
         trainX, trainY = dataloader.loadTrainData()
         testX, testY = dataloader.loadTestData()
         # 验证数据集形状
@@ -57,17 +60,18 @@ class MERTTestCase(unittest.TestCase):
 
     def testMERTModel(self):
         import numpy as np
-        dataloader = MERTDataLoder(datapath1="./data/mert/data_train.csv",datapath2="./data/mert/data_test.csv")
+        dataloader = MERTDataLoder(datapath1="./data/mert/data_train.csv", datapath2="./data/mert/data_test.csv")
         trainX, trainY = dataloader.loadTrainData()
         testX, testY = dataloader.loadTestData()
         n = 100
         epoch = 5
         model = MERTModel(n=n)
-        model.fit(trainX=trainX, trainY=trainY,epoch=epoch)
-        predictY = model.predict(predictX=testX,predictY=testY)
-        assert (np.mean(testY-predictY) < 1)
+        model.fit(trainX=trainX, trainY=trainY, epoch=epoch)
+        predictY = model.predict(predictX=testX, predictY=testY)
+        assert (np.mean(testY - predictY) < 1)
         pass
-    
+
+
 class GBMTestCase(unittest.TestCase):
     def testDataLoader(self):
         dataloader = GBMDataLoader()
@@ -104,7 +108,7 @@ class GATestCase(unittest.TestCase):
 
         def F(x):
             return 3 * (1 - x[0]) ** 2 * np.exp(-(x[0] ** 2) - (x[1] + 1) ** 2) - 10 * (
-                        x[0] / 5 - x[0] ** 3 - x[1] ** 5) * np.exp(-x[0] ** 2 - x[1] ** 2) - 1 / 3 ** np.exp(
+                    x[0] / 5 - x[0] ** 3 - x[1] ** 5) * np.exp(-x[0] ** 2 - x[1] ** 2) - 1 / 3 ** np.exp(
                 -(x[0] + 1) ** 2 - x[1] ** 2) - (x[2] - 3) ** 2
 
         c = 1
