@@ -78,7 +78,22 @@ max_iter ： int，optional（默认值= -1）
 求解器内迭代的硬限制，或无限制的-1
 ```
 
-## 3.2
+```
+data_train = np.loadtxt(open(datapath1, "rb"), delimiter=",", skiprows=0)
+data_test = np.loadtxt(open(datapath2, "rb"), delimiter=",", skiprows=0)
+```
+
+## 3.2 SALP
+
+算法在转换权重后再使用Lasso将不再获得参数，待处理
+
+### 3.2.1 通过转换X，将标准的Lasso转为为Adaptive Lasso
+
+取对于每个x,取x* = x/w
+
+![img](doc.pics/v2-67052a6bc15bc9b9e703526054307e45_720w.jpg)
+
+
 
 # 4. RE-BET
 

@@ -1,11 +1,14 @@
 import numpy as np
+
 from data.dataLoder import DataLoder
 
 
 class REBETDataLoder(DataLoder):
     def __init__(self, datapath1, datapath2):
-        data_train = np.loadtxt(open(datapath1, "rb"), delimiter=",", skiprows=0)
-        data_test = np.loadtxt(open(datapath2, "rb"), delimiter=",", skiprows=0)
+        with open(datapath1, "rb") as f:
+            data_train = np.loadtxt(f, delimiter=",", skiprows=0)
+        with open(datapath2, "rb") as f:
+            data_test = np.loadtxt(f, delimiter=",", skiprows=0)
         self.trainY = data_train[:, 0:1]
         self.trainX = data_train[:, 1:]
 

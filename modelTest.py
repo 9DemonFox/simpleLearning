@@ -1,23 +1,21 @@
 import unittest
+import warnings
 
 # other package
 from sklearn.metrics import mean_squared_error
 
-# model
 from ahp.AHP import AHPModel
-from ibrt.ibrt import IBRTModel
-from ga.ga import GAModel
-from gbm.GBM import GBMModel
-from salp.SALP import SVRModel
-from mert.mert import MERTModel
-from rebet.rebet import REBETModel
-# dataloader
-from data.ibrt.dataLoader import IBRTDataLoader
 from data.gbm.dataLoader import GBMDataLoader
-from data.salp.dataLoder import SalpDataLoder
+from data.ibrt.dataLoader import IBRTDataLoader
 from data.mert.dataLoder import MERTDataLoder
 from data.rebet.dataLoder import REBETDataLoder
-import warnings
+from data.salp.dataLoder import SalpDataLoder
+from ga.ga import GAModel
+from gbm.GBM import GBMModel
+from ibrt.ibrt import IBRTModel
+from mert.mert import MERTModel
+from rebet.rebet import REBETModel
+from salp.SALP import SVRModel, SALPModel
 
 warnings.filterwarnings("ignore")
 
@@ -124,7 +122,7 @@ class GATestCase(unittest.TestCase):
 
 class SAPTestCase(unittest.TestCase):
     def testDataLoder(self):
-        dataloader = SalpDataLoder()
+        dataloader = SalpDataLoder("data/salp/SALP_DATA.npy")
         trainX, trainY = dataloader.loadTrainData()
         testX, testY = dataloader.loadTestData()
         # 验证数据集形状
@@ -135,7 +133,7 @@ class SAPTestCase(unittest.TestCase):
         pass
 
     def testSVRModel(self):
-        dataloader = SalpDataLoder()
+        dataloader = SalpDataLoder("data/salp/SALP_DATA.npy")
         trainX, trainY = dataloader.loadTrainData()
         testX, testY = dataloader.loadTestData()
         model = SVRModel()
@@ -143,6 +141,30 @@ class SAPTestCase(unittest.TestCase):
         predictY = model.predict(predictX=testX)
         assert (mean_squared_error(testY, predictY) < 1)
         pass
+
+    def testSALPModel(self):
+        import numpy
+        dataloader = SalpDataLoder("data/salp/SALP_DATA.npy")
+        trainX, trainY = dataloader.loadTrainData()
+        model = SALPModel()
+        # step1
+        std_x, std_y = model.normalXY(trainX, trainY)
+        # print("验证均值为0 平方和为1:", (std_y.mean(), numpy.square(std_y).sum()),
+        #       (std_x[0].mean(), numpy.square(std_x[0]).sum()))  # 论文中要求数据)
+        assert abs(numpy.square(std_y).sum() - 1) <= 0.01
+        # step2
+        k = 10  # 重构样本数量
+        (xs, ys, bayes_indexs) = model.getBayesianBootstrapReconstructData(std_x, std_y, n_replications=k)
+        # step3
+        d = 100  # 变量数量
+        Vote = numpy.zeros(d)  # 对于留下的样本计数
+        for L in range(1):  # 对于每个模型
+            xL, yL = xs[L], ys[L]  # 取出当前样本
+            coef = model.getALPCoef(xL, yL)
+            Vote = model.voteCoef(coef, Vote)
+        # step 4 根据入选变量重构数据集
+        # step 5 计数
+
 
 class IBRTTestCase(unittest.TestCase):
     def testDataLoader(self):
@@ -164,7 +186,6 @@ class IBRTTestCase(unittest.TestCase):
         predictY = ibrt.predict(testX)
         assert (mean_squared_error(testY, predictY) < 10)
         pass
-
 
 
 class AHPTestCase(unittest.TestCase):
