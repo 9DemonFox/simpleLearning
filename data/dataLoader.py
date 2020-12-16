@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-class DataLoder(ABC):
+class DataLoader(ABC):
     def __init__(self):
         pass
 

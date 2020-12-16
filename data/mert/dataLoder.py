@@ -1,9 +1,9 @@
 import numpy as np
 
-from data.dataLoder import DataLoder
+from data.dataLoader import DataLoader
 
 
-class MERTDataLoder(DataLoder):
+class MERTDataLoader(DataLoader):
     def __init__(self, datapath1, datapath2):
         with open(datapath1, "rb") as f:
             data_train = np.loadtxt(f, delimiter=",", skiprows=0)
@@ -25,7 +25,7 @@ class MERTDataLoder(DataLoder):
 if __name__ == "__main__":
     datapath1 = "./data_train.csv"
     datapath2 = "./data_test.csv"
-    dataloder = MERTDataLoder(datapath1, datapath2)
+    dataloder = MERTDataLoader(datapath1, datapath2)
     data_train = dataloder.loadTrainData()
     data_test = dataloder.loadTrainData()
     trainY = data_train[:, 0:1]

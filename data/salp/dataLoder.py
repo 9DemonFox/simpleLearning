@@ -4,7 +4,7 @@ import numpy
 from numpy.random import normal as Normal
 from numpy.random import uniform as Uniform
 
-from data.dataLoder import DataLoder
+from data.dataLoader import DataLoader
 
 GROUPINDEX = "INDEX.npy"
 
@@ -61,7 +61,7 @@ def loadSALPData(data_path="SALP_DATA.npy"):
     return salp
 
 
-class SalpDataLoder(DataLoder):
+class SalpDataLoader(DataLoader):
     def __init__(self, data_path):
         self.data_path = data_path
         pass
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     svr = GridSearchCV(SVR(),
                        param_grid={"kernel": ("linear", 'rbf'), "C": np.logspace(-3, 3, 7),
                                    "gamma": np.logspace(-3, 3, 7)})
-    dataloader = SalpDataLoder("SALP_DATA.npy")
+    dataloader = SalpDataLoader("SALP_DATA.npy")
     trainX, trainY = dataloader.loadTrainData()
     testX, testY = dataloader.loadTestData()
     svr.fit(trainX, trainY)

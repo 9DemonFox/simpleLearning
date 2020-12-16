@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn import tree
-from data.rebet.dataLoder import REBETDataLoder
+from data.rebet.dataLoder import REBETDataLoader
 from model import Model
 from scipy.stats import gamma
 import math
@@ -230,7 +230,7 @@ if __name__ == '__main__':
     n = 100
     epoch = 50
     model = REBETModel(n=n)
-    dataloader = REBETDataLoder(datapath1="../data/mert/data_train.csv", datapath2="../data/mert/data_test.csv")
+    dataloader = REBETDataLoader(datapath1="../data/mert/data_train.csv", datapath2="../data/mert/data_test.csv")
     trainX, trainY = dataloader.loadTrainData()
 
     predictX, predictY = dataloader.loadTestData()

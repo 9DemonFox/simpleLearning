@@ -271,10 +271,10 @@ class SALPModel(Model):
 
 
 if __name__ == "__main__" and False:
-    from data.salp.dataLoder import SalpDataLoder
+    from data.salp.dataLoder import SalpDataLoader
     from sklearn.metrics import mean_squared_error
 
-    dataloader = SalpDataLoder("../data/salp/SALP_DATA.npy")
+    dataloader = SalpDataLoader("../data/salp/SALP_DATA.npy")
     trainX, trainY = dataloader.loadTrainData()
     testX, testY = dataloader.loadTestData()
     model = SVRModel()
@@ -284,10 +284,10 @@ if __name__ == "__main__" and False:
     pass
 
 if __name__ == "__main__" and False:
-    from data.salp.dataLoder import SalpDataLoder
+    from data.salp.dataLoder import SalpDataLoader
     from sklearn.metrics import mean_squared_error
 
-    dataloader = SalpDataLoder("../data/salp/SALP_DATA.npy")
+    dataloader = SalpDataLoader("../data/salp/SALP_DATA.npy")
     trainX, trainY = dataloader.loadTrainData()
     testX, testY = dataloader.loadTestData()
     model = SALPModel()
@@ -340,10 +340,10 @@ if __name__ == "__main__" and False:
     # plt.show()
 
 if __name__ == "__main__" and True:
-    from data.salp.dataLoder import SalpDataLoder
+    from data.salp.dataLoder import SalpDataLoader
     from sklearn.metrics import mean_squared_error
 
-    dataloader = SalpDataLoder("../data/salp/SALP_DATA.npy")
+    dataloader = SalpDataLoader("../data/salp/SALP_DATA.npy")
     trainX, trainY = dataloader.loadTrainData()
     testX, testY = dataloader.loadTestData()
     model = SALPModel()
