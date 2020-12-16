@@ -143,27 +143,17 @@ class SAPTestCase(unittest.TestCase):
         pass
 
     def testSALPModel(self):
-        import numpy
-        dataloader = SalpDataLoder("data/salp/SALP_DATA.npy")
+        from data.salp.dataLoder import SalpDataLoder
+        from sklearn.metrics import mean_squared_error
+
+        dataloader = SalpDataLoder("./data/salp/SALP_DATA.npy")
         trainX, trainY = dataloader.loadTrainData()
+        testX, testY = dataloader.loadTestData()
         model = SALPModel()
-        # step1
-        std_x, std_y = model.normalXY(trainX, trainY)
-        # print("验证均值为0 平方和为1:", (std_y.mean(), numpy.square(std_y).sum()),
-        #       (std_x[0].mean(), numpy.square(std_x[0]).sum()))  # 论文中要求数据)
-        assert abs(numpy.square(std_y).sum() - 1) <= 0.01
-        # step2
-        k = 10  # 重构样本数量
-        (xs, ys, bayes_indexs) = model.getBayesianBootstrapReconstructData(std_x, std_y, n_replications=k)
-        # step3
-        d = 100  # 变量数量
-        Vote = numpy.zeros(d)  # 对于留下的样本计数
-        for L in range(1):  # 对于每个模型
-            xL, yL = xs[L], ys[L]  # 取出当前样本
-            coef = model.getALPCoef(xL, yL)
-            Vote = model.voteCoef(coef, Vote)
-        # step 4 根据入选变量重构数据集
-        # step 5 计数
+        model.fit(trainX=trainX, trainY=trainY)
+        predictY = model.predict(predictX=testX)
+        # FIXME SALP模型的性能不好
+        assert mean_squared_error(predictY, testY) < 100
 
 
 class IBRTTestCase(unittest.TestCase):

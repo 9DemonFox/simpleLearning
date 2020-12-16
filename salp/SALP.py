@@ -1,6 +1,6 @@
 import numpy
 from sklearn.cross_decomposition import PLSRegression
-from sklearn.linear_model import LassoLars
+from sklearn.linear_model import Lasso, LinearRegression
 from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import normalize
 from sklearn.svm import SVR
@@ -58,7 +58,15 @@ class SVRModel(Model):
 
 
 class SALPModel(Model):
-    def __init__(self):
+    def __init__(self, alpha=0.00002, keepVariablePercent=0.25, k=10):
+        """
+        :param alpha:  惩罚项系数
+        :param keepVariable: 选择标量排除分位数 0.25 则是去除25%的最少次数选择变量
+        :param k: 贝叶斯重构样本数量
+        """
+        self.alpha = alpha
+        self.keepPercent = keepVariablePercent
+        self.k = k
         pass
 
     def normalXY(self, x, y):
@@ -131,7 +139,7 @@ class SALPModel(Model):
         return (xs, ys, bayes_indexs)
 
     def getPLSCoef(self, x, y):
-        """ 获取偏最小二乘回归系数(即是ALP算法中P的含义 Pls)
+        """ 获取偏最小二乘回归系数(即是ALP算法中P的含义 Pls)获取的系数
         :param x:
         :param y:
         :return:
@@ -140,35 +148,64 @@ class SALPModel(Model):
         pls.fit(x, y)
         return pls.coef_
 
-    def ALP(self, x, y):
-        """ ALP算法即是偏最小二乘的Adaptive Lasso with PLS
-        ALP是将限制系数从ols改为pls,通过修改标准的Lasso来实现ALP
+    def getLassoCoef(self, x, y, alpha=0):
+        """
         :param x:
         :param y:
-        :return: 通过样本训练得到的alp
+        :return:
         """
-        w = self.getPLSCoef(x, y).reshape(-1)  # 获取偏最小二乘权重
+        lasso = Lasso(alpha=alpha)
+        lasso.fit(x, y)
+        return lasso.coef_
+
+    def adap_lasso_with_init_weight(self, x, y, initWeight="ols", alpha=0.000005):
+        """
+        :param x:
+        :param y:
+        :param initWeight: 可以选ols、pls、lasso
+        :return:
+        """
+        Coef = None
         sampleNum = x.shape[0]  # 样本数量
-        varsNum = x.shape[1]  # 变量数量
-        ws = numpy.tile(w, sampleNum).reshape([sampleNum, varsNum])  # 显示的将权重扩充到和x共维度
-        ws = numpy.abs(ws)
-        ws[numpy.where(ws <= 0.01 / varsNum)] = 0.01 / varsNum  # 给定最小值
-        xStar = x / ws
-        xStar, y = self.normalXY(xStar, y)
-        alp = LassoLars()  # 通过变换x来得到相关权重
+        varsNum = x.shape[1]  # 变量数量(特征数量)
+        if initWeight == "ols":
+            Coef = self.getOlsCoef(x, y).reshape(-1)
+        elif initWeight == "pls":
+            Coef = self.getPLSCoef(x, y).reshape(-1)  # 获取偏最小二乘估计得到的系数
+        elif initWeight == "lasso":
+            Coef = self.getLassoCoef(x, y, alpha=alpha).reshape(-1)
+        else:
+            Coef = numpy.ones(varsNum)
+        # 权重为绝对值倒数的gama次方
+        # referPaper/基于数据挖掘的材料自然环境腐蚀预测研究.pdf page67 公式(4.6)
+        gama = 1
+        w = 1 / (abs(Coef + numpy.finfo(float).eps)) ** gama
+        ws = numpy.tile(w, sampleNum).reshape([sampleNum, varsNum])  # 显式的将权重扩充到和x共维度
+        # 通过变换把adaptive Lass 变为普通Lasso
+        # 给定最小值，避免出现无穷值
+        ws[numpy.where(ws <= 0.01 / varsNum)] = 0.01 / varsNum  # 给定最小值，避免出现无穷值
+
+        xStar = x / ws  # 置换x为xStar（x*）
+        # xStar, y = self.normalXY(xStar, y)  # 对xStar和y归一化
+        alp = Lasso(alpha=0.000005)  # 通过变换x来得到相关权重
         alp.fit(xStar, y)
-        return alp
+        return alp, w
         # 再使用Lasso
 
-    def getALPCoef(self, x, y):
+    def getALPCoef(self, x, y, initWeight="ols", alpha=0.000005):
         """ 获取ALP选取的参数
         :param x:
         :param y:
         :return:
         """
-        alp = self.ALP(x, y)
-        coef = alp.coef_
+        alp, w = self.adap_lasso_with_init_weight(x, y, initWeight=initWeight, alpha=alpha)
+        coef = alp.coef_ / w
         return coef
+
+    def getOlsCoef(self, x, y):
+        lasso = LinearRegression()
+        lasso.fit(x, y)
+        return lasso.coef_
 
     def voteCoef(self, coef, Vote):
         """ 对变量进行计数
@@ -185,11 +222,52 @@ class SALPModel(Model):
         x = kwargs.get("trainX")
         y = kwargs.get("trainY")
         # 对数据进行中心化 均值为0 平方和为1
-        x, y = self.normalXY(x, y)
-        return x, y
+        std_x, std_y = self.normalXY(x, y)
+        # 验证均值为0 平方和为1
+        assert abs(numpy.square(std_y).sum() - 1) < 0.01
+        assert abs(numpy.square(std_x[0]).sum() - 1) < 0.01
+        assert abs(abs(std_y.mean()) < 0.1)
+        # step2
+        (xs, ys, bayes_indexs) = self.getBayesianBootstrapReconstructData(std_x, std_y, n_replications=self.k)
+        # step3
+        variable_num = x.shape[1]
+        Vote = numpy.zeros(variable_num)  # 对于留下的样本计数
+        for L in range(self.k):  # 对于每个贝叶斯数据集
+            xL, yL = xs[L], ys[L]  # 取出当前样本
+            coef = self.getALPCoef(xL, yL)
+            Vote = self.voteCoef(coef, Vote)
+
+        # print(Vote)  # 变量预选
+
+        def getExcludeIndex(vote, percent=0.25):
+            # 按照分位数方法，得出需要排除的index
+            def getPercentNum(arr, p):
+                # 求分位数
+                arr.sort()
+                return arr[int(p * len(arr))]
+
+            v = numpy.copy(vote)
+            p_num = getPercentNum(v, percent)
+            return numpy.where(vote <= p_num), p_num  # 需要被排除的index,以及分位数
+
+        def removeFeatures(arr, removeIndexs):
+            arr[:, removeIndexs] = 0
+            return arr
+
+        # 将落选的变量置0
+        index, pnum = getExcludeIndex(Vote)
+        Xstar = removeFeatures(std_x, index)
+
+        # 再使用Lasso获取模型
+        modelEnd, _ = self.adap_lasso_with_init_weight(Xstar, std_y)
+
+        # 得到系数
+        self.model = modelEnd
 
     def predict(self, **kwargs):
-        pass
+        assert "predictX" in kwargs.keys()
+        predictX = kwargs["predictX"]
+        return self.model.predict(predictX)
 
 
 if __name__ == "__main__" and False:
@@ -205,12 +283,13 @@ if __name__ == "__main__" and False:
     assert (mean_squared_error(testY, predictY) < 1)
     pass
 
-if __name__ == "__main__" and True:
+if __name__ == "__main__" and False:
     from data.salp.dataLoder import SalpDataLoder
     from sklearn.metrics import mean_squared_error
 
     dataloader = SalpDataLoder("../data/salp/SALP_DATA.npy")
     trainX, trainY = dataloader.loadTrainData()
+    testX, testY = dataloader.loadTestData()
     model = SALPModel()
     # step1
     std_x, std_y = model.normalXY(trainX, trainY)
@@ -223,14 +302,52 @@ if __name__ == "__main__" and True:
     d = 100  # 变量数量
     Vote = numpy.zeros(d)  # 对于留下的样本计数
     aim_v_num = []  # 目标变量计算
-    for L in range(1):  # 对于每个模型
+    for L in range(k):  # 对于每个模型
         xL, yL = xs[L], ys[L]  # 取出当前样本
         coef = model.getALPCoef(xL, yL)
         Vote = model.voteCoef(coef, Vote)
-        print(Vote)
-    # 取所选变量构造子集，使用SALP
+    print(Vote)
 
+
+    def getExcludeIndex(vote, percent=0.25):
+        # 按照分位数方法，得出需要排除的index
+        def getPercentNum(arr, p):
+            # 求分位数
+            arr.sort()
+            return arr[int(p * len(arr))]
+
+        v = numpy.copy(vote)
+        p_num = getPercentNum(v, percent)
+        return numpy.where(vote <= p_num), p_num  # 需要被排除的index,以及分位数
+
+
+    def removeFeatures(arr, removeIndexs):
+        arr[:, removeIndexs] = 0
+        return arr
+
+
+    index, pnum = getExcludeIndex(Vote)
+    Xstar = removeFeatures(std_x, index)
+    modelEnd, _ = model.adap_lasso_with_init_weight(Xstar, std_y)
+    print(modelEnd.coef_)
+    # 这些index列的特征全部置0
+
+    # 根据重构样本重新选择变量组织算法
+    # 对于落选的变量，使得他们的特征为0即可
 
     # plt.scatter(numpy.linspace(0, 100, 100), model.getPLSCoef(xL, yL).reshape(100))
     # plt.scatter(, model.getPLSCoef(xL, yL))
     # plt.show()
+
+if __name__ == "__main__" and True:
+    from data.salp.dataLoder import SalpDataLoder
+    from sklearn.metrics import mean_squared_error
+
+    dataloader = SalpDataLoder("../data/salp/SALP_DATA.npy")
+    trainX, trainY = dataloader.loadTrainData()
+    testX, testY = dataloader.loadTestData()
+    model = SALPModel()
+    model.fit(trainX=trainX, trainY=trainY)
+    predictY = model.predict(predictX=testX)
+    print(mean_squared_error(predictY, testY))
+    print(model.model.coef_)
