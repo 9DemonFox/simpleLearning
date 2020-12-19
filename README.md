@@ -23,6 +23,7 @@
 ```
 pip install numpy=1.19.2
 pip install scipy=1.4.1
+pip install sklearn
 ```
 
 # 4. 提交！！！

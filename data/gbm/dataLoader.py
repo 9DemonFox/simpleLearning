@@ -2,7 +2,7 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 import pandas as pd
 
-from data.dataLoder import DataLoder
+from data.dataLoader import DataLoader
 
 DATAPATH = "data/gbm/oil_field_data_for_gbm.xlsx"
 
@@ -11,7 +11,7 @@ def normalize(X):
     return (X - X.mean()) / X.std()
 
 
-class GBMDataLoader(DataLoder):
+class GBMDataLoader(DataLoader):
     def __init__(self, datapath=DATAPATH):
         data = pd.read_excel(io=datapath)
         # drop first column

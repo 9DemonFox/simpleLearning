@@ -2,7 +2,7 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 import pandas as pd
 
-from data.dataLoder import DataLoder
+from data.dataLoader import DataLoader
 
 
 DATAPATH = "data/ibrt/test.xlsx"
@@ -14,7 +14,7 @@ def fra_Data(data, fra):  # fra为正整数
         fra -= 1
     return ret
 
-class IBRTDataLoader(DataLoder):
+class IBRTDataLoader(DataLoader):
     def __init__(self, datapath=DATAPATH):
         data = pd.read_excel(datapath)
         valid_data = np.array(data.iloc[1:])

@@ -104,9 +104,13 @@ class EigenvalueMethod(Method):
              https://zhuanlan.zhihu.com/p/93109898
              https: // jingyan.baidu.com / article / cbf0e500eb95582eaa28932b.html
         """
+        eigs, vectors = eig(preference_matrix)
         n = A.shape[0]
-        if n == 1:
-            return np.array([1])  # 矩阵为1阶矩阵
+        if eigs[eigs != 0].shape[0] <= 1:
+            super()._check_matrix(preference_matrix)
+            row_sums = np.sum(preference_matrix, axis=1)
+            total_sum = np.sum(row_sums)
+            return row_sums / total_sum
         else:
             width = preference_matrix.shape[0]
             _, vectors = eig(preference_matrix)
@@ -142,7 +146,6 @@ class GeometricMethod(Method):
 
 class localModel():
     """
-    从csv文件中读取模型
     # TODO 设置偏好矩阵行列的规则
     """
     __model = {}
@@ -260,24 +263,30 @@ class AHPModel(Model):
 
 
 if __name__ == '__main__':
-    trainX = {'method': 'eigenvalue',
-              'name': '合理使用留成利润',
-              'criteria': ['调动职工积极性', '提高技术水平', '改善职工生活条件'],
-              'preferenceMatrices': {'criteria': [['1', '0.2', '0.33'],  # 准则层
-                                                  ['5', '1', '3'],
-                                                  ['3', '0.33', '1']],
-                                     'subCriteria:调动职工积极性': [['1', '0.33'],
-                                                             ['3', '1']],
-                                     'subCriteria:提高技术水平': [['1', '0.2'],
-                                                            ['5', '1']],
-                                     'subCriteria:改善职工生活条件': [['1', '0.5'],
-                                                              ['2', '1']],
-                                     },
-              'subCriteria': {'调动职工积极性': ['奖金', '集体福利'],  # 决策层
-                              '提高技术水平': ['集体福利', '引进设备技术'],
-                              '改善职工生活条件': ['奖金', '集体福利'],
-                              }
-              }
+    trainX = {'criteria': ['子准则层1', '子准则层2', '子准则层3', '子准则层4', '子准则层5'],
+              'method': 'eigenvalue',
+              'name': '画像',
+              'preferenceMatrices': {'criteria': [['1', '1', '2', '1', '2'],  # 准则层
+                                                  ['1', '1', '2', '1', '1'],
+                                                  ['0.5', '0.5', '1', '1', '1'],
+                                                  ['1', '1', '1', '1', '2'],
+                                                  ['0.5', '1', '1', '0.5', '1']],
+                                     'subCriteria:子准则层1': [['1', '1', '1', '1'],
+                                                           ['1', '1', '1', '1'],
+                                                           ['1', '1', '1', '1'],
+                                                           ['1', '1', '1', '1']],
+                                     'subCriteria:子准则层2': [['1', '2'], ['0.5', '1']],
+                                     'subCriteria:子准则层3': [['1']],
+                                     'subCriteria:子准则层4': [['1', '3'], ['0.33', '1']],
+                                     'subCriteria:子准则层5': [['1', '2', '3'],
+                                                           ['0.5', '1', '2'],
+                                                           ['0.33', '0.5', '1']]},
+              'subCriteria': {'子准则层1': ['兽残不合格量', '毒素不合格量', '污染物不合格量', '重金属不合格量'],  # 决策层
+                              '子准则层2': ['U1占比', '综合合格率'],
+                              '子准则层3': ['周期内预警触发次数*'],
+                              '子准则层4': ['牧场整改率', '牧场食品安全评审结果'],
+                              '子准则层5': ['主要理化指标Cpk*', '体细胞Cpk*', '微生物Cpk*']}}
     model = AHPModel()
     model.fit(trainX=trainX)
     predictY = model.predict()
+    print(predictY)

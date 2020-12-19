@@ -40,8 +40,6 @@ subsample：float, default=1.0
 ...
 ```
 
-
-
 # 3. SALP
 
 该论文中提到了其它相关的方法，SVR
@@ -78,9 +76,86 @@ max_iter ： int，optional（默认值= -1）
 求解器内迭代的硬限制，或无限制的-1
 ```
 
-## 3.2
+```
+data_train = np.loadtxt(open(datapath1, "rb"), delimiter=",", skiprows=0)
+data_test = np.loadtxt(open(datapath2, "rb"), delimiter=",", skiprows=0)
+```
 
+## 3.2 SALP
 
+算法在转换权重后再使用Lasso将不再获得参数，待处理
+### 与原论文对比
+偏最小二乘算法获得的系数完全无效，采用OLS算法得出的系数有效，但是对比带有Grid搜索的相关算法来选取最优参数，似乎以偏最小二乘作为初始化参数并不能正确的选择变量，甚至OLS的都有效果。
+
+### 3.2.1 通过转换X，将标准的Lasso转为为Adaptive Lasso
+
+取对于每个x,取x* = x/w
+
+![img](doc.pics/v2-67052a6bc15bc9b9e703526054307e45_720w.jpg)
+
+### 3.2.2  ASGL
+asgl是一个处理线性回归相关的python包，可以直接采用其中的相关算法。
+https://github.com/alvaromc317/asgl/blob/master/user_guide.ipynb
+
+# 4. RE-BET
+
+该论文中提到了其它相关的方法，MERT
+
+## 4.1 MERT参数说明，默认采用
+
+论文原文
+
+> MERT模型中使用了cart回归树，树中的参数设为了默认值
+
+```
+epoch:int
+        循环轮数
+    n : int
+        观测对象种类数量
+    N : int
+        观测次数
+    m : int
+        每种观测对象的观测次数
+    D : array
+        随机效应变量的协方差矩阵
+    q : int
+        随机效应变量数
+    u : array
+        随机效应变量
+    σ2 : float
+        误差的方差
+    z : array
+        随机效应参数
+```
+
+## 4.2 REBET参数说明，默认采用
+
+论文原文
+
+> REBET模型中使用了cart回归树，树中的参数设为了默认值
+
+```
+epoch:int
+        循环轮数
+    n : int
+        观测对象种类数量
+    N : int
+        观测次数
+    m : int
+        每种观测对象的观测次数
+    D:  array
+        迪利克雷参数中的协方差矩阵
+    q : int
+        随机效应变量数
+    u : array
+        随机效应变量
+    σ2 : float
+        误差的方差
+    z : array
+        随机效应参数
+    M:  float
+        迪利克雷分布参数
+```
 
 # 7. AHP 层次分析法
 
@@ -168,7 +243,7 @@ max_iter ： int，optional（默认值= -1）
                                          'subCriteria:子准则层5': [['1', '2', '3'],
                                                                ['0.5', '1', '2'],
                                                                ['0.33', '0.5', '1']]},
-                  'subCriteria': {'子准则层1': ['兽残不合格量', '毒素不合格量', '污染物不合格量', '重金属不合格量'],  # 决策层
+                  'subCriteria': {'子准则层1': ['兽残不合格量', '毒素不合格量', '污染物不合格量', '重金属不合格量'],  
                                   '子准则层2': ['U1占比', '综合合格率'],
                                   '子准则层3': ['周期内预警触发次数*'],
                                   '子准则层4': ['牧场整改率', '牧场食品安全评审结果'],
