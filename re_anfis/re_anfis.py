@@ -432,6 +432,7 @@ class re_anfisModel(torch.nn.Module):
         mfdefs = [FuzzifyVariable(mfs) for _, mfs in self.invardefs]
         self.num_in = len(self.invardefs)
         self.num_rules = np.prod([len(mfs) for _, mfs in self.invardefs])
+        print(self.num_rules)
         if self.hybrid:
             cl = ConsequentLayer(self.num_in, self.num_rules, self.num_out)
         else:

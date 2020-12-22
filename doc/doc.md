@@ -156,6 +156,22 @@ epoch:int
     M:  float
         迪利克雷分布参数
 ```
+# 6. RF-ANFIS
+
+## 6.1 参数说明
+
+```
+    invardefs: 自定义list
+               输入变量，这里定义为3个，每个变量包含4个隶属度函数
+    outvarnames: 自定义list
+               输出变量名
+    num_in:    int
+               输入变量数量
+    num_rules: int
+               模糊规则数=变量数*隶属度函数数
+    
+```
+
 
 # 7. AHP 层次分析法
 
