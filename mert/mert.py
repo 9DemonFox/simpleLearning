@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn import tree
-from data.mert.dataLoder import MERTDataLoder
+from data.mert.dataLoder import MERTDataLoader
 from model import Model
 
 
@@ -141,7 +141,7 @@ if __name__ == '__main__':
     n = 100
     epoch = 50
     model = MERTModel(n=n)
-    dataloader = MERTDataLoder(datapath1="../data/mert/data_train.csv", datapath2="../data/mert/data_test.csv")
+    dataloader = MERTDataLoader(datapath1="../data/mert/data_train.csv", datapath2="../data/mert/data_test.csv")
     trainX, trainY = dataloader.loadTrainData()
 
     predictX, predictY = dataloader.loadTestData()
