@@ -40,7 +40,7 @@ def ex1_model():
             ('x2', make_bell_mfs(3.33333, 2, [-10, -3.333333, 3.333333, 10])),
             ]
     outvars = ['y0']
-    anf = re_anfis('Jang\'s example 1', invardefs, outvars)
+    anf = re_anfisModel('Jang\'s example 1', invardefs, outvars)
     return anf
 
 def train_anfis_with(model, data, optimizer, criterion,
@@ -411,21 +411,27 @@ class WeightedSumLayer(torch.nn.Module):
         y_pred = torch.bmm(tsk, weights.unsqueeze(2))
         return y_pred.squeeze(2)
 
-class re_anfis(torch.nn.Module):
+class re_anfisModel(torch.nn.Module):
     '''
         This is a container for the 5 layers of the ANFIS net.
         The forward pass maps inputs to outputs based on current settings,
         and then fit_coeff will adjust the TSK coeff using LSE.
     '''
-    def __init__(self, description, invardefs, outvarnames, hybrid=True):
-        super(re_anfis, self).__init__()
-        self.description = description
-        self.outvarnames = outvarnames
+    def __init__(self, hybrid=True):
+        super(re_anfisModel, self).__init__()
+        #self.description = description
+        self.invardefs = [
+            ('x0', make_bell_mfs(3.33333, 2, [-10, -3.333333, 3.333333, 10])),
+            ('x1', make_bell_mfs(3.33333, 2, [-10, -3.333333, 3.333333, 10])),
+            ('x2', make_bell_mfs(3.33333, 2, [-10, -3.333333, 3.333333, 10])),
+        ]
+        self.outvarnames = ['y0']
         self.hybrid = hybrid
-        varnames = [v for v, _ in invardefs]
-        mfdefs = [FuzzifyVariable(mfs) for _, mfs in invardefs]
-        self.num_in = len(invardefs)
-        self.num_rules = np.prod([len(mfs) for _, mfs in invardefs])
+        print('hi',self.hybrid)
+        varnames = [v for v, _ in self.invardefs]
+        mfdefs = [FuzzifyVariable(mfs) for _, mfs in self.invardefs]
+        self.num_in = len(self.invardefs)
+        self.num_rules = np.prod([len(mfs) for _, mfs in self.invardefs])
         if self.hybrid:
             cl = ConsequentLayer(self.num_in, self.num_rules, self.num_out)
         else:
@@ -500,7 +506,7 @@ class re_anfis(torch.nn.Module):
         '''
             Train the given model using the given (x,y) data.
         '''
-        optimizer = torch.optim.SGD(model.parameters(), lr=1e-4, momentum=0.99)
+        optimizer = torch.optim.SGD(self.parameters(), lr=1e-4, momentum=0.99)
         criterion = torch.nn.MSELoss(reduction='sum')
         train_anfis_with(self, data, optimizer, criterion, epochs, show_plots)
 
@@ -509,7 +515,7 @@ class re_anfis(torch.nn.Module):
 
         y_pred = np.array([[0]])
         for batch_x, batch_y in test:
-            y_pred_batch = model(batch_x)
+            y_pred_batch = self(batch_x)
             print(y_pred_batch.detach().numpy().shape)
             y_pred = np.concatenate((y_pred, y_pred_batch.detach().numpy()))
         y_pred = torch.from_numpy(y_pred[1:,:])
@@ -534,7 +540,7 @@ class re_anfis(torch.nn.Module):
         '''
 
 if __name__ == '__main__':
-    model = ex1_model()
+    model = re_anfisModel()
     data = anfisDataLoader()
     train_data = data.loadTrainData()
     test_data = data.loadTestData()
