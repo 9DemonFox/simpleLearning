@@ -108,8 +108,10 @@ https://github.com/alvaromc317/asgl/blob/master/user_guide.ipynb
 > MERT模型中使用了cart回归树，树中的参数设为了默认值
 
 ```
-epoch:int
+    epoch:int
         循环轮数
+    k:int
+        表示第k个变量作为随机效应变量
     n : int
         观测对象种类数量
     N : int
@@ -135,8 +137,10 @@ epoch:int
 > REBET模型中使用了cart回归树，树中的参数设为了默认值
 
 ```
-epoch:int
+    epoch:int
         循环轮数
+    k:int
+        表示第k个变量作为随机效应变量
     n : int
         观测对象种类数量
     N : int
