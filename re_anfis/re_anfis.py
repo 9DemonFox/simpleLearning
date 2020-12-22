@@ -68,6 +68,7 @@ def train_anfis_with(model, data, optimizer, criterion,
         x, y_actual = data.dataset.tensors
         with torch.no_grad():
             model.fit_coeff(x, y_actual)
+        '''
         # Get the error rate for the whole batch:
         y_pred = model(x)
         mse, rmse, perc_loss = calc_error(y_pred, y_actual)
@@ -82,16 +83,17 @@ def train_anfis_with(model, data, optimizer, criterion,
         y_actual = data.dataset.tensors[1]
         y_pred = model(data.dataset.tensors[0])
         plotResults(y_actual, y_pred)
+        '''
 
-
+'''
 def train_anfis(model, data, epochs=500, show_plots=False):
-    '''
-        Train the given model using the given (x,y) data.
-    '''
+    
+      #  Train the given model using the given (x,y) data.
+    
     optimizer = torch.optim.SGD(model.parameters(), lr=1e-4, momentum=0.99)
     criterion = torch.nn.MSELoss(reduction='sum')
     train_anfis_with(model, data, optimizer, criterion, epochs, show_plots)
-
+'''
 def make_bell_mfs(a, b, clist):
     '''Return a list of bell mfs, same (a,b), list of centers'''
     return [BellMembFunc(a, b, c) for c in clist]
@@ -494,8 +496,49 @@ class re_anfis(torch.nn.Module):
         self.y_pred = y_pred.squeeze(2)
         return self.y_pred
 
+    def fit(self, data, epochs=10, show_plots=False):
+        '''
+            Train the given model using the given (x,y) data.
+        '''
+        optimizer = torch.optim.SGD(model.parameters(), lr=1e-4, momentum=0.99)
+        criterion = torch.nn.MSELoss(reduction='sum')
+        train_anfis_with(self, data, optimizer, criterion, epochs, show_plots)
+
+    def predict(self, test):
+        # Get the error rate for the whole batch:
+
+        y_pred = np.array([[0]])
+        for batch_x, batch_y in test:
+            y_pred_batch = model(batch_x)
+            print(y_pred_batch.detach().numpy().shape)
+            y_pred = np.concatenate((y_pred, y_pred_batch.detach().numpy()))
+        y_pred = torch.from_numpy(y_pred[1:,:])
+
+        #y_pred = []
+        y_test = torch.reshape(test.dataset.tensors[1], [-1,1])
+        print(test.dataset.tensors[1])
+        print(y_pred)
+        print(calc_error(y_pred.double(), y_test.double()))
+        return y_pred
+
+        '''
+        errors = []
+        for t in range(epochs):
+            y_pred = model(x)
+            mse, rmse, perc_loss = calc_error(y_pred, y_actual)
+            errors.append(perc_loss)
+            # Print some progress information as the net is trained:
+            if epochs < 30 or t % 10 == 0:
+                print('epoch {:4d}: MSE={:.5f}, RMSE={:.5f} ={:.2f}%'
+                      .format(t, mse, rmse, perc_loss))
+        '''
+
 if __name__ == '__main__':
     model = ex1_model()
     data = anfisDataLoader()
     train_data = data.loadTrainData()
-    train_anfis(model, train_data, 20)
+    test_data = data.loadTestData()
+    #train_anfis(model, train_data, 20)
+    model.fit(train_data)
+    print(type(train_data))
+    predict_y = model.predict(test_data)
