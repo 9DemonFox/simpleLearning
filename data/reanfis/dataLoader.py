@@ -2,8 +2,6 @@ import sys
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
-import self as self
-
 import torch
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader

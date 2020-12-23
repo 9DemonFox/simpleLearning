@@ -126,16 +126,16 @@ class GATestCase(unittest.TestCase):
         pass
 
 
-class SAPTestCase(unittest.TestCase):
+class SALPTestCase(unittest.TestCase):
     def testDataLoder(self):
         dataloader = SalpDataLoader("data/salp/SALP_DATA.npy")
         trainX, trainY = dataloader.loadTrainData()
         testX, testY = dataloader.loadTestData()
         # 验证数据集形状
-        assert trainX.shape == (100, 100)
-        assert trainY.shape == (100,)
-        assert testX.shape == (100, 100)
-        assert testY.shape == (100,)
+        assert trainX.shape == (80, 100)
+        assert trainY.shape == (80,)
+        assert testX.shape == (20, 100)
+        assert testY.shape == (20,)
         pass
 
     def testSVRModel(self):

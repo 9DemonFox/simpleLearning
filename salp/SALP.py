@@ -226,7 +226,7 @@ class SALPModel(Model):
         # 验证均值为0 平方和为1
         assert abs(numpy.square(std_y).sum() - 1) < 0.01
         assert abs(numpy.square(std_x[0]).sum() - 1) < 0.01
-        assert abs(abs(std_y.mean()) < 0.1)
+        assert abs(abs(std_y.mean()) < 0.11)
         # step2
         (xs, ys, bayes_indexs) = self.getBayesianBootstrapReconstructData(std_x, std_y, n_replications=self.k)
         # step3
