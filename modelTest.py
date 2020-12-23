@@ -11,12 +11,14 @@ from data.ibrt.dataLoader import IBRTDataLoader
 from data.mert.dataLoder import MERTDataLoader
 from data.rebet.dataLoder import REBETDataLoader
 from data.salp.dataLoder import SalpDataLoader
+from data.reanfis.dataLoader import anfisDataLoader
 from ga.ga import GAModel
 from gbm.GBM import GBMModel
 from ibrt.ibrt import IBRTModel
 from mert.mert import MERTModel
 from rebet.rebet import REBETModel
 from salp.SALP import SVRModel, SALPModel
+from re_anfis.re_anfis import re_anfisModel
 
 warnings.filterwarnings("ignore")
 
@@ -176,6 +178,25 @@ class IBRTTestCase(unittest.TestCase):
         ibrt.fit(trainX, trainY)
         predictY = ibrt.predict(testX)
         assert (mean_squared_error(testY, predictY) < 10)
+        pass
+
+class re_anfisTestCase(unittest.TestCase):
+    def testDataLoader(self):
+        dataloader = anfisDataLoader()
+        train = dataloader.loadTrainData()
+        test = dataloader.loadTestData()
+        assert train.shape == (900, 4)
+        assert test.shape == (100, 4)
+        pass
+
+    def testre_anfisModel(self):
+        dataloader = anfisDataLoader()
+        train = dataloader.loadTrainData()
+        test = dataloader.loadTestData()
+        re_anfis = re_anfisModel()
+        re_anfis.fit(train)
+        predictY = re_anfis.predict(test)
+        assert (mean_squared_error(test.dataset.tensors[1], predictY) < 10)
         pass
 
 
