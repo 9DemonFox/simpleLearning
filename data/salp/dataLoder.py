@@ -81,7 +81,7 @@ class SalpDataLoader(DataLoader):
         dataSet = loadSALPData(self.data_path)
         trainX = dataSet[degreeOfOutliers, 0:80, :, :-1]
         trainY = dataSet[degreeOfOutliers, 0:80, :, -1]
-        return trainX[0], trainY[0]
+        return trainX[0][:80], trainY[0][:80]
 
     def loadTestData(self, **kwargs):
         if "degreeOfOutliers" in kwargs.keys():
@@ -93,7 +93,7 @@ class SalpDataLoader(DataLoader):
         dataSet = loadSALPData(self.data_path)
         testX = dataSet[degreeOfOutliers, 80:, :, :-1]
         testY = dataSet[degreeOfOutliers, 80:, :, -1]
-        return testX[0], testY[0]
+        return testX[0][80:], testY[0][80:]
 
 
 if __name__ == "__main__":
