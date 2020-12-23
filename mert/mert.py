@@ -91,6 +91,8 @@ class MERTModel(Model):
         
         epoch:int,可选(默认=200)
         循环轮数
+        k:int,可选(默认=1)
+        表示第k个变量作为随机效应变量
         N:int
         观测次数
         m:int
@@ -106,11 +108,15 @@ class MERTModel(Model):
         else:
             epoch = kwargs["epoch"]
 
+        if "k" not in kwargs.keys():
+            self.k = 1
+        else:
+            self.k = kwargs["k"]
         N = trainY.shape[0]
         m = int(N / self.n)
         z = np.ones((self.n, m, self.q))
         for i in range(self.n):
-            z[i:i + 1, :, 1:2] = z[i:i + 1, :, 1:2] - 1 + trainX[m * i:m * (i + 1), 0:1]
+            z[i:i + 1, :, 1:2] = z[i:i + 1, :, 1:2] - 1 + trainX[m * i:m * (i + 1), self.k-1:self.k]
         y0 = np.empty((N, 1))
         update(trainX, trainY, epoch, self.n, N, m, self.D, self.q, self.u, self.σ2, self.clf, y0, z)
         for j in range(self.n):
@@ -130,7 +136,7 @@ class MERTModel(Model):
         m = int(N / self.n)
         z = np.ones((self.n, m, self.q))
         for i in range(self.n):
-            z[i:i + 1, :, 1:2] = z[i:i + 1, :, 1:2] - 1 + predictX[m * i:m * (i + 1), 0:1]
+            z[i:i + 1, :, 1:2] = z[i:i + 1, :, 1:2] - 1 + predictX[m * i:m * (i + 1), self.k-1:self.k]
         x0 = self.clf2.predict(predictX).reshape(N, 1)
         for j in range(self.n):
             x0[j * m:(j + 1) * m, 0:1] = x0[j * m:(j + 1) * m, 0:1] + np.dot(z[j], self.u[j])
@@ -140,10 +146,11 @@ class MERTModel(Model):
 if __name__ == '__main__':
     n = 100
     epoch = 50
+    k = 1
     model = MERTModel(n=n)
     dataloader = MERTDataLoader(datapath1="../data/mert/data_train.csv", datapath2="../data/mert/data_test.csv")
     trainX, trainY = dataloader.loadTrainData()
 
     predictX, predictY = dataloader.loadTestData()
-    model.fit(trainX=trainX, trainY=trainY, epoch=epoch)
+    model.fit(trainX=trainX, trainY=trainY, epoch=epoch,k=k)
     model.predict(predictX=predictX, predictY=predictY)

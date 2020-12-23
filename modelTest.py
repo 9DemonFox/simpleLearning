@@ -42,8 +42,10 @@ class REBETTestCase(unittest.TestCase):
         testX, testY = dataloader.loadTestData()
         n = 100
         epoch = 5
-        model = REBETModel(n=n)
-        model.fit(trainX=trainX, trainY=trainY, epoch=epoch)
+        k = 1
+        M = 10
+        model = REBETModel(n=n,M=M)
+        model.fit(trainX=trainX, trainY=trainY, epoch=epoch,k=k)
         predictY = model.predict(predictX=testX, predictY=testY)
         assert (np.mean(testY - predictY) < 1)
         pass
@@ -68,8 +70,9 @@ class MERTTestCase(unittest.TestCase):
         testX, testY = dataloader.loadTestData()
         n = 100
         epoch = 5
+        k = 1
         model = MERTModel(n=n)
-        model.fit(trainX=trainX, trainY=trainY, epoch=epoch)
+        model.fit(trainX=trainX, trainY=trainY, epoch=epoch,k=k)
         predictY = model.predict(predictX=testX, predictY=testY)
         assert (np.mean(testY - predictY) < 1)
         pass

@@ -159,7 +159,7 @@ class REBETModel(Model):
         随机效应变量
         σ2:float
         误差的方差
-        M:float
+        M:float,可选(默认 = 10)
         迪利克雷分布参数
 
         """
@@ -167,12 +167,15 @@ class REBETModel(Model):
             self.n = 1
         else:
             self.n = kwargs["n"]
+        if "M" not in kwargs.keys():
+            self.M = 10
+        else:
+            self.M = kwargs["M"]
         self.q = 2
         self.D = np.identity(self.q)
         self.u = np.zeros((self.n, self.q, 1))
         self.σ2 = 1.0
         self.clf = tree.DecisionTreeRegressor(criterion='mse', max_depth=(10))
-        self.M = 10
 
     def fit(self, **kwargs):
 
@@ -180,6 +183,8 @@ class REBETModel(Model):
         
         epoch:int,可选(默认=200)
         循环轮数
+        k:int,可选(默认=1)
+        表示第k个变量作为随机效应变量
         N:int
         观测次数
         m:int
@@ -194,12 +199,16 @@ class REBETModel(Model):
             epoch = 200
         else:
             epoch = kwargs["epoch"]
+        if "k" not in kwargs.keys():
+            self.k = 1
+        else:
+            self.k = kwargs["k"]
 
         N = trainY.shape[0]
         m = int(N / self.n)
         z = np.ones((self.n, m, self.q))
         for i in range(self.n):
-            z[i:i + 1, :, 1:2] = z[i:i + 1, :, 1:2] - 1 + trainX[m * i:m * (i + 1), 0:1]
+            z[i:i + 1, :, 1:2] = z[i:i + 1, :, 1:2] - 1 + trainX[m * i:m * (i + 1), self.k-1:self.k]
         y0 = np.empty((N, 1))
         update(trainX, trainY, epoch, self.n, N, m, self.D, self.q, self.u, self.σ2, self.clf, y0, z, self.M)
         for j in range(self.n):
@@ -211,7 +220,7 @@ class REBETModel(Model):
         x0 = self.clf2.predict(trainX).reshape(N, 1)
         for j in range(self.n):
             x0[j * m:(j + 1) * m, 0:1] = x0[j * m:(j + 1) * m, 0:1] + np.dot(z[j], self.u[j])
-
+            
     def predict(self, **kwargs):
         predictX = kwargs["predictX"]
         predictY = kwargs["predictY"]
@@ -219,7 +228,7 @@ class REBETModel(Model):
         m = int(N / self.n)
         z = np.ones((self.n, m, self.q))
         for i in range(self.n):
-            z[i:i + 1, :, 1:2] = z[i:i + 1, :, 1:2] - 1 + predictX[m * i:m * (i + 1), 0:1]
+            z[i:i + 1, :, 1:2] = z[i:i + 1, :, 1:2] - 1 + predictX[m * i:m * (i + 1), self.k-1:self.k]
         x0 = self.clf2.predict(predictX).reshape(N, 1)
         for j in range(self.n):
             x0[j * m:(j + 1) * m, 0:1] = x0[j * m:(j + 1) * m, 0:1] + np.dot(z[j], self.u[j])
