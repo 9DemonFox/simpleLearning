@@ -163,6 +163,7 @@ class SelectLabelsList(Frame):
         for i, (text, selectFrame) in enumerate(self.text2LabelDic.items()):
             if self.isUnselectableTitle(text):
                 if i != 0:
+                    R.widget.HSeperator(self, height=10, bg=R.color.UNSelectedColor).pack()
                     R.widget.HSeperator(self, height=10, bg=R.color.SeperatorColor_BackGroud).pack()
                 self.text2LabelDic.get(text).pack(**titlePack)
             else:
