@@ -7,12 +7,14 @@ from sklearn.metrics import mean_squared_error
 from ahp.AHP import AHPModel
 from data.ahp.dataLoader import AHPDataLoader
 from data.gbm.dataLoader import GBMDataLoader
+from data.hlm.dataloader import HLMDataLoader
 from data.ibrt.dataLoader import IBRTDataLoader
 from data.mert.dataLoder import MERTDataLoader
 from data.rebet.dataLoder import REBETDataLoader
 from data.salp.dataLoder import SalpDataLoader
 from ga.ga import GAModel
 from gbm.GBM import GBMModel
+from hlm.HLM import HLMModel
 from ibrt.ibrt import IBRTModel
 from mert.mert import MERTModel
 from rebet.rebet import REBETModel
@@ -100,6 +102,33 @@ class GBMTestCase(unittest.TestCase):
         predictY = gbm_model.predict(predictX=testX)
         assert (mean_squared_error(testY, predictY) < 1)
         pass
+
+
+class HLMTestCase(unittest.TestCase):
+    def testDataLoader(self):
+        dataloader = HLMDataLoader()
+        trainW, trainX, trainY = dataloader.loadTrainData()
+        testW, testX, testY = dataloader.loadTestData()
+
+        assert trainW.shape == (8, )
+        assert trainX.shape == (4, 1)
+        assert trainY.shape == (4, )
+
+        assert testW.shape == (8, )
+        assert testX.shape == (4, 1)
+        assert testY.shape == (4, )
+
+    def testHLMModel(self):
+        hlm_model = HLMModel()
+        hlm_dataloader = HLMDataLoader()
+
+        trainW, trainX, trainY = hlm_dataloader.loadTrainData()
+        testW, testX, trainY = hlm_dataloader.loadTestData()
+        hlm_model.fit(trainW=trainW, trainX=trainX, trainY=trainY)
+        predictY = hlm_model.predict(predictW=trainW, predictX=trainX)
+
+        # assert mean_squared_error(trainY, predictY) < 1  # 0.947
+        assert mean_squared_error(trainY, predictY) < 3  # 0.947
 
 
 class GATestCase(unittest.TestCase):
