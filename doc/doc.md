@@ -157,6 +157,36 @@ epoch:int
         迪利克雷分布参数
 ```
 
+# 5. 多层线性模型 (HLM)
+
+## 5.1 参数说明
+
+```
+X: matrix/ndarray, 第一层的自变量矩阵。
+W: matrix/ndarray, 第二层的固定效应参数矩阵。
+Y: matrix/ndarray, 第一层的因变量矩阵。
+iters: int, 最大迭代次数。
+
+# gamma: matrix/ndarray, 第二层固定效应参数的系数矩阵。
+# sigma_squ: scalar, 第一层的随机误差的方差。
+# T: matrix/ndarray, 第二层的随机误差的协方差矩阵。
+# beta: matrix/ndarray, 第一层的随机系数。
+```
+
+## 5.2 EM 求解 HLM 大致过程
+
+```
+初始化 gamma, sigma_squ, T
+for i in range(iters):
+	E 步: 根据公式计算各统计量的期望值
+	M 步: 根据公式计算 gamma, sigma_squ, T 新的估计值
+return gamma, sigma_squ, T
+根据公式计算第一层随机系数 beta 等
+计算模型预测值
+```
+
+
+
 # 7. AHP 层次分析法
 
 ## 7.1 示例
