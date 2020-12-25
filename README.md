@@ -18,3 +18,6 @@ pip install -r requirements.txt
 双击目录下 app.bat 可以看到目前版本
 ```
 
+# 4. 说明文档
+
+> 在 /doc/doc.md 中有目前版本的说明文档
