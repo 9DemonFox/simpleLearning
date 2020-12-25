@@ -1,3 +1,4 @@
+import tkinter as tk
 from tkinter import *
 from tkinter import font as tkFont
 
@@ -46,13 +47,13 @@ class HSeperator(Frame):  # height 单位为像素值
 
 
 class selectFrame(Frame):
-    backgroud = "whitesmoke"  # 当选中时，应该和背景一个颜色
-    labelColor = "white"  # 当未选中时的颜色
-    labelEnterColor = "whitesmoke"  # 鼠标进入时颜色
+    backgroud = R.color.BackGroudColor  # 当选中时，应该和背景一个颜色
+    labelColor = R.color.UNSelectedColor  # 当未选中时的颜色
+    labelEnterColor = R.color.SelectedColor  # 鼠标进入时颜色
     selectedState = False
 
-    def __init__(self, text, parent, backgroud="whitesmoke", frontgroud="white", justify=LEFT):
-        super().__init__(master=parent, bg="green")
+    def __init__(self, text, parent, backgroud=R.color.BackGroudColor, frontgroud="white", justify=LEFT):
+        super().__init__(master=parent)
         self.seperator = VSeperator(parent=self, width=5, bg=backgroud)
         self.label = Label(self, text=text, bg=backgroud, width=16, height=2, fg=frontgroud, justify=justify,
                            font=R.font.NormalWeiRuanYaHeiFont(10))
@@ -70,13 +71,13 @@ class selectFrame(Frame):
 
     def setSelect(self):
         self.selectedState = True
-        self.label["bg"] = "white"
-        self.seperator["bg"] = "blue"
+        self.label["bg"] = R.color.SelectedColor
+        self.seperator["bg"] = R.color.SelectedSeperatorColor
 
     def setUnselect(self):
         self.selectedState = False
-        self.label["bg"] = "whitesmoke"
-        self.seperator["bg"] = "whitesmoke"
+        self.label["bg"] = R.color.UNSelectedColor
+        self.seperator["bg"] = R.color.UNSelectedColor
 
     def pack(self, padx, pady):
         super().pack(fill=X, padx=padx, pady=pady)
@@ -103,22 +104,90 @@ class selectFrame(Frame):
     def SenterEvent(event, selectFrameDict: dict):
         text = event.widget["text"]
         cls = selectFrameDict.get(text)
-        if cls.seperator["bg"] == "blue":
-            pass
-        else:
-            cls.seperator["bg"] = "white"
-        cls.label["bg"] = "white"
-        cls["bg"] = "white"
-        pass
+        if cls.selectedState == False:
+            cls.seperator["bg"] = R.color.SelectedColor
+        cls.label["bg"] = R.color.SelectedColor
 
     @staticmethod
     def SleaveEvent(event, selectFrameDict: dict):
         text = event.widget["text"]
         cls = selectFrameDict.get(text)
-        if cls.seperator["bg"] == "blue":
-            pass
-        else:
-            cls.seperator["bg"] = "whitesmoke"
         if cls.selectedState == False:
-            cls.label["bg"] = "whitesmoke"
-            cls["bg"] = "whitesmoke"
+            cls.seperator["bg"] = R.color.UNSelectedColor
+            cls.label["bg"] = R.color.UNSelectedColor
+
+
+class SelectLabelsList(Frame):
+    text2LabelDic = {}  # "模型中心" : Frame(模型中心)
+    labels = []  # 记录的按键
+    selectFlag = []  # 选中的标签
+
+    def __init__(self, parent, width=120, pady=10):
+        super().__init__(parent, width=width, pady=pady, bg=R.color.BackGroudColor)
+
+    def isUnselectableTitle(self, text):
+        """ 检查是不是不能选择的label
+        :param text:
+        :return:
+        """
+        return text.find("  ") >= 0
+
+    def initLabelsList(self):
+        """ 初始化label列表
+        :param labelTextList: ["  模型中心", "训练模型", "校验模型", "预测结果", "  数据中心", "数据集管理"]
+                        其中定义2个空格开头的为Title，不可选取
+        :return:
+        """
+        labelTextList = ["  模型中心", "训练模型", "校验模型", "预测结果", "  数据中心", "数据集管理"]
+
+        # 对于每个字符串创建selectFrame
+        for text in labelTextList:
+            self.text2LabelDic[text] = R.widget.selectFrame(text=text, parent=self,
+                                                            backgroud=R.color.UNSelectedColor,
+                                                            frontgroud=R.color.LabelFontColor_Black)
+        # 不同字体处理
+        for text in labelTextList:
+            if self.isUnselectableTitle(text):
+                self.setLabelFont(text,
+                                  {"justify": tk.LEFT, "anchor": tk.W, "font": R.font.BoldWeiRuanYaHeiFont(size=12)})
+
+        titlePack = {
+            "pady": 0,
+            "padx": 0
+        }
+        selectPack = {
+            "pady": 0,
+            "padx": 0
+        }
+
+        for i, (text, selectFrame) in enumerate(self.text2LabelDic.items()):
+            if self.isUnselectableTitle(text):
+                if i != 0:
+                    R.widget.HSeperator(self, height=10, bg=R.color.SeperatorColor_BackGroud).pack()
+                self.text2LabelDic.get(text).pack(**titlePack)
+            else:
+                self.text2LabelDic.get(text).pack(**selectPack)
+        R.widget.HSeperator(self, height=10, bg=R.color.FrameSeperatorColor_White).pack()
+
+    def Labelsbind(self):
+        """ 对每个Label绑定事件
+        :return:
+        """
+        for text, selectFrame in self.text2LabelDic.items():
+            if not self.isUnselectableTitle(text):  # 对于不是title的块绑定事件
+                # 绑定事件
+                selectFrame.bind("<Enter>",
+                                 lambda event: R.widget.selectFrame.SenterEvent(event, self.text2LabelDic))
+                selectFrame.bind("<Leave>",
+                                 lambda event: R.widget.selectFrame.SleaveEvent(event, self.text2LabelDic))
+                selectFrame.bind("<Button-1>",
+                                 lambda event: R.widget.selectFrame.SclickEvent(event, self.text2LabelDic))
+
+    def setLabelFont(self, text, style: dict):
+        """ 设置LabelFont
+        :param text:
+        :param style:
+        :return:
+        """
+        frame = self.text2LabelDic.get(text)
+        frame.label.config(**style)
