@@ -44,14 +44,14 @@ class anfisDataLoader(DataLoader):
         x = list(itertools.product(pts, repeat=3))
         x = torch.tensor(x, dtype=dtype)
 
-        print(x.numpy())
+        # print(x.numpy())
 
         sigma = torch.min(x)
         y = torch.tensor([[sinc(*p)] for p in x], dtype=dtype)
         x = torch.from_numpy(x_filter(x, y, sigma))  # sigma需要视情况调整
 
-        print(x.size(), y.size())
-        print(type(x),type(y))
+        # print(x.size(), y.size())
+        # print(type(x),type(y))
 
         #将x,y转成array，构造train/test再转回
         data_np = np.concatenate((x.numpy(),y.numpy()),axis=1)

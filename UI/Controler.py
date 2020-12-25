@@ -13,11 +13,11 @@ from UI.Viewer import tkimg_resized
 class Controler:
     def __init__(self, model: Modeler, view: Viewer):
         self.model = model
+        self.view = view
         self.initGlobalVaraible()
         self.layoutView()
 
     def layoutView(self, model=""):
-        self.view = view
         # 添加菜单栏命令
         self.addCommandMenubar()
         self.addCommandTitleLabel()

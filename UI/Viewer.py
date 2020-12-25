@@ -66,7 +66,34 @@ def v_seperator(parent, width, bg="whitesmoke"):  # width 单位为像素值
     return frame
 
 
-from tkinter import IntVar
+def selectedLabel(parent, label):
+    """ 选中某个按键
+    :param parent:
+    :param label:
+    :return:
+    """
+    f1 = tk.Frame(parent, bg="whitesmoke")
+    v_seperator(f1, width=5, bg="blue").pack(side=tk.LEFT, fill=tk.Y)
+    label(f1, "创建模型", bg="whitesmoke").pack(side=tk.LEFT, anchor=tk.W, padx=35, pady=5)
+    f1.pack(fill=tk.X)
+    pass
+
+
+class EventHandler:
+    @classmethod
+    def unselectLabel(event, seperator):
+        label = event.widget
+        label["backgroud"] = "white"
+        seperator["backgroud"] = "white"
+
+
+class SelectLabelsList:
+    text2LabelDic = {}
+    labels = []  # 记录的按键
+    selectFlag = []  # 选中的标签
+
+    def __init__(self):
+        pass
 
 
 class Viewer:
@@ -151,7 +178,7 @@ class Viewer:
 
         frame = tk.Frame(parent, bg="white", height=150)
 
-        self.main_top_image_label = image_label(frame, "R\\images\\decision_analyze.png", width=240, height=120,
+        self.main_top_image_label = image_label(frame, "UI\\R\\images\\decision_analyze.png", width=240, height=120,
                                                 keep_ratio=False)
         self.main_top_image_label.pack(side=tk.LEFT, padx=10, pady=10)
 
@@ -239,8 +266,9 @@ class Viewer:
         def label(frame, text, size=10, bold=False, bg="white"):
             return tk.Label(frame, text=text, bg=bg, font=_ft(size, bold))
 
-        frame = tk.Frame(parent, width=180, bg="white")
+        labels_list = []
 
+        frame = tk.Frame(parent, width=180, bg="white")
         label(frame, "模型中心", 12, True).pack(anchor=tk.W, padx=20, pady=10)
         label(frame, "我的模型").pack(anchor=tk.W, padx=40, pady=5)
 
