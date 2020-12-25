@@ -1,5 +1,6 @@
 import unittest
 import warnings
+import torch
 
 # other package
 from sklearn.metrics import mean_squared_error
@@ -185,8 +186,8 @@ class re_anfisTestCase(unittest.TestCase):
         dataloader = anfisDataLoader()
         train = dataloader.loadTrainData()
         test = dataloader.loadTestData()
-        assert train.shape == (900, 4)
-        assert test.shape == (100, 4)
+        assert train.dataset.tensors[0].size() == torch.Size([900, 3])
+        assert test.dataset.tensors[0].size() == torch.Size([100, 3])
         pass
 
     def testre_anfisModel(self):
