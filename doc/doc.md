@@ -40,6 +40,30 @@ subsample：float, default=1.0
 ...
 ```
 
+# 2. I-BRT
+
+该论文中提到了其它相关的方法，GBT
+
+## 2.1 I-BRT参数说明
+
+```
+模型初始化参数
+    n_iter:int
+        迭代次数，即基本树的个数
+    _gamma : float
+        正则项系数
+    _lamda : float
+        正则项系数
+    max_depth: int
+        基本树的最大深度（这里代替了原文中的最大叶节点数）
+
+dataloader参数
+    fra : int
+        扩展数据的倍数，由于数据为小样本，需要按此倍数扩展原始数据
+```
+
+> SVR 模型使用Ｒ 软件包E1071 计算; 神经网
+
 # 3. SALP
 
 该论文中提到了其它相关的方法，SVR
