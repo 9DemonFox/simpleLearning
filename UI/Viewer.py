@@ -5,6 +5,8 @@ from tkinter import ttk
 
 from PIL import Image, ImageTk
 
+from UI import R
+
 
 def tkimg_resized(img, w_box, h_box, keep_ratio=True):
     """对图片进行按比例缩放处理"""
@@ -178,7 +180,7 @@ class Viewer:
 
         frame = tk.Frame(parent, bg="white", height=150)
 
-        self.main_top_image_label = image_label(frame, "UI\\R\\images\\decision_analyze.png", width=240, height=120,
+        self.main_top_image_label = image_label(frame, R.image.regression, width=240, height=120,
                                                 keep_ratio=False)
         self.main_top_image_label.pack(side=tk.LEFT, padx=10, pady=10)
 
@@ -263,32 +265,10 @@ class Viewer:
         return frame
 
     def main_left(self, parent):
-        def label(frame, text, size=10, bold=False, bg="white"):
-            return tk.Label(frame, text=text, bg=bg, font=_ft(size, bold))
-
-        labels_list = []
-
-        frame = tk.Frame(parent, width=180, bg="white")
-        label(frame, "模型中心", 12, True).pack(anchor=tk.W, padx=20, pady=10)
-        label(frame, "我的模型").pack(anchor=tk.W, padx=40, pady=5)
-
-        f1 = tk.Frame(frame, bg="whitesmoke")
-        v_seperator(f1, width=5, bg="blue").pack(side=tk.LEFT, fill=tk.Y)
-        label(f1, "创建模型", bg="whitesmoke").pack(side=tk.LEFT, anchor=tk.W, padx=35, pady=5)
-        f1.pack(fill=tk.X)
-
-        label(frame, "训练模型").pack(anchor=tk.W, padx=40, pady=5)
-        label(frame, "校验模型").pack(anchor=tk.W, padx=40, pady=5)
-        label(frame, "发布模型").pack(anchor=tk.W, padx=40, pady=5)
-
-        h_seperator(frame, 10)
-
-        label(frame, "数据中心", 12, True).pack(anchor=tk.W, padx=20, pady=10)
-        label(frame, "数据集管理").pack(anchor=tk.W, padx=40, pady=5)
-        label(frame, "创建数据集").pack(anchor=tk.W, padx=40, pady=5)
-
-        frame.propagate(False)
-        return frame
+        selectFramesList = R.widgets.selectFramesList(parent, lambda x: print(x),
+                                                      labelTextList=["  模型中心", "选择模型", "训练模型", "校验模型", "预测结果", "  数据中心",
+                                                                     "数据集管理"], pady=0)
+        return selectFramesList
 
     def trainfile(self, filepath1):
         self.trainfile = filedialog.askopenfilename()

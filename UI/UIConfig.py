@@ -23,3 +23,10 @@ modelDefaultConfig = {
         "out 预测结果": "",
     }
 }
+
+modelTypes = ["回归模型", "决策分析", "参数寻优"]
+
+# 每种模型下有哪些模型
+modelTypes2models = {
+    "回归模型": [""]
+}
