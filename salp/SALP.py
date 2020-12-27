@@ -60,9 +60,9 @@ class SVRModel(Model):
 class SALPModel(Model):
     def __init__(self, alpha=0.00002, keepVariablePercent=0.25, k=10):
         """
-        :param alpha:  惩罚项系数
-        :param keepVariable: 选择标量排除分位数 0.25 则是去除25%的最少次数选择变量
-        :param k: 贝叶斯重构样本数量
+        :param alpha:  惩罚项系数,系数越大，入选变量越少
+        :param keepVariable: 选择标量排除分位数 0.25 则是去除25%的最少次数选择变量（变量筛选，论文推荐为0.1-0.3）
+        :param k: 贝叶斯重构样本数量，论文中为10
         """
         self.alpha = alpha
         self.keepPercent = keepVariablePercent
@@ -83,8 +83,7 @@ class SALPModel(Model):
     def bayesian_bootstrap(self, X,
                            statistic,
                            n_replications,
-                           resample_size,
-                           low_mem=False):
+                           resample_size):
         """
         :param statistic: 对于抽象，取func = lambda x: x
         :param n_replications: 重复次数
@@ -96,11 +95,9 @@ class SALPModel(Model):
             X = numpy.array(X)
         samples = []
         samples_index = []
-        if low_mem:
-            weights = (numpy.random.dirichlet([1] * len(X))
-                       for _ in range(n_replications))
-        else:
-            weights = numpy.random.dirichlet([1] * len(X), n_replications)
+        # 狄利克雷分布
+        weights = numpy.random.dirichlet([1] * len(X), n_replications)
+        # 重构样本
         for w in weights:
             sample_index = numpy.random.choice(range(len(X)), p=w, size=resample_size)
             samples_index.append(sample_index)
@@ -165,7 +162,6 @@ class SALPModel(Model):
         :param initWeight: 可以选ols、pls、lasso
         :return:
         """
-        Coef = None
         sampleNum = x.shape[0]  # 样本数量
         varsNum = x.shape[1]  # 变量数量(特征数量)
         if initWeight == "ols":
@@ -187,7 +183,8 @@ class SALPModel(Model):
 
         xStar = x / ws  # 置换x为xStar（x*）
         # xStar, y = self.normalXY(xStar, y)  # 对xStar和y归一化
-        alp = Lasso(alpha=0.000005)  # 通过变换x来得到相关权重
+        alp = GridSearchCV(Lasso(),
+                           {"alpha": [0.00001, 0.0001, 0.001, 0.005]})  # 通过变换x来得到相关权重
         alp.fit(xStar, y)
         return alp, w
         # 再使用Lasso
@@ -199,7 +196,7 @@ class SALPModel(Model):
         :return:
         """
         alp, w = self.adap_lasso_with_init_weight(x, y, initWeight=initWeight, alpha=alpha)
-        coef = alp.coef_ / w
+        coef = alp.best_estimator_.coef_ / w
         return coef
 
     def getOlsCoef(self, x, y):
@@ -350,4 +347,3 @@ if __name__ == "__main__" and True:
     model.fit(trainX=trainX, trainY=trainY)
     predictY = model.predict(predictX=testX)
     print(mean_squared_error(predictY, testY))
-    print(model.model.coef_)

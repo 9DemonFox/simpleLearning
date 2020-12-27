@@ -8,5 +8,5 @@ class VSeperator(Frame):
     def __init__(self, parent, width, bg="whitesmoke"):  # width 单位为像素值
         super().__init__(parent, width=width, bg=bg)
 
-    def pack(self):
-        super().pack(side=LEFT, fill=Y)
+    def pack(self, side=LEFT, fill=Y):
+        super().pack(side=side, fill=fill)

@@ -1,7 +1,8 @@
 from tkinter import *
-from UI import R
 
+from UI import R
 from UI.R.widgets import VSeperator
+
 
 class selectFrame(Frame):
     backgroud = R.color.BackGroudColor  # 当选中时，应该和背景一个颜色
@@ -40,10 +41,11 @@ class selectFrame(Frame):
         self.label.pack(fill=BOTH)
 
     @staticmethod
-    def SclickEvent(event, selectFrames):
+    def SclickEvent(event, selectFrames, C):
         """ 设置为选中状态
         :param event:
         :param cls:
+        :param C: 控制器
         :return:
         """
         selectFrameDict = selectFrames.text2LabelDic
@@ -54,8 +56,8 @@ class selectFrame(Frame):
             if selectFrame.selectedState == True:
                 selectFrame.setUnselect()
         cls.setSelect()
-        # 处理自定义事件
-        selectFrames.eventHandler_(text)
+        # 处理自定义事件 包含该UI的控制器
+        selectFrames.eventHandler_(text, C)
 
     @staticmethod
     def SenterEvent(event, selectFrames):

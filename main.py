@@ -6,5 +6,4 @@ if __name__ == '__main__':
     model = Modeler()
     view = Viewer()
     controler = Controler(model, view)
-    controler.layoutModel()
     controler.view.run()

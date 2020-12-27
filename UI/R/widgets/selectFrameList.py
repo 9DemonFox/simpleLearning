@@ -1,18 +1,7 @@
 import tkinter as tk
-from abc import ABC, abstractmethod
 from tkinter import *
 
 from UI import R
-
-
-class baseSelectFrameListEvent(ABC):
-
-    def __init__(self):
-        pass
-
-    @abstractmethod
-    def recall(self, text):
-        pass
 
 
 class selectFramesList(Frame):
@@ -24,7 +13,7 @@ class selectFramesList(Frame):
     labels = []  # 记录的按键
     selectFlag = []  # 选中的标签
 
-    def __init__(self, parent, recall, labelTextList=["  模型中心", "训练模型", "校验模型", "预测结果", "  数据中心", "数据集管理"],
+    def __init__(self, parent, labelTextList=["  模型中心", "训练模型", "校验模型", "预测结果", "  数据中心", "数据集管理"],
                  width=120,
                  pady=10):
         """
@@ -33,10 +22,15 @@ class selectFramesList(Frame):
         :param width: 组件宽度
         :param pady: list中label的间距
         """
-        self.eventHandler_ = recall
         super().__init__(parent, width=width, pady=pady, bg=R.color.BackGroudColor)
         self.initLabelsList(labelTextList)
-        self.Labelsbind()
+
+    def bind(self, recall):
+        """ recall中需要包含两个参数，1是text,2是当前Frame的Controler
+        :param recall:
+        :return:
+        """
+        self.eventHandler_ = recall
 
     def isUnselectableTitle(self, text):
         """ 检查是不是不能选择的label
@@ -81,10 +75,12 @@ class selectFramesList(Frame):
                 self.text2LabelDic.get(text).pack(**selectPack)
         R.widgets.HSeperator(self, height=10, bg=R.color.FrameSeperatorColor_White).pack()
 
-    def Labelsbind(self):
+    def Labelsbind(self, Controler):
         """ 对每个Label绑定事件
         :return:
         """
+        self.Controler = Controler
+        C = Controler
         for text, selectFrame in self.text2LabelDic.items():
             if not self.isUnselectableTitle(text):  # 对于不是title的块绑定事件
                 # 绑定事件
@@ -93,7 +89,7 @@ class selectFramesList(Frame):
                 selectFrame.bind("<Leave>",
                                  lambda event: R.widgets.selectFrame.SleaveEvent(event, self))
                 selectFrame.bind("<Button-1>",
-                                 lambda event: R.widgets.selectFrame.SclickEvent(event, self))
+                                 lambda event: R.widgets.selectFrame.SclickEvent(event, self, C))
 
     def setLabelFont(self, text, style: dict):
         """ 设置LabelFont

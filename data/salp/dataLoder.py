@@ -12,9 +12,9 @@ dataset_num = 100  # 数据集数量
 n = 100  # 样本容量
 k = 10  # 目标变量
 d = 100  # 变量数量
-E = 0.1
-delta = 5
-tau = numpy.full((n, k), 0.3)
+E = 0.1  # 表达Y的利群程度
+delta = 0.05
+tau = numpy.full((n, k), 0.3)  # y的离群程度 [样本容量,目标变量数量k]
 # 不同程度的 epsilon
 epsilon_1 = lambda: Normal(0, 1)
 epsilon_2 = lambda: (1 - E) * Normal(0, 1) + E * Normal(0, 1) / Uniform(0, 1)
@@ -29,11 +29,11 @@ def get_sample_data(epsilon):
     # L1 - Lk
     sigma = 1 / 3  # 为调整系数， 用于调整信号和噪声的幅度比值
     L = Normal(0, 1, (n, k))  # k个L数
-    y = L.sum(axis=1) + sigma * epsilon()
-    e = Uniform(0, 1, (n, d))
+    y = L.sum(axis=1) + sigma * epsilon()  # Y实际表示为10个变量相加
+    e = Uniform(0, 1, (n, d))  # [100,100] 独立的标准正态分布电量
     x = numpy.zeros((n, d))
-    x[:, 0:k] = L + tau * e[:, 0:k]
-    x[:, k:3 * k:2] = L + delta * e[:, k:3 * k:2]
+    x[:, 0:k] = L + tau * e[:, 0:k]  # x0-x10
+    x[:, k:3 * k:2] = L + delta * e[:, k:3 * k:2]  #
     x[:, k + 1:3 * k + 1:2] = L + delta * e[:, k + 1:3 * k + 1:2]
     x[:, 3 * k + 1:d] = e[:, 3 * k + 1:d]
     return x, y
@@ -101,14 +101,51 @@ if __name__ == "__main__":
     from sklearn.metrics import mean_squared_error
     from sklearn.model_selection import GridSearchCV
     import numpy as np
+    from sklearn.linear_model import LinearRegression, LassoLars
 
     # 自动选择合适的参数
     svr = GridSearchCV(SVR(),
                        param_grid={"kernel": ("linear", 'rbf'), "C": np.logspace(-3, 3, 7),
                                    "gamma": np.logspace(-3, 3, 7)})
+    lasso = GridSearchCV(LinearRegression(),
+                         param_grid={
+                             "fit_intercept": [True, False]
+                         }
+                         # param_grid={
+                         #     "alpha": [0.00000001, 0.0000001, 0.000001, 0.00001, 0.0001, 0.03, 0.06, 0.09, 0.12, 0.15,
+                         #               0.2, 0.3,
+                         #               0.4, 0.5]}
+                         )
+    lasso = LassoLars(alpha=0.0001)
     dataloader = SalpDataLoader("SALP_DATA.npy")
-    trainX, trainY = dataloader.loadTrainData()
-    testX, testY = dataloader.loadTestData()
+    trainX, trainY = dataloader.loadTrainData(degreeOfOutliers=1)
+    testX, testY = dataloader.loadTestData(degreeOfOutliers=1)
+    from sklearn.preprocessing import normalize
+
+
+    def normalXY(self, x, y):
+        """标准化 均值为0 平方和为1
+        :param x:
+        :param y:
+        :return:
+        """
+        normal_l2 = lambda data: normalize(data.reshape(1, -1), norm="l2").squeeze()
+        y = normal_l2(y)
+        x = numpy.apply_along_axis(normal_l2, axis=1, arr=x)
+        return x, y
+
+
+    # svr.fit(trainX, trainY)
+    lasso.fit(trainX, trainY)
+    predictY = lasso.predict(testX)
+    print(lasso.coef_)
+    # print(lasso.best_estimator_)
+    err = mean_squared_error(predictY, testY)
+    print(err)
+
     svr.fit(trainX, trainY)
     predictY = svr.predict(testX)
+    # print(svr.best_estimator_.coef_)
+    # print(lasso.best_estimator_)
     err = mean_squared_error(predictY, testY)
+    print(err)

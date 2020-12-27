@@ -1,4 +1,4 @@
-from UI.UIConfig import machineLearningModels, modelDefaultConfig
+from UI.UIConfig import machineLearningModels, modelDefaultConfig, modelTypes2models, mainleftFrameTextList
 
 
 class Modeler:
@@ -22,4 +22,30 @@ class Modeler:
         """
         configs = modelDefaultConfig
         return configs
-        pass
+
+    def loadAllModelsByGroup(self, type: str):
+        models = modelTypes2models.get(type)
+        modelsName = [item.get("model_name") for item in models]
+        return modelsName
+
+    def loadAllModelsGroup(self):
+        return list(modelTypes2models.keys())
+
+    def loadModelParameters(self, modelName):
+        """ 加载模型参数
+        :return:
+        """
+        for modelType in self.loadAllModelsGroup():
+            for model in modelTypes2models.get(modelType):
+                name, abbr = model.get("model_name")
+                if name == modelName or abbr == modelName:
+                    return model.get("model_parameters")
+
+    def loadMainleftFrameTextList(self):
+        return mainleftFrameTextList
+
+
+if __name__ == '__main__':
+    m = Modeler()
+    parameter = m.loadModelParameters("SALP")
+    print(parameter)
