@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
 
 from collections import OrderedDict
-from data.reanfis.dataLoader import anfisDataLoader
+from data.rfanfis.dataLoader import anfisDataLoader
 
 
 dtype = torch.float
@@ -411,14 +411,14 @@ class WeightedSumLayer(torch.nn.Module):
         y_pred = torch.bmm(tsk, weights.unsqueeze(2))
         return y_pred.squeeze(2)
 
-class re_anfisModel(torch.nn.Module):
+class rf_anfisModel(torch.nn.Module):
     '''
         This is a container for the 5 layers of the ANFIS net.
         The forward pass maps inputs to outputs based on current settings,
         and then fit_coeff will adjust the TSK coeff using LSE.
     '''
     def __init__(self, hybrid=True):
-        super(re_anfisModel, self).__init__()
+        super(rf_anfisModel, self).__init__()
         #self.description = description
         self.invardefs = [
             ('x0', make_bell_mfs(3.33333, 2, [-10, -3.333333, 3.333333, 10])),
@@ -541,7 +541,7 @@ class re_anfisModel(torch.nn.Module):
         '''
 
 if __name__ == '__main__':
-    model = re_anfisModel()
+    model = rf_anfisModel()
     data = anfisDataLoader()
     train_data = data.loadTrainData()
     test_data = data.loadTestData()
