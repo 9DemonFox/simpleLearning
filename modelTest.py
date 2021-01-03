@@ -157,9 +157,9 @@ class GATestCase(unittest.TestCase):
 
 class SALPTestCase(unittest.TestCase):
     def testDataLoder(self):
-        dataloader = SALPDataLoader("data/salp/SALP_DATA.npy")
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        dataloader = SALPDataLoader()
+        trainX, trainY = dataloader.loadTrainData(train_path="data/salp/SALP_TRAIN_DATA.xlsx")
+        testX, testY = dataloader.loadTestData(test_path="data/salp/SALP_TEST_DATA.xlsx")
         # 验证数据集形状
         assert trainX.shape == (80, 100)
         assert trainY.shape == (80,)
@@ -168,9 +168,9 @@ class SALPTestCase(unittest.TestCase):
         pass
 
     def testSVRModel(self):
-        dataloader = SALPDataLoader("data/salp/SALP_DATA.npy")
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        dataloader = SALPDataLoader()
+        trainX, trainY = dataloader.loadTrainData(train_path="data/salp/SALP_TEST_DATA.xlsx")
+        testX, testY = dataloader.loadTestData(test_path="data/salp/SALP_TEST_DATA.xlsx")
         model = SVRModel()
         model.fit(trainX=trainX, trainY=trainY)
         predictY = model.predict(predictX=testX)
@@ -181,9 +181,9 @@ class SALPTestCase(unittest.TestCase):
         from data.salp.dataLoder import SALPDataLoader
         from sklearn.metrics import mean_squared_error
 
-        dataloader = SALPDataLoader("./data/salp/SALP_DATA.npy")
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        dataloader = SALPDataLoader()
+        trainX, trainY = dataloader.loadTrainData(train_path="data/salp/SALP_TRAIN_DATA.xlsx")
+        testX, testY = dataloader.loadTestData(test_path="data/salp/SALP_TEST_DATA.xlsx")
         model = SALPModel()
         model.fit(trainX=trainX, trainY=trainY)
         predictY = model.predict(predictX=testX)

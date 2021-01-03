@@ -1,6 +1,6 @@
 import numpy
 from sklearn.cross_decomposition import PLSRegression
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression,LassoLars
 from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVR
 
@@ -57,14 +57,15 @@ class SVRModel(Model):
 
 
 class SALPModel(Model):
-    def __init__(self, alpha=0.00002, keepVariablePercent=0.25, k=10):
+    def __init__(self, alpha=0.1, max_iter=500, excludeVariablePercent=0.25, k=10):
         """
         :param alpha:  惩罚项系数,系数越大，入选变量越少
         :param keepVariable: 选择标量排除分位数 0.25 则是去除25%的最少次数选择变量（变量筛选，论文推荐为0.1-0.3）
         :param k: 贝叶斯重构样本数量，论文中为10 等于目标变量数量
         """
         self.alpha = alpha
-        self.keepPercent = keepVariablePercent
+        self.max_iter = max_iter
+        self.excludeVariablePercent = excludeVariablePercent
         self.k = k
         pass
 
@@ -170,7 +171,6 @@ class SALPModel(Model):
         ws[numpy.where(ws <= 0.01 / varsNum)] = numpy.finfo(float).eps  # 给定最小值，避免出现无穷值
 
         xStar = x / ws  # 置换x为xStar（x*）
-        # xStar, y = self.normalXY(xStar, y)  # 对xStar和y归一化
         alp = LassoLars(alpha=alpha * 0.02, max_iter=5000)
         alp.fit(xStar, y)
         return alp, w
@@ -202,25 +202,32 @@ class SALPModel(Model):
         return Vote
 
     def fit(self, **kwargs):
+        """
+        :param kwargs:
+        :return:
+        """
         x = kwargs.get("trainX")
         y = kwargs.get("trainY")
 
-        assert "excludeVariablePercent" in kwargs.keys()
-        excludeVariablePercent = kwargs.get("excludeVariablePercent")
+        # # 初始化返回值
+        # returnDic = {
+        #     "排除特征": None,
+        #     "系数": None
+        # }
 
-        # LassoLars 会自动对数据对中处理
+        # step1 数据对中处理，LassoLar fit_intercept=True 会自动对数据对中处理
         std_x, std_y = x, y
-        # step2
+        # step2 重构数据集
         (xs, ys, bayes_indexs) = self.getBayesianBootstrapReconstructData(std_x, std_y, n_replications=self.k)
-        # step3
+        # step3 重选变量
         variable_num = x.shape[1]
         Vote = numpy.zeros(variable_num)  # 对于留下的样本计数
         for L in range(self.k):  # 对于每个贝叶斯数据集
             xL, yL = xs[L], ys[L]  # 取出当前样本
-            coef = self.getALPCoef(xL, yL, alpha=0.02)
+            coef = self.getALPCoef(xL, yL, self.alpha)  # 使用ALP算法获取当前系数
             Vote = self.voteCoef(coef, Vote)
 
-        # print(Vote)  # 变量预选
+        print(Vote)  # 变量预选
 
         def getExcludeIndex(vote, percent=0.5):
             # 按照分位数方法，得出需要排除的index
@@ -240,26 +247,24 @@ class SALPModel(Model):
         print(Vote)
 
         # 将落选的变量(特征）置0
-        index, pnum = getExcludeIndex(Vote, excludeVariablePercent)
+        index, pnum = getExcludeIndex(Vote, self.excludeVariablePercent)
         Xstar = removeFeatures(std_x, index)
-
         # 再使用Lasso获取模型
-        modelEnd, _ = self.adap_lasso_with_init_weight(Xstar, std_y, alpha=0.1, initWeight=None)
-
-        # 得到系数
+        modelEnd, _ = self.adap_lasso_with_init_weight(Xstar, std_y, alpha=self.alpha, initWeight=None)
+        # 得到模型
         self.model = modelEnd
 
     def predict(self, **kwargs):
         """ predic
-        :param kwargs:
-        :return:
+        :param kwargs: predictX n*features
+        :return: 预测结果
         """
         assert "predictX" in kwargs.keys()
         predictX = kwargs["predictX"]
         return self.model.predict(predictX)
 
 
-if __name__ == "__main__" and True:
+if __name__ == "__main__" and False:
     from data.salp.dataLoder import SALPDataLoader
     from sklearn.metrics import mean_squared_error
 
@@ -318,7 +323,6 @@ if __name__ == "__main__" and False:
 
     index, pnum = getExcludeIndex(Vote)
     Xstar = removeFeatures(std_x, index)
-    print("被移除的变量:", index)
     modelEnd, _ = model.adap_lasso_with_init_weight(Xstar, std_y)
     print(modelEnd.coef_)
     # 这些index列的特征全部置0
@@ -351,10 +355,12 @@ if __name__ == "__main__" and True:
     trainX, trainY = dataloader.loadTrainData(train_path="../data/salp/SALP_TRAIN_DATA.xlsx")
     testX, testY = dataloader.loadTestData(test_path="../data/salp/SALP_TEST_DATA.xlsx")
     model = SALPModel()
-    model.fit(trainX=trainX, trainY=trainY, excludeVariablePercent=0.5)
+    model.fit(trainX=trainX, trainY=trainY)
     predictY = model.predict(predictX=testX)
+    predictTrainY = model.predict(predictX=trainX)
     print(model.model.coef_)
     print(mean_squared_error(predictY, testY))
+    print(mean_squared_error(predictTrainY, trainY))
 
     lasso = LassoLars(alpha=0.01, max_iter=1000)
     lasso.fit(trainX, trainY)
