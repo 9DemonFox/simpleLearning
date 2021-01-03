@@ -258,7 +258,8 @@ class AHPModel(Model):
         self.model = creat_model(trainX)
 
     def predict(self, **kwargs):
-        # predictX = kwargs["predict"]
+        predictX = kwargs["predictX"]
+        self.model = creat_model(predictX)
         return self.model.get_model_tree().getShow()
 
 

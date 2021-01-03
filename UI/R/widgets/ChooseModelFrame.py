@@ -25,6 +25,7 @@ class ChooseModelFrame(Frame):
 
     def getCurModel(self, engOnly=True):
         curModel = self.curModel.get()
+        # 模型名字是中英文，以空格分开
         if engOnly:
             curModel = curModel[curModel.find(" ") + 1:]
         return curModel

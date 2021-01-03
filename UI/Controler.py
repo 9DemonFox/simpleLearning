@@ -1,4 +1,5 @@
-from tkinter import IntVar
+from tkinter import IntVar, RIGHT, YES, BOTH
+from tkinter import StringVar, filedialog
 
 from PIL import Image
 
@@ -15,8 +16,16 @@ class Controler:
         self.view = view
         self.initGlobalVaraible()
         self.layoutView()
-
-        self.MachineLearningModel = {}  # 机器学习模型
+        self.MachineLearningModel = {
+            "model": None,
+            "parameters": {
+            },
+            "state": 0,  # 初始化、训练
+            "train_data_path": StringVar(),  # 训练数据路径
+            "test_data_path": StringVar(),  # 测试数据路径
+            "predict_data_path": StringVar(),  # 预测数据路径
+            "predict_result": StringVar()
+        }  # 机器学习模型
 
         self.initState()
         # 绑定选择模型
@@ -37,6 +46,19 @@ class Controler:
         selectFrame = list(self.view.main_left_chooseStepList.text2LabelDic.values())[1]
         selectFrame.setSelect()
 
+        # 设置main_right 为模型配置页面
+        self.view.main_right_1(self.view.main_frame).pack(side=RIGHT, expand=YES, fill=BOTH)
+
+        # 初始化其它步骤时的元素
+        # step4 模型数据
+        self.view.main_right_4(self.view.main_frame)
+        self.view.main_right_frame_4_btnPath.bind("<Button-1>",
+                                                  lambda event: MainRightCommand.chooseInputData(event, "预测文件", self))
+        self.view.main_right_frame_4_pathEntry.config(textvariable=self.MachineLearningModel["predict_data_path"])
+        self.view.main_right_frame_4_btnPredict.bind("<Button-1>",
+                                                     lambda event: MainRightCommand.predict(event, self))
+        self.view.main_right_frame_4_txtResult.config(textvariable=self.MachineLearningModel["predict_result"])
+
         # 改变combobox选择内容
         self.view.main_right_chooseBox['values'] = self.view.main_right_chooseBox.setValues(
             self.model.loadAllModelsByGroup(self.curModelGroup))
@@ -49,26 +71,25 @@ class Controler:
         self.view.main_left_chooseStepList
 
     def chooseModel(self, event=None):
-        """ 选择模型,在选择模型时触发
+        """ ,在选择模型时触发
         :return:
         """
         # 读取相应参数
         curModel = self.view.main_right_chooseBox.getCurModel()
+        # 设置model层的模型
+        self.model.config_step1(curModel)
+
         parameterDict = self.model.loadModelParameters(curModel)
-        parameterList = None
         if parameterDict == None:
             parameterList = [("No Parameter", 0)]
         else:
             parameterList = list(parameterDict.values())
+
+        # 模型配置全局变量
+        self.MachineLearningModel["parameters"] = parameterList
+        self.MachineLearningModel["model"] = curModel
         # 对于新的模型,重新布局模型页面
         self.view.main_right_parameterBox.repack(parameterList)
-
-    def chooseStep(self, step: str):
-        """ 修改步骤
-        :param step: 配置模型 训练模型 ...
-        :return:
-        """
-        pass
 
     def setModelParameters(self):
         """ 配置模型参数
@@ -184,14 +205,43 @@ class Command:
         """
         # 所选步骤对应于右边的Frame
         step2MainRightFrame = {
-
+            "配置模型": C.view.main_right_frame_1,
+            "预测结果": C.view.main_right_frame_4
         }
 
-        if text == "模型选择":
-            # C.ChooseModel()
-            pass
-        print(text)
+        frame = step2MainRightFrame.get(text)
+        for f in step2MainRightFrame.values():
+            f.pack_forget()
+        frame.pack(side=RIGHT, expand=YES, fill=BOTH)
         return text
+
+
+class MainRightCommand:
+    @staticmethod
+    def chooseInputData(event, dataType: str, C: Controler):
+        """
+        :param event:
+        :param dataType: 训练文件 测试文件 预测文件
+        :param C:
+        :return:
+        """
+        filePath = filedialog.askopenfilename();
+        if dataType == "预测文件":
+            if (filePath != ''):
+                C.MachineLearningModel["predict_data_path"].set(filePath)
+        elif dataType == "训练文件":
+            print("test")
+        print(C.MachineLearningModel)
+
+    @staticmethod
+    def predict(event, C: Controler):
+        """ 预测结果
+        :param event:
+        :param C:
+        :return:
+        """
+        result = C.model.predict_step4(C.MachineLearningModel.get("predict_data_path").get())
+        C.MachineLearningModel.get("predict_result").set(result)
 
 
 if __name__ == '__main__':

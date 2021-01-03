@@ -2,8 +2,7 @@ from data.dataLoader import DataLoader
 
 
 class AHPDataLoader(DataLoader):
-    def __init__(self, data_path):
-        self.data_path = data_path
+    def __init__(self):
         pass
 
     def loadTrainData(self, **kwargs):
@@ -11,10 +10,7 @@ class AHPDataLoader(DataLoader):
         :param
         :return: 加载数据
         """
-        with open(self.data_path, "r", encoding="utf-8")as f:
-            text = f.read()
-        dic = eval(text)
-        return dic
+        raise Exception("AHP Model does not have any train data")
 
     def loadTestData(self, **kwargs):
         """ ahp模型没有测试集
@@ -23,9 +19,20 @@ class AHPDataLoader(DataLoader):
         """
         raise Exception("AHP Model does not have any test data")
 
+    def loadPredictData(self, **kwargs):
+        """
+        :param predict_path 预测的输入
+        :return: 加载数据
+        """
+        assert "predict_path" in kwargs.keys()
+        with open(kwargs.get("predict_path"), "r", encoding="utf-8")as f:
+            text = f.read()
+        dic = eval(text)
+        return dic
+
 
 if __name__ == "__main__":
-    a = AHPDataLoader("./ahpInput.txt")
-    dic = a.loadTrainData()
+    a = AHPDataLoader()
+    dic = a.loadPredictData(predict_path="")
     print(dic)
     a.loadTestData()

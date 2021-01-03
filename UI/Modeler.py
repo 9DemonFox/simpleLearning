@@ -1,9 +1,54 @@
 from UI.UIConfig import machineLearningModels, modelDefaultConfig, modelTypes2models, mainleftFrameTextList
+from ahp.AHP import AHPModel
+from data.ahp.dataLoader import AHPDataLoader
+from data.gbm.dataLoader import GBMDataLoader
+from data.hlm.dataloader import HLMDataLoader
+from data.ibrt.dataLoader import IBRTDataLoader
+from data.mert.dataLoder import MERTDataLoader
+from data.reanfis.dataLoader import anfisDataLoader as RE_ANFISDataLoader
+from data.rebet.dataLoder import REBETDataLoader
+from data.salp.dataLoder import SALPDataLoader
+from ga.ga import GAModel
+from gbm.GBM import GBMModel
+from hlm.HLM import HLMModel
+from ibrt.ibrt import IBRTModel
+from mert.mert import MERTModel
+from re_anfis.re_anfis import re_anfisModel as RE_ANFISModel
+from rebet.rebet import REBETModel
+from salp.SALP import SVRModel, SALPModel
 
 
 class Modeler:
     def __init__(self):
+        allModels = [AHPModel, GAModel, GBMModel, HLMModel, IBRTModel, MERTModel, RE_ANFISModel, REBETModel,
+                     SALPModel, SVRModel]
+        allModelsName = [str(m.__name__)[:-5] for m in allModels]
+        self.name2Model = dict(zip(allModelsName, allModels))
+        self.curModel = None  # 当前模型
+        self.curModelName = None
+        self.curDataLoader = None
+        allDataLoader = [AHPDataLoader, GBMDataLoader, HLMDataLoader, IBRTDataLoader, MERTDataLoader,
+                         RE_ANFISDataLoader, REBETDataLoader, SALPDataLoader, AHPDataLoader]
+        self.name2DataLoader = dict(zip(allModelsName, allDataLoader))
+
+    def config_step1(self, modelName):
+        """ 配置模型,从模型名字到模型类映射
+        :return:
+        """
+        self.curModel = self.name2Model.get(modelName)()  # 初始化模型
+        self.curModelName = modelName
         pass
+
+    def predict_step4(self, predict_path):
+        """
+        :param predict_path: 测试集数据路径
+        :return:
+        """
+        # 选择当前模型
+        self.curDataLoader = self.name2DataLoader.get(self.curModelName)()
+        predictX = self.curDataLoader.loadPredictData(predict_path=predict_path)
+        result = self.curModel.predict(predictX=predictX)
+        return result
 
     def loadConfig(self, modelName):
         pass
@@ -32,7 +77,7 @@ class Modeler:
         return list(modelTypes2models.keys())
 
     def loadModelParameters(self, modelName):
-        """ 加载模型参数
+        """ 从配置文件加载模型参数
         :return:
         """
         for modelType in self.loadAllModelsGroup():
@@ -45,7 +90,9 @@ class Modeler:
         return mainleftFrameTextList
 
 
-if __name__ == '__main__':
-    m = Modeler()
-    parameter = m.loadModelParameters("SALP")
-    print(parameter)
+if __name__ == "__main__":
+    dataLoader = AHPDataLoader()
+    predictX = dataLoader.loadPredictData(
+        predict_path=r"G:\研究生_UESTC\研究生-大数据中心\研究生组事务\深度学习的腐蚀预测研究\层次分析法\data\ahp\ahpInput.txt")
+    model = AHPModel()
+    print(model.predict(predictX=predictX))

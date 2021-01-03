@@ -1,8 +1,7 @@
 import numpy
 from sklearn.cross_decomposition import PLSRegression
-from sklearn.linear_model import Lasso, LinearRegression
+from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import GridSearchCV
-from sklearn.preprocessing import normalize
 from sklearn.svm import SVR
 
 from model import Model
@@ -62,23 +61,12 @@ class SALPModel(Model):
         """
         :param alpha:  惩罚项系数,系数越大，入选变量越少
         :param keepVariable: 选择标量排除分位数 0.25 则是去除25%的最少次数选择变量（变量筛选，论文推荐为0.1-0.3）
-        :param k: 贝叶斯重构样本数量，论文中为10
+        :param k: 贝叶斯重构样本数量，论文中为10 等于目标变量数量
         """
         self.alpha = alpha
         self.keepPercent = keepVariablePercent
         self.k = k
         pass
-
-    def normalXY(self, x, y):
-        """标准化 均值为0 平方和为1
-        :param x:
-        :param y:
-        :return:
-        """
-        normal_l2 = lambda data: normalize(data.reshape(1, -1), norm="l2").squeeze()
-        y = normal_l2(y)
-        x = numpy.apply_along_axis(normal_l2, axis=1, arr=x)
-        return x, y
 
     def bayesian_bootstrap(self, X,
                            statistic,
@@ -145,17 +133,17 @@ class SALPModel(Model):
         pls.fit(x, y)
         return pls.coef_
 
-    def getLassoCoef(self, x, y, alpha=0):
-        """
+    def getLassoCoef(self, x, y, alpha=0.1):
+        """ 获取Lasso最小回归系数
         :param x:
         :param y:
         :return:
         """
-        lasso = Lasso(alpha=alpha)
+        lasso = LassoLars(alpha=alpha)
         lasso.fit(x, y)
         return lasso.coef_
 
-    def adap_lasso_with_init_weight(self, x, y, initWeight="ols", alpha=0.000005):
+    def adap_lasso_with_init_weight(self, x, y, alpha, initWeight="lasso"):
         """
         :param x:
         :param y:
@@ -169,9 +157,9 @@ class SALPModel(Model):
         elif initWeight == "pls":
             Coef = self.getPLSCoef(x, y).reshape(-1)  # 获取偏最小二乘估计得到的系数
         elif initWeight == "lasso":
-            Coef = self.getLassoCoef(x, y, alpha=alpha).reshape(-1)
+            Coef = self.getLassoCoef(x, y, alpha=alpha * 0.1).reshape(-1)
         else:
-            Coef = numpy.ones(varsNum)
+            Coef = numpy.ones(varsNum)  # 没有初始化权重
         # 权重为绝对值倒数的gama次方
         # referPaper/基于数据挖掘的材料自然环境腐蚀预测研究.pdf page67 公式(4.6)
         gama = 1
@@ -179,24 +167,22 @@ class SALPModel(Model):
         ws = numpy.tile(w, sampleNum).reshape([sampleNum, varsNum])  # 显式的将权重扩充到和x共维度
         # 通过变换把adaptive Lass 变为普通Lasso
         # 给定最小值，避免出现无穷值
-        ws[numpy.where(ws <= 0.01 / varsNum)] = 0.01 / varsNum  # 给定最小值，避免出现无穷值
+        ws[numpy.where(ws <= 0.01 / varsNum)] = numpy.finfo(float).eps  # 给定最小值，避免出现无穷值
 
         xStar = x / ws  # 置换x为xStar（x*）
         # xStar, y = self.normalXY(xStar, y)  # 对xStar和y归一化
-        alp = GridSearchCV(Lasso(),
-                           {"alpha": [0.00001, 0.0001, 0.001, 0.005]})  # 通过变换x来得到相关权重
+        alp = LassoLars(alpha=alpha * 0.02, max_iter=5000)
         alp.fit(xStar, y)
         return alp, w
-        # 再使用Lasso
 
-    def getALPCoef(self, x, y, initWeight="ols", alpha=0.000005):
+    def getALPCoef(self, x, y, alpha, initWeight="ols"):
         """ 获取ALP选取的参数
         :param x:
         :param y:
         :return:
         """
         alp, w = self.adap_lasso_with_init_weight(x, y, initWeight=initWeight, alpha=alpha)
-        coef = alp.best_estimator_.coef_ / w
+        coef = alp.coef_ / w
         return coef
 
     def getOlsCoef(self, x, y):
@@ -218,12 +204,12 @@ class SALPModel(Model):
     def fit(self, **kwargs):
         x = kwargs.get("trainX")
         y = kwargs.get("trainY")
-        # 对数据进行中心化 均值为0 平方和为1
-        std_x, std_y = self.normalXY(x, y)
-        # 验证均值为0 平方和为1
-        assert abs(numpy.square(std_y).sum() - 1) < 0.01
-        assert abs(numpy.square(std_x[0]).sum() - 1) < 0.01
-        assert abs(abs(std_y.mean()) < 0.11)
+
+        assert "excludeVariablePercent" in kwargs.keys()
+        excludeVariablePercent = kwargs.get("excludeVariablePercent")
+
+        # LassoLars 会自动对数据对中处理
+        std_x, std_y = x, y
         # step2
         (xs, ys, bayes_indexs) = self.getBayesianBootstrapReconstructData(std_x, std_y, n_replications=self.k)
         # step3
@@ -231,12 +217,12 @@ class SALPModel(Model):
         Vote = numpy.zeros(variable_num)  # 对于留下的样本计数
         for L in range(self.k):  # 对于每个贝叶斯数据集
             xL, yL = xs[L], ys[L]  # 取出当前样本
-            coef = self.getALPCoef(xL, yL)
+            coef = self.getALPCoef(xL, yL, alpha=0.02)
             Vote = self.voteCoef(coef, Vote)
 
         # print(Vote)  # 变量预选
 
-        def getExcludeIndex(vote, percent=0.25):
+        def getExcludeIndex(vote, percent=0.5):
             # 按照分位数方法，得出需要排除的index
             def getPercentNum(arr, p):
                 # 求分位数
@@ -251,29 +237,35 @@ class SALPModel(Model):
             arr[:, removeIndexs] = 0
             return arr
 
-        # 将落选的变量置0
-        index, pnum = getExcludeIndex(Vote)
+        print(Vote)
+
+        # 将落选的变量(特征）置0
+        index, pnum = getExcludeIndex(Vote, excludeVariablePercent)
         Xstar = removeFeatures(std_x, index)
 
         # 再使用Lasso获取模型
-        modelEnd, _ = self.adap_lasso_with_init_weight(Xstar, std_y)
+        modelEnd, _ = self.adap_lasso_with_init_weight(Xstar, std_y, alpha=0.1, initWeight=None)
 
         # 得到系数
         self.model = modelEnd
 
     def predict(self, **kwargs):
+        """ predic
+        :param kwargs:
+        :return:
+        """
         assert "predictX" in kwargs.keys()
         predictX = kwargs["predictX"]
         return self.model.predict(predictX)
 
 
-if __name__ == "__main__" and False:
-    from data.salp.dataLoder import SalpDataLoader
+if __name__ == "__main__" and True:
+    from data.salp.dataLoder import SALPDataLoader
     from sklearn.metrics import mean_squared_error
 
-    dataloader = SalpDataLoader("../data/salp/SALP_DATA.npy")
-    trainX, trainY = dataloader.loadTrainData()
-    testX, testY = dataloader.loadTestData()
+    dataloader = SALPDataLoader()
+    trainX, trainY = dataloader.loadTrainData(train_path="../data/salp/SALP_TRAIN_DATA.xlsx")
+    testX, testY = dataloader.loadTestData(test_path="../data/salp/SALP_TEST_DATA.xlsx")
     model = SVRModel()
     model.fit(trainX=trainX, trainY=trainY)
     predictY = model.predict(predictX=testX)
@@ -281,12 +273,13 @@ if __name__ == "__main__" and False:
     pass
 
 if __name__ == "__main__" and False:
-    from data.salp.dataLoder import SalpDataLoader
+    from data.salp.dataLoder import SALPDataLoader
     from sklearn.metrics import mean_squared_error
+    from sklearn.linear_model import LassoLars
 
-    dataloader = SalpDataLoader("../data/salp/SALP_DATA.npy")
-    trainX, trainY = dataloader.loadTrainData()
-    testX, testY = dataloader.loadTestData()
+    dataloader = SALPDataLoader()
+    trainX, trainY = dataloader.loadTrainData(train_path="../data/salp/SALP_TRAIN_DATA.xlsx")
+    testX, testY = dataloader.loadTestData(test_path="../data/salp/SALP_TEST_DATA.xlsx")
     model = SALPModel()
     # step1
     std_x, std_y = model.normalXY(trainX, trainY)
@@ -325,6 +318,7 @@ if __name__ == "__main__" and False:
 
     index, pnum = getExcludeIndex(Vote)
     Xstar = removeFeatures(std_x, index)
+    print("被移除的变量:", index)
     modelEnd, _ = model.adap_lasso_with_init_weight(Xstar, std_y)
     print(modelEnd.coef_)
     # 这些index列的特征全部置0
@@ -336,14 +330,34 @@ if __name__ == "__main__" and False:
     # plt.scatter(, model.getPLSCoef(xL, yL))
     # plt.show()
 
-if __name__ == "__main__" and True:
-    from data.salp.dataLoder import SalpDataLoader
+if __name__ == "__main__" and False:
+    from data.salp.dataLoder import SALPDataLoader
     from sklearn.metrics import mean_squared_error
 
-    dataloader = SalpDataLoader("../data/salp/SALP_DATA.npy")
+    dataloader = SALPDataLoader("../data/salp/SALP_DATA.npy")
     trainX, trainY = dataloader.loadTrainData()
     testX, testY = dataloader.loadTestData()
     model = SALPModel()
     model.fit(trainX=trainX, trainY=trainY)
     predictY = model.predict(predictX=testX)
     print(mean_squared_error(predictY, testY))
+
+if __name__ == "__main__" and True:
+    from data.salp.dataLoder import SALPDataLoader
+    from sklearn.metrics import mean_squared_error
+    from sklearn.linear_model import LassoLars
+
+    dataloader = SALPDataLoader()
+    trainX, trainY = dataloader.loadTrainData(train_path="../data/salp/SALP_TRAIN_DATA.xlsx")
+    testX, testY = dataloader.loadTestData(test_path="../data/salp/SALP_TEST_DATA.xlsx")
+    model = SALPModel()
+    model.fit(trainX=trainX, trainY=trainY, excludeVariablePercent=0.5)
+    predictY = model.predict(predictX=testX)
+    print(model.model.coef_)
+    print(mean_squared_error(predictY, testY))
+
+    lasso = LassoLars(alpha=0.01, max_iter=1000)
+    lasso.fit(trainX, trainY)
+    predictY = lasso.predict(testX)
+    print(mean_squared_error(predictY, testY))
+    print(lasso.coef_)

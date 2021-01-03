@@ -36,7 +36,7 @@ modelTypes2models = {
             "model_name": ("改进的自适应Lasso", "SALP"),
             "model_parameters": {
                 "alpha": ("惩罚项系数", 0.001),
-                "keepVariablePercent": ("参数淘汰率", 0.25)
+                "excludeVariablePercent": ("参数淘汰率", 0.25)
             }
         },
         {

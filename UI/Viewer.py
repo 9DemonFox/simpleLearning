@@ -94,16 +94,16 @@ class Viewer:
     def main(self, parent):
         """ 窗体主体 """
 
-        frame = tk.Frame(parent, bg="whitesmoke")
+        self.main_frame = tk.Frame(parent, bg="whitesmoke")
 
-        self.main_top(frame).pack(fill=tk.X, padx=30, pady=15)
-        self.main_left(frame).pack(side=tk.LEFT, fill=tk.Y, padx=30)
-        R.widgets.VSeperator(frame, 30).pack(side=tk.RIGHT, fill=tk.Y)
+        self.main_top(self.main_frame).pack(fill=tk.X, padx=30, pady=15)
+        self.main_left(self.main_frame).pack(side=tk.LEFT, fill=tk.Y, padx=30)
+        R.widgets.VSeperator(self.main_frame, 30).pack(side=tk.RIGHT, fill=tk.Y)
 
-        # main_right_1
-        self.main_right_1(frame).pack(side=tk.RIGHT, expand=tk.YES, fill=tk.BOTH)
+        # 初始化是使用frame1， main_right_1
+        # self.main_right_1(self.main_frame).pack(side=tk.RIGHT, expand=tk.YES, fill=tk.BOTH)
 
-        return frame
+        return self.main_frame
 
     def main_top(self, parent):
         frame = tk.Frame(parent, bg="white", height=150)
@@ -118,22 +118,53 @@ class Viewer:
         return frame
 
     def main_right_1(self, parent):
-        """ 在这里初始化3种界面
+        """ 在这里初始化3种界面 1.模型选择 2.训练模型 3.模型预测
         :param parent:
         :return:
         """
-        frame = tk.Frame(parent, width=200, bg="red")
-
-        self.main_right_chooseBox = R.widgets.ChooseModelFrame(frame, [("", "")])
+        self.main_right_frame_1 = tk.Frame(parent, width=200, bg=R.color.SelectedColor)
+        # 选择模型
+        self.main_right_chooseBox = R.widgets.ChooseModelFrame(self.main_right_frame_1, [("", "")])
         self.main_right_chooseBox.pack(fill=tk.X, pady=0)
-        self.main_right_parameterBox = R.widgets.ParameterFrameList(frame, [("", "")])
+        # 输入变量界面
+        self.main_right_parameterBox = R.widgets.ParameterFrameList(self.main_right_frame_1, [("", "")])
         self.main_right_parameterBox.pack(fill=tk.X, pady=0)
         # ttk.Button(frame, text="下一步", width=12).pack(anchor=tk.W, padx=112, pady=5)
 
-        return frame
+        return self.main_right_frame_1
 
     def main_right_2(self, parent):
         pass
+
+    def main_right_4(self, parent):
+        """ 在这里初始化3种界面 1.模型选择 2.训练模型 4.预测结果
+        :param parent:
+        :return:
+        """
+        # 选择模型
+        self.main_right_frame_4 = tk.Frame(parent, width=200, bg=R.color.UNSelectedColor)
+        self.main_right_frame_4_btnPath = tk.Button(self.main_right_frame_4, text='选择', width=10)
+        self.main_right_frame_4_btnPredict = tk.Button(self.main_right_frame_4, text='预测', width=10)
+        tk.Label(self.main_right_frame_4, text="数据路径：", bg=R.color.UNSelectedColor).grid(row=0, column=0)
+        self.main_right_frame_4_pathEntry = tk.Entry(self.main_right_frame_4, width=45)
+        self.main_right_frame_4_pathEntry.grid(row=0, column=1)
+        self.main_right_frame_4_btnPath.grid(row=0, column=2)
+
+        tk.Label(self.main_right_frame_4, text="输出结果：", bg=R.color.UNSelectedColor).grid(row=2, column=0)
+        self.main_right_frame_4_txtResult = tk.Label(self.main_right_frame_4, bg=R.color.UNSelectedColor, borderwidth=2,
+                                                     relief="sunken",
+                                                     justify=tk.LEFT,
+                                                     width=45, height=15)
+
+        self.main_right_frame_4_txtResult.grid(row=3, column=1)
+        self.main_right_frame_4_btnPredict.grid(row=4, column=2)
+        # self.main_right_chooseBox = R.widgets.ChooseModelFrame(self.main_right_frame_1, [("", "")])
+        # self.main_right_chooseBox.pack(fill=tk.X, pady=0)
+        # self.main_right_parameterBox = R.widgets.ParameterFrameList(self.main_right_frame_1, [("", "")])
+        # self.main_right_parameterBox.pack(fill=tk.X, pady=0)
+        # ttk.Button(frame, text="下一步", width=12).pack(anchor=tk.W, padx=112, pady=5)
+
+        return self.main_right_frame_4
 
     def layoutConfigModel(self, modelName, parameters: dict):
         """ 对模型配置布局
