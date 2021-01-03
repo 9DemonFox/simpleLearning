@@ -1,4 +1,4 @@
-from tkinter import IntVar, RIGHT, YES, BOTH
+from tkinter import IntVar, RIGHT, YES, BOTH, END, INSERT
 from tkinter import StringVar, filedialog
 
 from PIL import Image
@@ -70,7 +70,15 @@ class Controler:
         self.view.main_right_frame_2_pathEntry.config(textvariable=self.MachineLearningModel["train_data_path"])
         self.view.main_right_frame_2_btnTrain.bind("<Button-1>",
                                                    lambda event: MainRightCommand.train(event, self))
-        self.view.main_right_frame_2_txtResult.config(textvariable=self.MachineLearningModel["train_result"])
+
+        # step3 测试模型
+        self.view.main_right_3(self.view.main_frame)
+        self.view.main_right_frame_3_btnPath.bind("<Button-1>",
+                                                  lambda event: MainRightCommand.chooseInputData(event, "测试文件", self))
+
+        self.view.main_right_frame_3_pathEntry.config(textvariable=self.MachineLearningModel["test_data_path"])
+        self.view.main_right_frame_3_btnTrain.bind("<Button-1>",
+                                                   lambda event: MainRightCommand.test(event, self))
 
         # step4 模型数据
         self.view.main_right_4(self.view.main_frame)
@@ -79,7 +87,7 @@ class Controler:
         self.view.main_right_frame_4_pathEntry.config(textvariable=self.MachineLearningModel["predict_data_path"])
         self.view.main_right_frame_4_btnPredict.bind("<Button-1>",
                                                      lambda event: MainRightCommand.predict(event, self))
-        self.view.main_right_frame_4_txtResult.config(textvariable=self.MachineLearningModel["predict_result"])
+        # self.view.main_right_frame_4_txtResult.config(textvariable=self.MachineLearningModel["predict_result"])
 
     def chooseModel(self, event=None):
         """ 在选择模型时触发
@@ -208,6 +216,7 @@ class Command:
         step2MainRightFrame = {
             "配置模型": C.view.main_right_frame_1,
             "训练模型": C.view.main_right_frame_2,
+            "校验模型": C.view.main_right_frame_3,
             "预测结果": C.view.main_right_frame_4
         }
 
@@ -236,6 +245,9 @@ class MainRightCommand:
         elif dataType == "训练文件":
             if (filePath != ''):
                 C.MachineLearningModel["train_data_path"].set(filePath)
+        elif dataType == "测试文件":
+            if (filePath != ''):
+                C.MachineLearningModel["test_data_path"].set(filePath)
         print(C.MachineLearningModel)
 
     @staticmethod
@@ -261,10 +273,25 @@ class MainRightCommand:
 
     @staticmethod
     def train(event, C: Controler):
-        print("training")
         result = C.model.train_step_2(C.MachineLearningModel.get("train_data_path").get())
-        print(result)
-        pass
+        C.view.main_right_frame_2_txtResult.delete(1.0, END)
+        for k, v in result.items():
+            C.view.main_right_frame_2_txtResult.insert(INSERT, k)
+            C.view.main_right_frame_2_txtResult.insert(INSERT, "\n")
+            v = v.replace("\n", "")
+            C.view.main_right_frame_2_txtResult.insert(INSERT, v)
+            C.view.main_right_frame_2_txtResult.insert(INSERT, "\n")
+
+    @staticmethod
+    def test(event, C: Controler):
+        result = C.model.test_step_3(C.MachineLearningModel.get("test_data_path").get())
+        C.view.main_right_frame_3_txtResult.delete(1.0, END)
+        for k, v in result.items():
+            C.view.main_right_frame_3_txtResult.insert(INSERT, k)
+            C.view.main_right_frame_3_txtResult.insert(INSERT, "\n")
+            v = v.replace("\n", "")
+            C.view.main_right_frame_3_txtResult.insert(INSERT, v)
+            C.view.main_right_frame_3_txtResult.insert(INSERT, "\n")
 
     @staticmethod
     def predict(event, C: Controler):
@@ -274,7 +301,12 @@ class MainRightCommand:
         :return:
         """
         result = C.model.predict_step_4(C.MachineLearningModel.get("predict_data_path").get())
-        C.MachineLearningModel.get("predict_result").set(result)
+        C.view.main_right_frame_4_txtResult.delete(1.0, END)
+        for k, v in result.items():
+            C.view.main_right_frame_4_txtResult.insert(INSERT, k)
+            C.view.main_right_frame_4_txtResult.insert(INSERT, "\n")
+            C.view.main_right_frame_4_txtResult.insert(INSERT, v)
+            C.view.main_right_frame_4_txtResult.insert(INSERT, "\n")
 
 
 if __name__ == '__main__':
