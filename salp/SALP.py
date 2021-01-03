@@ -1,6 +1,6 @@
 import numpy
 from sklearn.cross_decomposition import PLSRegression
-from sklearn.linear_model import LinearRegression,LassoLars
+from sklearn.linear_model import LinearRegression, LassoLars
 from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVR
 
@@ -209,12 +209,6 @@ class SALPModel(Model):
         x = kwargs.get("trainX")
         y = kwargs.get("trainY")
 
-        # # 初始化返回值
-        # returnDic = {
-        #     "排除特征": None,
-        #     "系数": None
-        # }
-
         # step1 数据对中处理，LassoLar fit_intercept=True 会自动对数据对中处理
         std_x, std_y = x, y
         # step2 重构数据集
@@ -226,8 +220,6 @@ class SALPModel(Model):
             xL, yL = xs[L], ys[L]  # 取出当前样本
             coef = self.getALPCoef(xL, yL, self.alpha)  # 使用ALP算法获取当前系数
             Vote = self.voteCoef(coef, Vote)
-
-        print(Vote)  # 变量预选
 
         def getExcludeIndex(vote, percent=0.5):
             # 按照分位数方法，得出需要排除的index
@@ -244,8 +236,6 @@ class SALPModel(Model):
             arr[:, removeIndexs] = 0
             return arr
 
-        print(Vote)
-
         # 将落选的变量(特征）置0
         index, pnum = getExcludeIndex(Vote, self.excludeVariablePercent)
         Xstar = removeFeatures(std_x, index)
@@ -253,6 +243,31 @@ class SALPModel(Model):
         modelEnd, _ = self.adap_lasso_with_init_weight(Xstar, std_y, alpha=self.alpha, initWeight=None)
         # 得到模型
         self.model = modelEnd
+        return index[0], self.model.coef_
+
+    def fitForUI(self, **kwargs):
+        """ 返回结果到前端
+        :return:
+        """
+        self.fit(**kwargs)
+        # 返回结果为字典形式
+        excludeFeatures, coefs = self.fit(**kwargs)
+        returnDic = {
+            "排除特征": excludeFeatures,
+            "系数": coefs
+        }
+        return returnDic
+
+    def predictForUI(self, **kwargs):
+        """
+        :param kwargs:
+        :return: 字典形式结果
+        """
+        returnDic = {
+            "预测结果": None
+        }
+        returnDic["预测结果"] == self.predict(**kwargs)
+        return returnDic
 
     def predict(self, **kwargs):
         """ predic
