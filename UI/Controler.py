@@ -22,6 +22,7 @@ class Controler:
             },
             "state": 0,  # 初始化、训练
             "train_data_path": StringVar(),  # 训练数据路径
+            "train_result": StringVar(),  # 训练结果
             "test_data_path": StringVar(),  # 测试数据路径
             "predict_data_path": StringVar(),  # 预测数据路径
             "predict_result": StringVar()
@@ -42,14 +43,35 @@ class Controler:
         self.view.main_left_chooseStepList.Labelsbind(self)  # 绑定当前Controler
         self.view.main_left_chooseStepList.bind(
             lambda text, self: Command.navigateBar(text, self))  # 返回文本，根据文本内容控制当前的状态
-        # 对第一个选项设置为选定状态
+
+        # 对第一个选项【配置模型】设置为选定状态
         selectFrame = list(self.view.main_left_chooseStepList.text2LabelDic.values())[1]
         selectFrame.setSelect()
 
         # 设置main_right 为模型配置页面
         self.view.main_right_1(self.view.main_frame).pack(side=RIGHT, expand=YES, fill=BOTH)
+        # 改变combobox选择内容
+        self.view.main_right_frame_1_chooseBox['values'] = self.view.main_right_frame_1_chooseBox.setValues(
+            self.model.loadAllModelsByGroup(self.curModelGroup))
+        self.view.main_right_frame_1_chooseBox.setCurrent(0)
+        self.chooseModel()
+        # 设置事件绑定
+        self.view.main_right_frame_1_chooseBox.bind(lambda event, C: C.chooseModel(), self)
+
+        # 选择模型的步骤
+        self.view.main_left_chooseStepList
 
         # 初始化其它步骤时的元素
+        # step2 训练模型
+        self.view.main_right_2(self.view.main_frame)
+        self.view.main_right_frame_2_btnPath.bind("<Button-1>",
+                                                  lambda event: MainRightCommand.chooseInputData(event, "训练文件", self))
+
+        self.view.main_right_frame_2_pathEntry.config(textvariable=self.MachineLearningModel["train_data_path"])
+        self.view.main_right_frame_2_btnTrain.bind("<Button-1>",
+                                                   lambda event: MainRightCommand.train(event, self))
+        self.view.main_right_frame_2_txtResult.config(textvariable=self.MachineLearningModel["train_result"])
+
         # step4 模型数据
         self.view.main_right_4(self.view.main_frame)
         self.view.main_right_frame_4_btnPath.bind("<Button-1>",
@@ -59,43 +81,29 @@ class Controler:
                                                      lambda event: MainRightCommand.predict(event, self))
         self.view.main_right_frame_4_txtResult.config(textvariable=self.MachineLearningModel["predict_result"])
 
-        # 改变combobox选择内容
-        self.view.main_right_chooseBox['values'] = self.view.main_right_chooseBox.setValues(
-            self.model.loadAllModelsByGroup(self.curModelGroup))
-        self.view.main_right_chooseBox.setCurrent(0)
-        self.chooseModel()
-        # 设置事件绑定
-        self.view.main_right_chooseBox.bind(lambda event, C: C.chooseModel(), self)
-
-        # 选择模型的步骤
-        self.view.main_left_chooseStepList
-
     def chooseModel(self, event=None):
-        """ ,在选择模型时触发
+        """ 在选择模型时触发
         :return:
         """
         # 读取相应参数
-        curModel = self.view.main_right_chooseBox.getCurModel()
-        # 设置model层的模型
-        self.model.config_step1(curModel)
+        curModel = self.view.main_right_frame_1_chooseBox.getCurModel()
 
         parameterDict = self.model.loadModelParameters(curModel)
         if parameterDict == None:
             parameterList = [("No Parameter", 0)]
         else:
-            parameterList = list(parameterDict.values())
+            parameterList = list(parameterDict.items())
 
         # 模型配置全局变量
         self.MachineLearningModel["parameters"] = parameterList
         self.MachineLearningModel["model"] = curModel
         # 对于新的模型,重新布局模型页面
-        self.view.main_right_parameterBox.repack(parameterList)
-
-    def setModelParameters(self):
-        """ 配置模型参数
-        :return:
-        """
-        pass
+        self.view.main_right_frame_1_parameterBox.repack(parameterList)
+        # 将配置模型按键绑定并且重新触发
+        self.view.main_right_frame_1_parameterBox.confirmButton.bind("<Button-1>",
+                                                                     lambda event: MainRightCommand.config(event, self))
+        # 触发配置事件
+        MainRightCommand.config(None, self)
 
     def layoutView(self, modelGroup="回归模型"):
         # 添加菜单栏命令
@@ -151,13 +159,6 @@ class Command:
         print(var.get(), )
 
     @staticmethod
-    def reLayoutUI(controler: Controler, var, modelNameList, modelConfigs):
-        controler.clearModelView()
-        model = list(controler.ModelNameList.keys())[var.get()]
-        # controler.layoutModel(model)
-        pass
-
-    @staticmethod
     def changeModel(event, controlaer: Controler):
         print(event)
 
@@ -191,8 +192,8 @@ class Command:
 
         # 改变combobox选择内容
         models = controler.model.loadAllModelsByGroup(modelGroup)
-        controler.view.main_right_chooseBox.setValues(models)
-        controler.view.main_right_chooseBox.setCurrent(0)
+        controler.view.main_right_frame_1_chooseBox.setValues(models)
+        controler.view.main_right_frame_1_chooseBox.setCurrent(0)
         # 触发更改参数选择
         controler.chooseModel()
 
@@ -206,6 +207,7 @@ class Command:
         # 所选步骤对应于右边的Frame
         step2MainRightFrame = {
             "配置模型": C.view.main_right_frame_1,
+            "训练模型": C.view.main_right_frame_2,
             "预测结果": C.view.main_right_frame_4
         }
 
@@ -213,6 +215,8 @@ class Command:
         for f in step2MainRightFrame.values():
             f.pack_forget()
         frame.pack(side=RIGHT, expand=YES, fill=BOTH)
+        if text == "配置模型":
+            MainRightCommand.config(None, C)
         return text
 
 
@@ -225,13 +229,42 @@ class MainRightCommand:
         :param C:
         :return:
         """
-        filePath = filedialog.askopenfilename();
+        filePath = filedialog.askopenfilename()
         if dataType == "预测文件":
             if (filePath != ''):
                 C.MachineLearningModel["predict_data_path"].set(filePath)
         elif dataType == "训练文件":
-            print("test")
+            if (filePath != ''):
+                C.MachineLearningModel["train_data_path"].set(filePath)
         print(C.MachineLearningModel)
+
+    @staticmethod
+    def config(event, C: Controler):
+        print("config model")
+        """ 配置模型
+        :param event:
+        :param C:
+        :return:
+        """
+        # 获取参数
+        parameterDict = C.view.main_right_frame_1_parameterBox.getParametersDict()
+
+        # 将字符串值转为数字
+        for k, v in parameterDict.items():
+            parameterDict[k] = eval(v)
+        # 获取当前模型名字
+        curModel = C.view.main_right_frame_1_chooseBox.getCurModel()
+        # 初始化模型
+        C.model.config_step_1(curModel, **parameterDict)
+        print(curModel, parameterDict)
+        pass
+
+    @staticmethod
+    def train(event, C: Controler):
+        print("training")
+        result = C.model.train_step_2(C.MachineLearningModel.get("train_data_path").get())
+        print(result)
+        pass
 
     @staticmethod
     def predict(event, C: Controler):
@@ -240,7 +273,7 @@ class MainRightCommand:
         :param C:
         :return:
         """
-        result = C.model.predict_step4(C.MachineLearningModel.get("predict_data_path").get())
+        result = C.model.predict_step_4(C.MachineLearningModel.get("predict_data_path").get())
         C.MachineLearningModel.get("predict_result").set(result)
 
 

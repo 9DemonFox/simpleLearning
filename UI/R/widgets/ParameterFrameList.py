@@ -5,6 +5,8 @@ from UI.R.widgets import ParameterFrame
 
 
 class ParameterFrameList(Frame):
+    ParameterContainerNum = 10  # 配置ParameterContainer最大个数
+
     def __init__(self, parent, parametersList):
         """ 模型列表
         :param parent:
@@ -19,9 +21,6 @@ class ParameterFrameList(Frame):
             self.ParameterContainerList.append(ParameterFrame(self, "", ""))
         self.repack(parametersList)
 
-    def confirmButtonBind(self):
-        pass
-
     def setParametersLayout(self):
         """ 设置参数布局
         :return:
@@ -35,14 +34,18 @@ class ParameterFrameList(Frame):
         """
         self.confirmButton.bind("<Button-1>", lambda event: recall(event, C))
 
-    def getAllParameters(self):
+    def getParametersDict(self):
         """ 返回所有的参数信息
         :return:
+        {
+            "k":"10"
+        }
         """
-        parameterList = []
+        parameterDict = {}
         for i in range(self.parameterNum):
-            parameterList.append(self.ParameterContainerList[i].getParameter(True))
-        return parameterList
+            parameterName, parameterValue = self.ParameterContainerList[i].getParameter()
+            parameterDict[parameterName] = parameterValue
+        return parameterDict
 
     def repack(self, parametersList):
         """ 对于新来的参数列表
@@ -54,8 +57,9 @@ class ParameterFrameList(Frame):
             parameterContainer.pack_forget()
         self.confirmButton.pack_forget()
 
-        for (parameterContainer, (parameterName, parameterValue)) in zip(self.ParameterContainerList, parametersList):
-            parameterContainer.setParameter(parameterName, parameterValue)
+        for (parameterContainer, (parameterName, (parameterNameCn, parameterValue))) \
+                in zip(self.ParameterContainerList, parametersList):
+            parameterContainer.setParameter(parameterName, parameterNameCn, parameterValue)
             parameterContainer.pack(pady=5, fill=X)
 
         self.confirmButton.pack(side=RIGHT)

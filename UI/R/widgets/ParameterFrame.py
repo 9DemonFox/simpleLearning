@@ -25,21 +25,25 @@ class ParameterFrame(Frame):
                                         width=12)
         self.parameterNameLabel.pack(side=LEFT, padx=0)
 
-        self.parameterValueText = Entry(self, width=16, font=R.font.NormalWeiRuanYaHeiFont(10))
-        self.parameterValueText.pack(side=LEFT, padx=5)
-        self.parameterValueText.insert(INSERT, parameterStr)
+        self.parameterNameLabelCN = Label(self, text=parameterName, anchor=E, bg=R.color.UNSelectedColor,
+                                          font=R.font.NormalWeiRuanYaHeiFont(10),
+                                          width=12)
+        self.parameterNameLabelCN.pack(side=LEFT, padx=0)
 
-    def setParameter(self, parameterName, parameterStr):
+        self.parameterValueEntry = Entry(self, width=16, font=R.font.NormalWeiRuanYaHeiFont(10))
+        self.parameterValueEntry.pack(side=LEFT, padx=5)
+        self.parameterValueEntry.insert(INSERT, parameterStr)
+
+    def setParameter(self, parameterName, parameterNameCN, parameterStr):
         self.parameterNameLabel["text"] = parameterName
-        self.parameterValueText.delete(0, END)
-        self.parameterValueText.insert(INSERT, parameterStr)
+        self.parameterNameLabelCN["text"] = parameterNameCN
+        self.parameterValueEntry.delete(0, END)
+        self.parameterValueEntry.insert(INSERT, parameterStr)
 
-    def getParameter(self, engOnly=False):
+    def getParameter(self):
         """
         :param engOnly: 【系数淘汰率 k】=>k
         :return: 参数名字 参数值
         """
         parameterName = self.parameterNameLabel["text"]
-        if engOnly:
-            parameterName = parameterName[parameterName.find(" ") + 1:]
-        return (parameterName, self.parameterValueText.get())
+        return (parameterName, self.parameterValueEntry.get())

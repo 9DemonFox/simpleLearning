@@ -124,17 +124,44 @@ class Viewer:
         """
         self.main_right_frame_1 = tk.Frame(parent, width=200, bg=R.color.SelectedColor)
         # 选择模型
-        self.main_right_chooseBox = R.widgets.ChooseModelFrame(self.main_right_frame_1, [("", "")])
-        self.main_right_chooseBox.pack(fill=tk.X, pady=0)
+        self.main_right_frame_1_chooseBox = R.widgets.ChooseModelFrame(self.main_right_frame_1, [("", "")])
+        self.main_right_frame_1_chooseBox.pack(fill=tk.X, pady=0)
         # 输入变量界面
-        self.main_right_parameterBox = R.widgets.ParameterFrameList(self.main_right_frame_1, [("", "")])
-        self.main_right_parameterBox.pack(fill=tk.X, pady=0)
+        self.main_right_frame_1_parameterBox = R.widgets.ParameterFrameList(self.main_right_frame_1, [("", ("", ""))])
+        self.main_right_frame_1_parameterBox.pack(fill=tk.X, pady=0)
         # ttk.Button(frame, text="下一步", width=12).pack(anchor=tk.W, padx=112, pady=5)
 
         return self.main_right_frame_1
 
     def main_right_2(self, parent):
-        pass
+        """ 在这里初始化3种界面 1.模型选择 2.训练模型
+        :param parent:
+        :return:
+        """
+        # 训练模型
+        self.main_right_frame_2 = tk.Frame(parent, width=200, bg=R.color.UNSelectedColor)
+        self.main_right_frame_2_btnPath = tk.Button(self.main_right_frame_2, text='选择', width=10)
+        self.main_right_frame_2_btnTrain = tk.Button(self.main_right_frame_2, text='训练', width=10)
+        tk.Label(self.main_right_frame_2, text="数据路径：", bg=R.color.UNSelectedColor).grid(row=0, column=0)
+        self.main_right_frame_2_pathEntry = tk.Entry(self.main_right_frame_2, width=45)
+        self.main_right_frame_2_pathEntry.grid(row=0, column=1)
+        self.main_right_frame_2_btnPath.grid(row=0, column=2)
+
+        tk.Label(self.main_right_frame_2, text="输出结果：", bg=R.color.UNSelectedColor).grid(row=2, column=0)
+        self.main_right_frame_2_txtResult = tk.Label(self.main_right_frame_2, bg=R.color.UNSelectedColor, borderwidth=2,
+                                                     relief="sunken",
+                                                     justify=tk.LEFT,
+                                                     width=45, height=15)
+
+        self.main_right_frame_2_txtResult.grid(row=3, column=1)
+        self.main_right_frame_2_btnTrain.grid(row=4, column=2)
+        # self.main_right_frame_1_chooseBox = R.widgets.ChooseModelFrame(self.main_right_frame_1, [("", "")])
+        # self.main_right_frame_1_chooseBox.pack(fill=tk.X, pady=0)
+        # self.main_right_frame_1_parameterBox = R.widgets.ParameterFrameList(self.main_right_frame_1, [("", "")])
+        # self.main_right_frame_1_parameterBox.pack(fill=tk.X, pady=0)
+        # ttk.Button(frame, text="下一步", width=12).pack(anchor=tk.W, padx=112, pady=5)
+
+        return self.main_right_frame_2
 
     def main_right_4(self, parent):
         """ 在这里初始化3种界面 1.模型选择 2.训练模型 4.预测结果
@@ -158,10 +185,10 @@ class Viewer:
 
         self.main_right_frame_4_txtResult.grid(row=3, column=1)
         self.main_right_frame_4_btnPredict.grid(row=4, column=2)
-        # self.main_right_chooseBox = R.widgets.ChooseModelFrame(self.main_right_frame_1, [("", "")])
-        # self.main_right_chooseBox.pack(fill=tk.X, pady=0)
-        # self.main_right_parameterBox = R.widgets.ParameterFrameList(self.main_right_frame_1, [("", "")])
-        # self.main_right_parameterBox.pack(fill=tk.X, pady=0)
+        # self.main_right_frame_1_chooseBox = R.widgets.ChooseModelFrame(self.main_right_frame_1, [("", "")])
+        # self.main_right_frame_1_chooseBox.pack(fill=tk.X, pady=0)
+        # self.main_right_frame_1_parameterBox = R.widgets.ParameterFrameList(self.main_right_frame_1, [("", "")])
+        # self.main_right_frame_1_parameterBox.pack(fill=tk.X, pady=0)
         # ttk.Button(frame, text="下一步", width=12).pack(anchor=tk.W, padx=112, pady=5)
 
         return self.main_right_frame_4

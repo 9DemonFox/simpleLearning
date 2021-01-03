@@ -35,8 +35,10 @@ modelTypes2models = {
         {
             "model_name": ("改进的自适应Lasso", "SALP"),
             "model_parameters": {
-                "alpha": ("惩罚项系数", 0.001),
-                "excludeVariablePercent": ("参数淘汰率", 0.25)
+                "alpha": ("惩罚项系数", 0.1),
+                "max_iter": ("最大迭代次数", 500),
+                "ex_var_per": ("参数淘汰率", 0.25),
+                "k": ("重构样本数量", 10)
             }
         },
         {
@@ -49,7 +51,10 @@ modelTypes2models = {
         }],
     "决策分析": [
         {
-            "model_name": ("层次分析法", "AHP")
+            "model_name": ("层次分析法", "AHP"),
+            "model_parameters": {
+                "No Parameter": ("无参数", "None"),
+            }
         }],
     "参数寻优": [
         {

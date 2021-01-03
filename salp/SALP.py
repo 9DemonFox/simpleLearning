@@ -1,6 +1,7 @@
 import numpy
+import sklearn
 from sklearn.cross_decomposition import PLSRegression
-from sklearn.linear_model import LinearRegression, LassoLars
+from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVR
 
@@ -57,7 +58,7 @@ class SVRModel(Model):
 
 
 class SALPModel(Model):
-    def __init__(self, alpha=0.1, max_iter=500, excludeVariablePercent=0.25, k=10):
+    def __init__(self, alpha=0.1, max_iter=500, ex_var_per=0.25, k=10):
         """
         :param alpha:  惩罚项系数,系数越大，入选变量越少
         :param keepVariable: 选择标量排除分位数 0.25 则是去除25%的最少次数选择变量（变量筛选，论文推荐为0.1-0.3）
@@ -65,7 +66,7 @@ class SALPModel(Model):
         """
         self.alpha = alpha
         self.max_iter = max_iter
-        self.excludeVariablePercent = excludeVariablePercent
+        self.excludeVariablePercent = ex_var_per
         self.k = k
         pass
 
@@ -140,7 +141,7 @@ class SALPModel(Model):
         :param y:
         :return:
         """
-        lasso = LassoLars(alpha=alpha)
+        lasso = sklearn.linear_model.LassoLars(alpha=alpha)
         lasso.fit(x, y)
         return lasso.coef_
 
@@ -171,7 +172,7 @@ class SALPModel(Model):
         ws[numpy.where(ws <= 0.01 / varsNum)] = numpy.finfo(float).eps  # 给定最小值，避免出现无穷值
 
         xStar = x / ws  # 置换x为xStar（x*）
-        alp = LassoLars(alpha=alpha * 0.02, max_iter=5000)
+        alp = sklearn.linear_model.LassoLars(alpha=alpha * 0.02, max_iter=5000)
         alp.fit(xStar, y)
         return alp, w
 
@@ -253,8 +254,8 @@ class SALPModel(Model):
         # 返回结果为字典形式
         excludeFeatures, coefs = self.fit(**kwargs)
         returnDic = {
-            "排除特征": excludeFeatures,
-            "系数": coefs
+            "排除特征": str(excludeFeatures),
+            "系数": str(coefs)
         }
         return returnDic
 
@@ -266,7 +267,8 @@ class SALPModel(Model):
         returnDic = {
             "预测结果": None
         }
-        returnDic["预测结果"] == self.predict(**kwargs)
+        predictResult = self.predict(**kwargs)
+        returnDic["预测结果"] = str(predictResult)
         return returnDic
 
     def predict(self, **kwargs):
@@ -370,8 +372,9 @@ if __name__ == "__main__" and True:
     trainX, trainY = dataloader.loadTrainData(train_path="../data/salp/SALP_TRAIN_DATA.xlsx")
     testX, testY = dataloader.loadTestData(test_path="../data/salp/SALP_TEST_DATA.xlsx")
     model = SALPModel()
-    model.fit(trainX=trainX, trainY=trainY)
+    model.fitForUI(trainX=trainX, trainY=trainY)
     predictY = model.predict(predictX=testX)
+    predictYForUI = model.predictForUI(predictX=testX)
     predictTrainY = model.predict(predictX=trainX)
     print(model.model.coef_)
     print(mean_squared_error(predictY, testY))

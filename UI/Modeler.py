@@ -20,26 +20,37 @@ from salp.SALP import SVRModel, SALPModel
 
 class Modeler:
     def __init__(self):
-        allModels = [AHPModel, GAModel, GBMModel, HLMModel, IBRTModel, MERTModel, RE_ANFISModel, REBETModel,
+        allModels = [AHPModel, GAModel, GBMModel, HLMModel,
+                     IBRTModel, MERTModel, RE_ANFISModel, REBETModel,
                      SALPModel, SVRModel]
+        allDataLoader = [AHPDataLoader, None, GBMDataLoader, HLMDataLoader,
+                         IBRTDataLoader, MERTDataLoader, RE_ANFISDataLoader, REBETDataLoader,
+                         SALPDataLoader, SALPDataLoader]
         allModelsName = [str(m.__name__)[:-5] for m in allModels]
         self.name2Model = dict(zip(allModelsName, allModels))
         self.curModel = None  # 当前模型
         self.curModelName = None
         self.curDataLoader = None
-        allDataLoader = [AHPDataLoader, GBMDataLoader, HLMDataLoader, IBRTDataLoader, MERTDataLoader,
-                         RE_ANFISDataLoader, REBETDataLoader, SALPDataLoader, AHPDataLoader]
         self.name2DataLoader = dict(zip(allModelsName, allDataLoader))
 
-    def config_step1(self, modelName):
+    def config_step_1(self, modelName, **parameters):
         """ 配置模型,从模型名字到模型类映射
         :return:
         """
-        self.curModel = self.name2Model.get(modelName)()  # 初始化模型
+        if "No Parameter" in parameters.keys():
+            parameters = {}
+        self.curModel = self.name2Model.get(modelName)(**parameters)  # 初始化模型
         self.curModelName = modelName
-        pass
 
-    def predict_step4(self, predict_path):
+    def train_step_2(self, train_path):
+        # DataLoader
+        print(self.curModelName)
+        self.curDataLoader = self.name2DataLoader.get(self.curModelName)()
+        trainX, trainY = self.curDataLoader.loadTrainData(train_path=train_path)
+        result = self.curModel.fitForUI(trainX=trainX, trainY=trainY)
+        return result
+
+    def predict_step_4(self, predict_path):
         """
         :param predict_path: 测试集数据路径
         :return:

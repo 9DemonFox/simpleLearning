@@ -21,7 +21,7 @@ class Viewer:
         m = Modeler()
         sFL = R.widgets.ParameterFrameList(mainFrame, parameterList)
         sFL.pack()
-        # sFL.bind(lambda event, c: print(c.getAllParameters()), sFL)
+        # sFL.bind(lambda event, c: print(c.getParametersDict()), sFL)
         sFL.bind(lambda event, c: c.repack([(' alpha', 0.001), (' k', 0.25), ("asd", "123")]), sFL)
         mainFrame.pack()
 
