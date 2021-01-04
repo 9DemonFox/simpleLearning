@@ -3,6 +3,7 @@ from sklearn import tree
 from data.mert.dataLoder import MERTDataLoader
 from model import Model
 
+from sklearn.metrics import mean_squared_error
 
 def update(trainX, trainY, epoch, n, N, m, D, q, u, σ2, clf, y0, z):
     """
@@ -56,6 +57,8 @@ def update(trainX, trainY, epoch, n, N, m, D, q, u, σ2, clf, y0, z):
             d = d + np.dot(u[j], u[j].T) + D - np.dot(np.dot(np.dot(np.dot(D, z[j].T), np.linalg.inv(v)), z[j]), D)
         σ2 = σ / N
         D = d / n
+    
+    return D,σ2
 
 
 class MERTModel(Model):
@@ -72,27 +75,74 @@ class MERTModel(Model):
         u:array
         随机效应变量
         σ2:float
-        误差的方差
+        误差的方差 
+        epoch:int,可选(默认=200)
+        循环轮数
+        k:int,可选(默认=1)
+        表示第k个变量作为随机效应变量
 
         """
         if "n" not in kwargs.keys():
             self.n = 1
         else:
             self.n = kwargs["n"]
+        if "epoch" not in kwargs.keys():
+            self.epoch = 200
+        else:
+            self.epoch = kwargs["epoch"]
+
+        if "k" not in kwargs.keys():
+            self.k = 1
+        else:
+            self.k = kwargs["k"]
         self.q = 2
         self.D = np.identity(self.q)
         self.u = np.zeros((self.n, self.q, 1))
         self.σ2 = 1.0
         self.clf = tree.DecisionTreeRegressor(criterion='mse', max_depth=(10))
 
+    def fitForUI(self, **kwargs):
+        """ 返回结果到前端
+        :return:
+        """
+        self.fit(**kwargs)
+        # 返回结果为字典形式
+        D,σ2 = self.fit(**kwargs)
+        returnDic = {
+            "随机效应协方差矩阵": str(D),
+            "误差方差": str(σ2)
+        }
+        return returnDic
+    
+    def testForUI(self, **kwargs):
+        """
+        :param kwargs:
+        :return: 字典形式结果
+        """
+        returnDic = {
+            "mse": None
+        }
+        predictResult = self.test(**kwargs)
+        returnDic["mse"] = str(predictResult)
+        return returnDic
+    
+    def predictForUI(self, **kwargs):
+        """
+        :param kwargs:
+        :return: 字典形式结果
+        """
+        returnDic = {
+            "预测结果": None
+        }
+        predictResult = self.predict(**kwargs)
+        returnDic["预测结果"] = str(predictResult)
+        return returnDic
+    
     def fit(self, **kwargs):
 
         """
         
-        epoch:int,可选(默认=200)
-        循环轮数
-        k:int,可选(默认=1)
-        表示第k个变量作为随机效应变量
+       
         N:int
         观测次数
         m:int
@@ -101,43 +151,58 @@ class MERTModel(Model):
         随机效应参数
 
         """
-        trainX = kwargs["trainX"]
-        trainY = kwargs["trainY"]
         if "epoch" not in kwargs.keys():
-            epoch = 200
+            self.epoch = 200
         else:
-            epoch = kwargs["epoch"]
+            self.epoch = kwargs["epoch"]
 
         if "k" not in kwargs.keys():
             self.k = 1
         else:
             self.k = kwargs["k"]
-        N = trainY.shape[0]
+        self.trainX = kwargs["trainX"]
+        self.trainY = kwargs["trainY"]
+        N = self.trainY.shape[0]
+        self.trainY = self.trainY.reshape(N,1)
         m = int(N / self.n)
         z = np.ones((self.n, m, self.q))
         for i in range(self.n):
-            z[i:i + 1, :, 1:2] = z[i:i + 1, :, 1:2] - 1 + trainX[m * i:m * (i + 1), self.k-1:self.k]
+            z[i:i + 1, :, 1:2] = z[i:i + 1, :, 1:2] - 1 + self.trainX[m * i:m * (i + 1), self.k-1:self.k]
         y0 = np.empty((N, 1))
-        update(trainX, trainY, epoch, self.n, N, m, self.D, self.q, self.u, self.σ2, self.clf, y0, z)
+        D,σ2 = update(self.trainX, self.trainY, self.epoch, self.n, N, m, self.D, self.q, self.u, self.σ2, self.clf, y0, z)
         for j in range(self.n):
-            y0[j * m:(j + 1) * m, 0:1] = trainY[j * m:(j + 1) * m, 0:1] - np.dot(z[j], self.u[j])
+            y0[j * m:(j + 1) * m, 0:1] = self.trainY[j * m:(j + 1) * m, 0:1] - np.dot(z[j], self.u[j])
 
         self.clf2 = tree.DecisionTreeRegressor(criterion='mse', random_state=0, ccp_alpha=0.1, max_depth=(10))
-        self.clf2.fit(trainX, y0)
+        self.clf2.fit(self.trainX, y0)
         # tree.plot_tree(self.clf2,filled=True)
-        x0 = self.clf2.predict(trainX).reshape(N, 1)
+        x0 = self.clf2.predict(self.trainX).reshape(N, 1)
         for j in range(self.n):
             x0[j * m:(j + 1) * m, 0:1] = x0[j * m:(j + 1) * m, 0:1] + np.dot(z[j], self.u[j])
+        
+        return D,σ2
 
-    def predict(self, **kwargs):
-        predictX = kwargs["predictX"]
-        predictY = kwargs["predictY"]
-        N = predictY.shape[0]
+    def test(self, **kwargs):
+        self.predictX = kwargs["predictX"]
+        self.predictY = kwargs["predictY"]
+        N = self.predictX.shape[0]
         m = int(N / self.n)
         z = np.ones((self.n, m, self.q))
         for i in range(self.n):
-            z[i:i + 1, :, 1:2] = z[i:i + 1, :, 1:2] - 1 + predictX[m * i:m * (i + 1), self.k-1:self.k]
-        x0 = self.clf2.predict(predictX).reshape(N, 1)
+            z[i:i + 1, :, 1:2] = z[i:i + 1, :, 1:2] - 1 + self.predictX[m * i:m * (i + 1), self.k-1:self.k]
+        x0 = self.clf2.predict(self.predictX).reshape(N, 1)
+        for j in range(self.n):
+            x0[j * m:(j + 1) * m, 0:1] = x0[j * m:(j + 1) * m, 0:1] + np.dot(z[j], self.u[j])
+        return mean_squared_error(x0, self.predictY)
+    
+    def predict(self, **kwargs):
+        self.predictX = kwargs["predictX"]
+        N = self.predictX.shape[0]
+        m = int(N / self.n)
+        z = np.ones((self.n, m, self.q))
+        for i in range(self.n):
+            z[i:i + 1, :, 1:2] = z[i:i + 1, :, 1:2] - 1 + self.predictX[m * i:m * (i + 1), self.k-1:self.k]
+        x0 = self.clf2.predict(self.predictX).reshape(N, 1)
         for j in range(self.n):
             x0[j * m:(j + 1) * m, 0:1] = x0[j * m:(j + 1) * m, 0:1] + np.dot(z[j], self.u[j])
         return x0
@@ -147,10 +212,14 @@ if __name__ == '__main__':
     n = 100
     epoch = 50
     k = 1
-    model = MERTModel(n=n)
-    dataloader = MERTDataLoader(datapath1="../data/mert/data_train.csv", datapath2="../data/mert/data_test.csv")
-    trainX, trainY = dataloader.loadTrainData()
-
-    predictX, predictY = dataloader.loadTestData()
-    model.fit(trainX=trainX, trainY=trainY, epoch=epoch,k=k)
-    model.predict(predictX=predictX, predictY=predictY)
+    datapath1="../data/mert/data_train.xlsx"
+    datapath2="../data/mert/data_test.xlsx"
+    datapath3="../data/mert/data_predict.xlsx"
+    dataloader = MERTDataLoader()
+    trainX, trainY = dataloader.loadTrainData(train_path=datapath1)
+    textX, textY = dataloader.loadTestData(test_path=datapath2)
+    predictX = dataloader.loadPredictData(predict_path=datapath3)
+    model = MERTModel(n=n, epoch=epoch, k=k)
+    print(model.fitForUI(trainX=trainX, trainY=trainY))
+    print(model.testForUI(predictX=textX, predictY=textY))
+    print(model.predictForUI(predictX=textX))
