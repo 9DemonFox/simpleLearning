@@ -27,21 +27,27 @@ warnings.filterwarnings("ignore")
 
 class REBETTestCase(unittest.TestCase):
     def testDataLoder(self):
-        dataloader = REBETDataLoader(datapath1="./data/rebet/data_train.csv", datapath2="./data/rebet/data_test.csv")
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        
+        datapath1="./data/rebet/data_train.xlsx"
+        datapath2="./data/rebet/data_test.xlsx"
+        dataloader = REBETDataLoader()
+        trainX, trainY = dataloader.loadTrainData(train_path=datapath1)
+        testX, testY = dataloader.loadTestData(test_path=datapath2)
         # 验证数据集形状
         assert trainX.shape == (5000, 3)
-        assert trainY.shape == (5000, 1)
+        assert trainY.shape == (5000, )
         assert testX.shape == (500, 3)
-        assert testY.shape == (500, 1)
+        assert testY.shape == (500, )
         pass
 
     def testREBETModel(self):
         import numpy as np
-        dataloader = REBETDataLoader(datapath1="./data/rebet/data_train.csv", datapath2="./data/rebet/data_test.csv")
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        
+        datapath1="./data/rebet/data_train.xlsx"
+        datapath2="./data/rebet/data_test.xlsx"
+        dataloader = REBETDataLoader()
+        trainX, trainY = dataloader.loadTrainData(train_path=datapath1)
+        testX, testY = dataloader.loadTestData(test_path=datapath2)
         n = 100
         epoch = 5
         k = 1
@@ -55,21 +61,27 @@ class REBETTestCase(unittest.TestCase):
 
 class MERTTestCase(unittest.TestCase):
     def testDataLoder(self):
-        dataloader = MERTDataLoader(datapath1="./data/mert/data_train.csv", datapath2="./data/mert/data_test.csv")
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        
+        datapath1="./data/mert/data_train.xlsx"
+        datapath2="./data/mert/data_test.xlsx"
+        dataloader = MERTDataLoader()
+        trainX, trainY = dataloader.loadTrainData(train_path=datapath1)
+        testX, testY = dataloader.loadTestData(test_path=datapath2)
         # 验证数据集形状
         assert trainX.shape == (5000, 3)
-        assert trainY.shape == (5000, 1)
+        assert trainY.shape == (5000, )
         assert testX.shape == (500, 3)
-        assert testY.shape == (500, 1)
+        assert testY.shape == (500, )
         pass
 
     def testMERTModel(self):
         import numpy as np
-        dataloader = MERTDataLoader(datapath1="./data/mert/data_train.csv", datapath2="./data/mert/data_test.csv")
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        
+        datapath1="./data/mert/data_train.xlsx"
+        datapath2="./data/mert/data_test.xlsx"
+        dataloader = MERTDataLoader()
+        trainX, trainY = dataloader.loadTrainData(train_path=datapath1)
+        testX, testY = dataloader.loadTestData(test_path=datapath2)
         n = 100
         epoch = 5
         k = 1
@@ -139,7 +151,6 @@ class HLMTestCase(unittest.TestCase):
 class GATestCase(unittest.TestCase):
     def testGAModel(self):
         import numpy as np
-        model = GAModel()
 
         def F(x):
             return 3 * (1 - x[0]) ** 2 * np.exp(-(x[0] ** 2) - (x[1] + 1) ** 2) - 10 * (
@@ -150,7 +161,8 @@ class GATestCase(unittest.TestCase):
         F = F
         n = 3
         ranges = np.array([[-3, 3], [-3, 3], [0, 4]])
-        value, x = model.fit(c=c, F=F, n=n, ranges=ranges)
+        model = GAModel(c=c, n=n, ranges=ranges)
+        value, x = model.predict( F=F)
         assert (F(x) == value)
         pass
 
