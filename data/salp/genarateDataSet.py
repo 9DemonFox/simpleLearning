@@ -5,6 +5,8 @@ import pandas
 from numpy.random import normal as Normal
 from numpy.random import uniform as Uniform
 
+from data.excelTools import ExcelTool
+
 
 def get_sample_data():
     n = 100  # 样本容量
@@ -64,9 +66,9 @@ if __name__ == '__main__' and True:
     trainX, trainY = x[0:80, :], y[0:80].reshape(1, -1)
     testX, testY = x[80:, :], y[80:].reshape(1, -1)
     predictX, predictY = x[80:81, :], y[80:81].reshape(1, -1)
-    saveXY2Excel(trainX, trainY, "SALP_TRAIN_DATA.xlsx")
-    saveXY2Excel(testX, testY, "SALP_TEST_DATA.xlsx")
-    saveXY2Excel(predictX, predictY, "SALP_PREDICT_DATA.xlsx")
+    ExcelTool.saveXY2Excel(trainX, trainY, "SALP_TRAIN_DATA.xlsx")
+    ExcelTool.saveXY2Excel(testX, testY, "SALP_TEST_DATA.xlsx")
+    ExcelTool.saveX2Excel(predictX, "SALP_PREDICT_DATA.xlsx")
 
 if __name__ == '__main__' and False:
     x, y = get_sample_data()

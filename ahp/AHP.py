@@ -262,6 +262,18 @@ class AHPModel(Model):
         self.model = creat_model(predictX)
         return self.model.get_model_tree().getShow()
 
+    def predictForUI(self, **kwargs):
+        """
+        :param kwargs:
+        :return: 字典形式结果
+        """
+        returnDic = {
+            "预测结果": None
+        }
+        predictResult = self.predict(**kwargs)
+        returnDic["预测结果"] = str(predictResult)
+        return returnDic
+
 
 if __name__ == '__main__':
     trainX = {'criteria': ['子准则层1', '子准则层2', '子准则层3', '子准则层4', '子准则层5'],

@@ -2,9 +2,12 @@ import numpy
 import sklearn
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVR
 
+from data.salp.dataLoder import SALPDataLoader
 from model import Model
 
 
@@ -259,6 +262,25 @@ class SALPModel(Model):
         }
         return returnDic
 
+    def testForUI(self, **kwargs):
+        """
+        :param kwargs:
+        :return: 字典形式结果
+        """
+        returnDic = {
+            "mean_squared_error": None,
+            "mean_absolute_error": None
+        }
+        kwargs["predictX"] = kwargs.get("testX")
+        predictResult = self.predict(**kwargs)
+        testY = kwargs.get("testY")
+        mse = mean_squared_error(predictResult, testY)
+        mae = mean_absolute_error(predictResult, testY)
+        returnDic["预测结果"] = str(predictResult)
+        returnDic["mean_absolute_error"] = str(mae)
+        returnDic["mean_squared_error"] = str(mse)
+        return returnDic
+
     def predictForUI(self, **kwargs):
         """
         :param kwargs:
@@ -282,9 +304,6 @@ class SALPModel(Model):
 
 
 if __name__ == "__main__" and False:
-    from data.salp.dataLoder import SALPDataLoader
-    from sklearn.metrics import mean_squared_error
-
     dataloader = SALPDataLoader()
     trainX, trainY = dataloader.loadTrainData(train_path="../data/salp/SALP_TRAIN_DATA.xlsx")
     testX, testY = dataloader.loadTestData(test_path="../data/salp/SALP_TEST_DATA.xlsx")
@@ -295,9 +314,6 @@ if __name__ == "__main__" and False:
     pass
 
 if __name__ == "__main__" and False:
-    from data.salp.dataLoder import SALPDataLoader
-    from sklearn.metrics import mean_squared_error
-    from sklearn.linear_model import LassoLars
 
     dataloader = SALPDataLoader()
     trainX, trainY = dataloader.loadTrainData(train_path="../data/salp/SALP_TRAIN_DATA.xlsx")

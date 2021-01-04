@@ -22,6 +22,18 @@ class ExcelTool:
         df.to_excel(path)
 
     @staticmethod
+    def saveX2Excel(x, path="SALP_PREDICT_DATA.xlsx"):
+        """ 存储预测数据集
+        :param x:
+        :param path:
+        :return:
+        """
+        columns = ["x" + str(i) for i in range(x.shape[1])]
+        df = pandas.DataFrame.from_records(x)
+        df.columns = columns
+        df.to_excel(path)
+
+    @staticmethod
     def loadExcelData(data_path):
         """
         :param data_path: excel数据 第1列为Y

@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog
+from tkinter.scrolledtext import ScrolledText
 
 from PIL import Image, ImageTk
 
@@ -140,28 +141,62 @@ class Viewer:
         """
         # 训练模型
         self.main_right_frame_2 = tk.Frame(parent, width=200, bg=R.color.UNSelectedColor)
-        self.main_right_frame_2_btnPath = tk.Button(self.main_right_frame_2, text='选择', width=10)
-        self.main_right_frame_2_btnTrain = tk.Button(self.main_right_frame_2, text='训练', width=10)
-        tk.Label(self.main_right_frame_2, text="数据路径：", bg=R.color.UNSelectedColor).grid(row=0, column=0)
-        self.main_right_frame_2_pathEntry = tk.Entry(self.main_right_frame_2, width=45)
-        self.main_right_frame_2_pathEntry.grid(row=0, column=1)
-        self.main_right_frame_2_btnPath.grid(row=0, column=2)
 
-        tk.Label(self.main_right_frame_2, text="输出结果：", bg=R.color.UNSelectedColor).grid(row=2, column=0)
-        self.main_right_frame_2_txtResult = tk.Label(self.main_right_frame_2, bg=R.color.UNSelectedColor, borderwidth=2,
-                                                     relief="sunken",
-                                                     justify=tk.LEFT,
-                                                     width=45, height=15)
+        row0 = tk.Frame(self.main_right_frame_2, bg=R.color.UNSelectedColor)
+        row0.pack(fill=tk.X, side=tk.TOP)
+        row1 = tk.Frame(self.main_right_frame_2, bg=R.color.UNSelectedColor)
+        row1.pack(fill=tk.X, side=tk.TOP)
+        row2 = tk.Frame(self.main_right_frame_2, bg=R.color.UNSelectedColor)
+        row2.pack(fill=tk.X, side=tk.TOP)
+        row3 = tk.Frame(self.main_right_frame_2, bg=R.color.UNSelectedColor)
+        row3.pack(fill=tk.X, side=tk.TOP)
 
-        self.main_right_frame_2_txtResult.grid(row=3, column=1)
-        self.main_right_frame_2_btnTrain.grid(row=4, column=2)
-        # self.main_right_frame_1_chooseBox = R.widgets.ChooseModelFrame(self.main_right_frame_1, [("", "")])
-        # self.main_right_frame_1_chooseBox.pack(fill=tk.X, pady=0)
-        # self.main_right_frame_1_parameterBox = R.widgets.ParameterFrameList(self.main_right_frame_1, [("", "")])
-        # self.main_right_frame_1_parameterBox.pack(fill=tk.X, pady=0)
-        # ttk.Button(frame, text="下一步", width=12).pack(anchor=tk.W, padx=112, pady=5)
+        tk.Label(row0, text="数据路径：", bg=R.color.UNSelectedColor).pack(side=tk.LEFT)
+        self.main_right_frame_2_pathEntry = tk.Entry(row0, width=45)
+        self.main_right_frame_2_btnPath = tk.Button(row0, text='选择', width=10)
+        self.main_right_frame_2_pathEntry.pack(side=tk.LEFT)
+        self.main_right_frame_2_btnPath.pack(side=tk.LEFT)
 
+        tk.Label(row1, text="输出结果：", bg=R.color.UNSelectedColor).pack(side=tk.LEFT)
+
+        self.main_right_frame_2_txtResult = ScrolledText(row2, width=45, height=15, bd=2)
+        self.main_right_frame_2_txtResult.pack(side=tk.LEFT, padx=64)
+
+        self.main_right_frame_2_btnTrain = tk.Button(row3, text='训练', width=10)
+        self.main_right_frame_2_btnTrain.pack(side=tk.RIGHT, padx=232)
         return self.main_right_frame_2
+
+    def main_right_3(self, parent):
+        """
+        :param parent:
+        :return:
+        """
+        # 训练模型
+        self.main_right_frame_3 = tk.Frame(parent, width=200, bg=R.color.UNSelectedColor)
+
+        row0 = tk.Frame(self.main_right_frame_3, bg=R.color.UNSelectedColor)
+        row0.pack(fill=tk.X, side=tk.TOP)
+        row1 = tk.Frame(self.main_right_frame_3, bg=R.color.UNSelectedColor)
+        row1.pack(fill=tk.X, side=tk.TOP)
+        row2 = tk.Frame(self.main_right_frame_3, bg=R.color.UNSelectedColor)
+        row2.pack(fill=tk.X, side=tk.TOP)
+        row3 = tk.Frame(self.main_right_frame_3, bg=R.color.UNSelectedColor)
+        row3.pack(fill=tk.X, side=tk.TOP)
+
+        tk.Label(row0, text="数据路径：", bg=R.color.UNSelectedColor).pack(side=tk.LEFT)
+        self.main_right_frame_3_pathEntry = tk.Entry(row0, width=45)
+        self.main_right_frame_3_btnPath = tk.Button(row0, text='选择', width=10)
+        self.main_right_frame_3_pathEntry.pack(side=tk.LEFT)
+        self.main_right_frame_3_btnPath.pack(side=tk.LEFT)
+
+        tk.Label(row1, text="输出结果：", bg=R.color.UNSelectedColor).pack(side=tk.LEFT)
+
+        self.main_right_frame_3_txtResult = ScrolledText(row2, width=45, height=15, bd=2)
+        self.main_right_frame_3_txtResult.pack(side=tk.LEFT, padx=64)
+
+        self.main_right_frame_3_btnTrain = tk.Button(row3, text='测试', width=10)
+        self.main_right_frame_3_btnTrain.pack(side=tk.RIGHT, padx=232)
+        return self.main_right_frame_3
 
     def main_right_4(self, parent):
         """ 在这里初始化3种界面 1.模型选择 2.训练模型 4.预测结果
@@ -170,21 +205,32 @@ class Viewer:
         """
         # 选择模型
         self.main_right_frame_4 = tk.Frame(parent, width=200, bg=R.color.UNSelectedColor)
-        self.main_right_frame_4_btnPath = tk.Button(self.main_right_frame_4, text='选择', width=10)
-        self.main_right_frame_4_btnPredict = tk.Button(self.main_right_frame_4, text='预测', width=10)
-        tk.Label(self.main_right_frame_4, text="数据路径：", bg=R.color.UNSelectedColor).grid(row=0, column=0)
-        self.main_right_frame_4_pathEntry = tk.Entry(self.main_right_frame_4, width=45)
-        self.main_right_frame_4_pathEntry.grid(row=0, column=1)
-        self.main_right_frame_4_btnPath.grid(row=0, column=2)
 
-        tk.Label(self.main_right_frame_4, text="输出结果：", bg=R.color.UNSelectedColor).grid(row=2, column=0)
-        self.main_right_frame_4_txtResult = tk.Label(self.main_right_frame_4, bg=R.color.UNSelectedColor, borderwidth=2,
-                                                     relief="sunken",
-                                                     justify=tk.LEFT,
-                                                     width=45, height=15)
+        row0 = tk.Frame(self.main_right_frame_4, bg=R.color.UNSelectedColor)
+        row0.pack(fill=tk.X, side=tk.TOP)
+        self.main_right_frame_4_btnPath = tk.Button(row0, text='选择', width=10)
+        self.main_right_frame_4_pathEntry = tk.Entry(row0, width=45)
+        tk.Label(row0, text="数据路径：", bg=R.color.UNSelectedColor).pack(side=tk.LEFT)
+        self.main_right_frame_4_pathEntry.pack(side=tk.LEFT)
+        self.main_right_frame_4_btnPath.pack(side=tk.LEFT)
 
-        self.main_right_frame_4_txtResult.grid(row=3, column=1)
-        self.main_right_frame_4_btnPredict.grid(row=4, column=2)
+        row1 = tk.Frame(self.main_right_frame_4, bg=R.color.UNSelectedColor)
+        row1.pack(fill=tk.X, side=tk.TOP)
+        tk.Label(row1, text="输出结果：", bg=R.color.UNSelectedColor).pack(side=tk.LEFT)
+        # self.main_right_frame_4_txtResult = tk.Label(self.main_right_frame_4, bg=R.color.UNSelectedColor, borderwidth=2,
+        #                                              relief="sunken", wraplength=36,
+        #                                              anchor=tk.W,
+        #                                              justify=tk.LEFT,
+        #                                              width=45, height=15)
+        row2 = tk.Frame(self.main_right_frame_4, bg=R.color.UNSelectedColor)
+        row2.pack(fill=tk.X, side=tk.TOP)
+        self.main_right_frame_4_txtResult = ScrolledText(row2, width=45, height=15, bd=2)
+        self.main_right_frame_4_txtResult.pack(side=tk.LEFT, padx=64)
+
+        row3 = tk.Frame(self.main_right_frame_4, bg=R.color.UNSelectedColor)
+        row3.pack(fill=tk.X, side=tk.TOP)
+        self.main_right_frame_4_btnPredict = tk.Button(row3, text='预测', width=10)
+        self.main_right_frame_4_btnPredict.pack(side=tk.RIGHT, padx=232)
         # self.main_right_frame_1_chooseBox = R.widgets.ChooseModelFrame(self.main_right_frame_1, [("", "")])
         # self.main_right_frame_1_chooseBox.pack(fill=tk.X, pady=0)
         # self.main_right_frame_1_parameterBox = R.widgets.ParameterFrameList(self.main_right_frame_1, [("", "")])

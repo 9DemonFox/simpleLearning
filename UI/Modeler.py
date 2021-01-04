@@ -43,11 +43,15 @@ class Modeler:
         self.curModelName = modelName
 
     def train_step_2(self, train_path):
-        # DataLoader
-        print(self.curModelName)
         self.curDataLoader = self.name2DataLoader.get(self.curModelName)()
         trainX, trainY = self.curDataLoader.loadTrainData(train_path=train_path)
         result = self.curModel.fitForUI(trainX=trainX, trainY=trainY)
+        return result
+
+    def test_step_3(self, test_path):
+        self.curDataLoader = self.name2DataLoader.get(self.curModelName)()
+        testX, testY = self.curDataLoader.loadTrainData(train_path=test_path)
+        result = self.curModel.testForUI(testX=testX, testY=testY)
         return result
 
     def predict_step_4(self, predict_path):
@@ -58,7 +62,7 @@ class Modeler:
         # 选择当前模型
         self.curDataLoader = self.name2DataLoader.get(self.curModelName)()
         predictX = self.curDataLoader.loadPredictData(predict_path=predict_path)
-        result = self.curModel.predict(predictX=predictX)
+        result = self.curModel.predictForUI(predictX=predictX)
         return result
 
     def loadConfig(self, modelName):
