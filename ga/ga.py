@@ -1,6 +1,6 @@
 import numpy as np
-
 from model import Model
+from data.ga.dataLoder import GADataLoader
 
 
 def get_fitness(c, pop, F, n, precisions, ranges, POP_SIZE):
@@ -15,9 +15,9 @@ def get_fitness(c, pop, F, n, precisions, ranges, POP_SIZE):
     x = translateDNA(pop, n, ranges, precisions, POP_SIZE)
     pred = F(x)
     if c == 1:
-        return (pred - np.min(pred)) + 1e-3
+        return (pred - np.min(pred)) + 1e-10
     if c == 0:
-        return -(pred - np.max(pred)) + 1e-3
+        return -(pred - np.max(pred)) + 1e-10
 
 
 def translateDNA(pop, n, ranges, precisions, POP_SIZE):
@@ -141,17 +141,12 @@ def ga(c, F, n, ranges, precisions, N_GENERATIONS, POP_SIZE, MUTATION_RATE, CROS
 
 
 class GAModel(Model):
-    def _init_(self):
-        pass
-
-    def fit(self, **kwargs):
+    def __init__(self, **kwargs):
         """
         Parameters
         ----------
         c:int,必选
         指定求函数的最大值或最小值，‘1’为求最大值，‘0’为求最小值
-        F:function,必选
-        指定所要求最值的函数表达式
         n:int,必选
         指定函数所含变量个数
         ranges:array,必选
@@ -167,53 +162,70 @@ class GAModel(Model):
         CROSSOVER_RATE:float,可选（默认值 = 0.8）
         指定交叉概率
         """
-        c = kwargs["c"]
-        F = kwargs["F"]
-        n = kwargs["n"]
-        ranges = kwargs["ranges"]
+        self.c = kwargs["c"]
+        self.n = kwargs["n"]
+        self.ranges = kwargs["ranges"]
         if "precisions" not in kwargs.keys():
-            precisions = 24
+            self.precisions = 24
         else:
-            precisions = kwargs["precisions"]
+            self.precisions = kwargs["precisions"]
         if "POP_SIZE" not in kwargs.keys():
-            POP_SIZE = 200
+            self.POP_SIZE = 200
         else:
-            POP_SIZE = kwargs["POP_SIZE"]
+            self.POP_SIZE = kwargs["POP_SIZE"]
         if "MUTATION_RATE" not in kwargs.keys():
-            MUTATION_RATE = 0.005
+            self.MUTATION_RATE = 0.005
         else:
-            MUTATION_RATE = kwargs["MUTATION_RATE"]
+            self.MUTATION_RATE = kwargs["MUTATION_RATE"]
         if "CROSSOVER_RATE" not in kwargs.keys():
-            CROSSOVER_RATE = 0.8
+            self.CROSSOVER_RATE = 0.8
         else:
-            CROSSOVER_RATE = kwargs["CROSSOVER_RATE"]
+            self.CROSSOVER_RATE = kwargs["CROSSOVER_RATE"]
         if "N_GENERATIONS" not in kwargs.keys():
-            N_GENERATIONS = 50
+            self.N_GENERATIONS = 50
         else:
-            N_GENERATIONS = kwargs["N_GENERATIONS"]
-        return ga(c, F, n, ranges, precisions, N_GENERATIONS, POP_SIZE, MUTATION_RATE, CROSSOVER_RATE)
+            self.N_GENERATIONS = kwargs["N_GENERATIONS"]
+    
+    def predictForUI(self, **kwargs):
+        """ 返回结果到前端
+        :return:
+        """
+        self.F = kwargs["F"]
+        # 返回结果为字典形式
+        y,x = self.predict()
+        returnDic = {
+            "最值": str(y),
+            "变量取值": str(x)
+        }
+        return returnDic
+    
+       
+    def fit(self):
+        pass
 
     def predict(self, **kwargs):
+        if "F" not in kwargs.keys():
+            self.F = self.F
+        else:
+            self.F = kwargs["F"]
+        return ga(self.c, self.F, self.n, self.ranges, self.precisions, self.N_GENERATIONS, self.POP_SIZE, self.MUTATION_RATE, self.CROSSOVER_RATE)
 
-        pass
 
 
 if __name__ == '__main__':
-    def F(x):
-        return 3 * (1 - x[0]) ** 2 * np.exp(-(x[0] ** 2) - (x[1] + 1) ** 2) - 10 * (
-                x[0] / 5 - x[0] ** 3 - x[1] ** 5) * np.exp(-x[0] ** 2 - x[1] ** 2) - 1 / 3 ** np.exp(
-            -(x[0] + 1) ** 2 - x[1] ** 2) - (x[2] - 3) ** 2
 
 
-    c = 1
-    F = F
-    n = 3
-    ranges = np.array([[-3, 3], [-3, 3], [0, 4]])
+    c = 0
+    a = GADataLoader()
+    F = a.loadPredictData(predict_path="../data/ga/F.txt")
+    n = 2
+    ranges = np.array([[-3, 3],[-3,3]])
     precisions = 24
     N_GENERATIONS = 50
     POP_SIZE = 200
     MUTATION_RATE = 0.005
     CROSSOVER_RATE = 0.8
-    model = GAModel()
-    model.fit(c=c, F=F, n=n, ranges=ranges, precisions=precisions, N_GENERATIONS=N_GENERATIONS, POP_SIZE=POP_SIZE,
-              MUTATION_RATE=MUTATION_RATE, CROSSOVER_RATE=CROSSOVER_RATE)
+    model = GAModel(c=c, n=n, ranges=ranges, precisions=precisions, N_GENERATIONS=N_GENERATIONS, 
+                    POP_SIZE=POP_SIZE,MUTATION_RATE=MUTATION_RATE, CROSSOVER_RATE=CROSSOVER_RATE)
+    print(model.predictForUI(F=F))
+    
