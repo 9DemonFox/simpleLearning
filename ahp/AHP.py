@@ -258,8 +258,21 @@ class AHPModel(Model):
         self.model = creat_model(trainX)
 
     def predict(self, **kwargs):
-        # predictX = kwargs["predict"]
+        predictX = kwargs["predictX"]
+        self.model = creat_model(predictX)
         return self.model.get_model_tree().getShow()
+
+    def predictForUI(self, **kwargs):
+        """
+        :param kwargs:
+        :return: 字典形式结果
+        """
+        returnDic = {
+            "预测结果": None
+        }
+        predictResult = self.predict(**kwargs)
+        returnDic["预测结果"] = str(predictResult)
+        return returnDic
 
 
 if __name__ == '__main__':
