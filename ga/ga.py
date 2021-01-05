@@ -1,9 +1,11 @@
 import numpy as np
+import sys
+sys.path.append('..')
 from model import Model
 from data.ga.dataLoder import GADataLoader
 
 
-def get_fitness(c, pop, F, n, precisions, ranges, POP_SIZE):
+def get_fitness(c, pop, F, n, precisions, xmax, xmin, POP_SIZE):
     """
 
     Returns
@@ -12,7 +14,7 @@ def get_fitness(c, pop, F, n, precisions, ranges, POP_SIZE):
         计算适应度.
 
     """
-    x = translateDNA(pop, n, ranges, precisions, POP_SIZE)
+    x = translateDNA(pop, n, xmax, xmin, precisions, POP_SIZE)
     pred = F(x)
     if c == 1:
         return (pred - np.min(pred)) + 1e-10
@@ -20,7 +22,7 @@ def get_fitness(c, pop, F, n, precisions, ranges, POP_SIZE):
         return -(pred - np.max(pred)) + 1e-10
 
 
-def translateDNA(pop, n, ranges, precisions, POP_SIZE):
+def translateDNA(pop, n, xmax, xmin, precisions, POP_SIZE):
     """
 
     Parameters
@@ -41,7 +43,7 @@ def translateDNA(pop, n, ranges, precisions, POP_SIZE):
 
     for i in range(n):
         x[i] = x_pop[i].dot(2 ** np.arange(precisions)[::-1]) / float(2 ** precisions - 1) * (
-                ranges[i][1] - ranges[i][0]) + ranges[i][0]
+                xmax - xmin) + xmin
     return x
 
 
@@ -92,7 +94,7 @@ def select(pop, fitness, POP_SIZE):
     return pop[idx]
 
 
-def get_fitness1(pop, F, n, precisions, ranges, POP_SIZE):
+def get_fitness1(pop, F, n, precisions, xmax, xmin, POP_SIZE):
     """
 
     Returns
@@ -101,25 +103,25 @@ def get_fitness1(pop, F, n, precisions, ranges, POP_SIZE):
         种群所对应函数值.
 
     """
-    x = translateDNA(pop, n, ranges, precisions, POP_SIZE)
+    x = translateDNA(pop, n, xmax, xmin, precisions, POP_SIZE)
     pred = F(x)
     return pred
 
 
-def print_info(c, pop, F, n, precisions, ranges, POP_SIZE):
+def print_info(c, pop, F, n, precisions, xmax, xmin, POP_SIZE):
     """
 
     得到最优解
 
     """
 
-    fitness = get_fitness1(pop, F, n, precisions, ranges, POP_SIZE)
+    fitness = get_fitness1(pop, F, n, precisions, xmax, xmin, POP_SIZE)
     if c == 1:
         best_fitness_index = np.argmax(fitness)
     if c == 0:
         best_fitness_index = np.argmin(fitness)
     # print("optimal_value:", fitness[best_fitness_index])
-    x = translateDNA(pop, n, ranges, precisions, POP_SIZE)
+    x = translateDNA(pop, n, xmax, xmin, precisions, POP_SIZE)
     return fitness[best_fitness_index], x[:, best_fitness_index:best_fitness_index + 1]
     # for i in range(n):
     # print(x[i][best_fitness_index])
@@ -129,15 +131,15 @@ def print_info(c, pop, F, n, precisions, ranges, POP_SIZE):
 # print("(x, y):", (x[max_fitness_index], y[max_fitness_index]))
 
 
-def ga(c, F, n, ranges, precisions, N_GENERATIONS, POP_SIZE, MUTATION_RATE, CROSSOVER_RATE):
+def ga(c, F, n, xmax, xmin, precisions, N_GENERATIONS, POP_SIZE, MUTATION_RATE, CROSSOVER_RATE):
     pop = np.random.randint(n, size=(POP_SIZE, precisions * n))
     for _ in range(N_GENERATIONS):
         pop = np.array(crossover_and_mutation(pop, CROSSOVER_RATE, POP_SIZE, precisions, MUTATION_RATE))
 
-        fitness = get_fitness(c, pop, F, n, precisions, ranges, POP_SIZE)
+        fitness = get_fitness(c, pop, F, n, precisions, xmax, xmin, POP_SIZE)
         pop = select(pop, fitness, POP_SIZE)
 
-    return print_info(c, pop, F, n, precisions, ranges, POP_SIZE)
+    return print_info(c, pop, F, n, precisions, xmax, xmin, POP_SIZE)
 
 
 class GAModel(Model):
@@ -164,7 +166,14 @@ class GAModel(Model):
         """
         self.c = kwargs["c"]
         self.n = kwargs["n"]
-        self.ranges = kwargs["ranges"]
+        if "xmax" not in kwargs.keys():
+            self.xmax = 1000
+        else:
+            self.xmax = kwargs["xmax"]
+        if "xmin" not in kwargs.keys():
+            self.xmin = -1000
+        else:
+            self.xmin = kwargs["xmin"]
         if "precisions" not in kwargs.keys():
             self.precisions = 24
         else:
@@ -190,7 +199,7 @@ class GAModel(Model):
         """ 返回结果到前端
         :return:
         """
-        self.F = kwargs["F"]
+        self.predictX = kwargs["predictX"]
         # 返回结果为字典形式
         y,x = self.predict()
         returnDic = {
@@ -204,11 +213,11 @@ class GAModel(Model):
         pass
 
     def predict(self, **kwargs):
-        if "F" not in kwargs.keys():
-            self.F = self.F
+        if "predictX" not in kwargs.keys():
+            self.predictX = self.predictX
         else:
-            self.F = kwargs["F"]
-        return ga(self.c, self.F, self.n, self.ranges, self.precisions, self.N_GENERATIONS, self.POP_SIZE, self.MUTATION_RATE, self.CROSSOVER_RATE)
+            self.predictX = kwargs["predictX"]
+        return ga(self.c, self.predictX, self.n, self.xmax, self.xmin, self.precisions, self.N_GENERATIONS, self.POP_SIZE, self.MUTATION_RATE, self.CROSSOVER_RATE)
 
 
 
@@ -218,14 +227,15 @@ if __name__ == '__main__':
     c = 0
     a = GADataLoader()
     F = a.loadPredictData(predict_path="../data/ga/F.txt")
-    n = 2
-    ranges = np.array([[-3, 3],[-3,3]])
+    n = 3
+    xmax = 10
+    xmin = -10
     precisions = 24
     N_GENERATIONS = 50
     POP_SIZE = 200
     MUTATION_RATE = 0.005
     CROSSOVER_RATE = 0.8
-    model = GAModel(c=c, n=n, ranges=ranges, precisions=precisions, N_GENERATIONS=N_GENERATIONS, 
+    model = GAModel(c=c, n=n, xmax=xmax, xmin=xmin, precisions=precisions, N_GENERATIONS=N_GENERATIONS, 
                     POP_SIZE=POP_SIZE,MUTATION_RATE=MUTATION_RATE, CROSSOVER_RATE=CROSSOVER_RATE)
-    print(model.predictForUI(F=F))
+    print(model.predictForUI(predictX=F))
     

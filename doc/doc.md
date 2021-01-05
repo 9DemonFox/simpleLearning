@@ -304,14 +304,14 @@ return gamma, sigma_squ, T
 用于求解函数最值问题
 ## 8.1 GA参数说明，默认采用
 ```
-c:int,必选
+c:int,可选 （默认值 = 0）
 指定求函数的最大值或最小值，‘1’为求最大值，‘0’为求最小值
-F:function,必选
-指定所要求最值的函数表达式
 n:int,必选
 指定函数所含变量个数
-ranges:array,必选
-指定各个变量的取值范围
+xmax:float,可选 （默认值 = 1000）
+指定所有变量的上界
+xmin:float,可选 （默认值 = -1000）
+指定所有变量的下界
 precisions:int,可选（默认值 = 24）
 指定精度
 N_GENERATIONS:int,可选（默认值 = 50）
