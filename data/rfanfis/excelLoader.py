@@ -18,8 +18,10 @@ class excelLoader():
         pass
 
     def saveXY2Excel(self, x, y, path="RFANFIS_TRAIN_DATA.xlsx"):
-        xy = numpy.insert(x, 0, values=y, axis=1)
+        #print(x.shape,y.shape)
+        xy = numpy.insert(x, [0], values=y, axis=1)
         df = pandas.DataFrame.from_records(xy)
+        #print(df)
         columns = ["y"]
         columns_x = ["x" + str(i) for i in range(trainX.shape[1])]
         columns.extend(columns_x)

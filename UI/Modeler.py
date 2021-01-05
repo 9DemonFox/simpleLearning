@@ -5,7 +5,7 @@ from data.gbm.dataLoader import GBMDataLoader
 from data.hlm.dataloader import HLMDataLoader
 from data.ibrt.dataLoader import IBRTDataLoader
 from data.mert.dataLoder import MERTDataLoader
-from data.reanfis.dataLoader import anfisDataLoader as RE_ANFISDataLoader
+from data.rfanfis.dataLoader import anfisDataLoader as RE_ANFISDataLoader
 from data.rebet.dataLoder import REBETDataLoader
 from data.salp.dataLoder import SALPDataLoader
 from ga.ga import GAModel
@@ -13,7 +13,7 @@ from gbm.GBM import GBMModel
 from hlm.HLM import HLMModel
 from ibrt.ibrt import IBRTModel
 from mert.mert import MERTModel
-from re_anfis.re_anfis import re_anfisModel as RE_ANFISModel
+from rf_anfis.rf_anfis import rf_anfisModel as RE_ANFISModel
 from rebet.rebet import REBETModel
 from salp.SALP import SVRModel, SALPModel
 

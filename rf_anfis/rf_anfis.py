@@ -2,6 +2,13 @@ import sys
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
+import sklearn
+from sklearn.cross_decomposition import PLSRegression
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVR
 
 import torch
 import torch.nn.functional as F
@@ -538,21 +545,57 @@ class rf_anfisModel(torch.nn.Module):
         print(test.dataset.tensors[1])
         print(y_pred)
         print(calc_error(y_pred.double(), y_test.double()))
+
+        y_pred = y_pred.numpy()
         return y_pred
 
-        '''
-        errors = []
-        for t in range(epochs):
-            y_pred = model(x)
-            mse, rmse, perc_loss = calc_error(y_pred, y_actual)
-            errors.append(perc_loss)
-            # Print some progress information as the net is trained:
-            if epochs < 30 or t % 10 == 0:
-                print('epoch {:4d}: MSE={:.5f}, RMSE={:.5f} ={:.2f}%'
-                      .format(t, mse, rmse, perc_loss))
-        '''
+    def fitForUI(self, td):
+        """ 返回结果到前端
+        :return:
+        """
+        self.fit(td)
+        # 返回结果为字典形式
+        #excludeFeatures, coefs = self.fit(**kwargs)
+        returnDic = {
+            str(None): str(None),
+            str(None): str(None)
+        }
+        return returnDic
 
-if __name__ == '__main__':
+    def testForUI(self, *args):
+        """
+        :param kwargs:
+        :return: 字典形式结果
+        """
+        returnDic = {
+            "mean_squared_error": None,
+            "mean_absolute_error": None
+        }
+        args["predictX"] = args.get("testX")
+        predictResult = self.predict(*args)
+        testY = args.get("testY")
+        mse = mean_squared_error(predictResult, testY)
+        mae = mean_absolute_error(predictResult, testY)
+        returnDic["预测结果"] = str(predictResult)
+        returnDic["mean_absolute_error"] = str(mae)
+        returnDic["mean_squared_error"] = str(mse)
+        return returnDic
+
+    def predictForUI(self, *args):
+        """
+        :param kwargs:
+        :return: 字典形式结果
+        """
+        returnDic = {
+            "预测结果": None
+        }
+        predictResult = self.predict(*args)
+        returnDic["预测结果"] = str(predictResult)
+        return returnDic
+
+
+
+if __name__ == '__main__' and False:
     model = rf_anfisModel()
     data = anfisDataLoader()
     train_data = data.loadTrainData()
@@ -562,3 +605,22 @@ if __name__ == '__main__':
     model.fit(train_data)
     print(type(train_data))
     predict_y = model.predict(test_data)
+
+if __name__ == "__main__" and True:
+    from data.salp.dataLoder import SALPDataLoader
+    from sklearn.metrics import mean_squared_error
+    from sklearn.linear_model import LassoLars
+
+    model = rf_anfisModel()
+    data = anfisDataLoader()
+    train_data = data.loadTrainData()
+    print(train_data[0].shape, train_data[1].shape)
+    test_data = data.loadTestData()
+    model.fitForUI(train_data)
+    predictY = model.predict(test_data)
+    predictYForUI = model.predictForUI(test_data)
+    predictTrainY = model.predict(train_data)
+    #print(model.model.coef_)
+    print(predictTrainY.shape, train_data[1].shape)
+    print(mean_squared_error(predictY, test_data[1]))
+    print(mean_squared_error(predictTrainY, train_data[1]))
