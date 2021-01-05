@@ -1,5 +1,6 @@
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
 
 from data.gbm.dataLoader import GBMDataLoader
 from model import Model
@@ -34,6 +35,43 @@ class GBMModel(Model):
     def predict(self, predictX):
         return self.model.predict(predictX)
 
+    def fitFotUI(self, **kwargs):
+        init_params = self.model.get_params()
+        assert "trainX" in kwargs.keys()
+        assert "trainY" in kwargs.keys()
+        trainX, trainY = kwargs.get("trainX"), kwargs.get("trainY")
+        self.fit(trainX, trainY)
+        return None
+
+    def testForUI(self, **kwargs):
+        returnDic = {
+            "predict_result": None,
+            "mean_squared_error": None,
+            "mean_absolute_error": None
+        }
+
+        assert "testX" in kwargs.keys()
+        assert "testY" in kwargs.keys()
+
+        testX, testY = kwargs.get("testX"), kwargs.get("testY")
+        predictResult = self.model.predict(testX)
+        mse = mean_squared_error(predictResult, testY)
+        mae = mean_absolute_error(predictResult, testY)
+        returnDic["predict_result"] = str(predictResult)
+        returnDic["mean_squared_error"] = str(mse)
+        returnDic["mean_absolute_error"] = str(mae)
+        return returnDic
+
+    def predictForUI(self, **kwargs):
+        returnDic = {
+            "predict_result": None
+        }
+        assert "predictX" in kwargs.keys()
+        predictX = kwargs.get("predictX")
+        predictY = self.predict(predictX=predictX)
+        returnDic["predict_result"] = str(predictY)
+        return returnDic
+
 
 if __name__ == "__main__":
     # Quadric 损失函数 (y-f(x))^2 / 2 -> ls
@@ -45,10 +83,13 @@ if __name__ == "__main__":
               # 'loss': 'lad',
               'loss': 'ls'}
     gbm_reg = GBMModel(**params)
-    gbm_loader = GBMDataLoader(datapath="../data/gbm/oil_field_data_for_gbm.xlsx")
+    datapath = "../data/gbm/oil_field_data_for_gbm.xlsx"
+    gbm_loader = GBMDataLoader(datapath=datapath)
 
     trainX, trainY = gbm_loader.loadTrainData()
+    print(trainX, "\n", trainY)
     testX, testY = gbm_loader.loadTestData()
+    print(testX, "\n", testY)
 
     gbm_reg.fit(trainX=trainX, trainY=trainY)
     predictY = gbm_reg.predict(predictX=testX)
