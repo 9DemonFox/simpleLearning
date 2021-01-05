@@ -127,11 +127,11 @@ class HLMTestCase(unittest.TestCase):
         trainW, trainX, trainY = dataloader.loadTrainData()
         testW, testX, testY = dataloader.loadTestData()
 
-        assert trainW.shape == (8,)
+        assert trainW.shape == (1, 8)
         assert trainX.shape == (4, 1)
         assert trainY.shape == (4,)
 
-        assert testW.shape == (8,)
+        assert testW.shape == (1, 8)
         assert testX.shape == (4, 1)
         assert testY.shape == (4,)
 

@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
 
 from data.hlm.dataloader import HLMDataLoader
 from model import Model
@@ -146,9 +147,12 @@ def append_ones(x, w):
     添加常数列，在 x, w 之前添加一列 1.
     """
     # TODO: judge W's shape is (q, ) or (q, 1)
+    # X = np.c_[np.ones(x.shape[0]), x]
+    # w = np.hstack((1, w))
+    # W = np.vstack((np.hstack((w, np.zeros(w.shape[0]))), np.hstack((np.zeros(w.shape[0]), w))))
     X = np.c_[np.ones(x.shape[0]), x]
-    w = np.hstack((1, w))
-    W = np.vstack((np.hstack((w, np.zeros(w.shape[0]))), np.hstack((np.zeros(w.shape[0]), w))))
+    w = np.hstack((np.ones((w.shape[0], 1)), w))
+    W = np.vstack((np.hstack((w, np.zeros((1, w.shape[1])))), np.hstack((np.zeros((1, w.shape[1])), w))))
     return X, W
 
 
@@ -187,6 +191,7 @@ class HLMModel(Model):
         Y = np.array(y).reshape(y.shape[0], 1)
 
         self.gamma, self.sigma_squ, self.T = em_hlm(W, X, Y, iters)
+        return self.gamma, self.sigma_squ, self.T
 
     def predict(self, **kwargs):
         assert "predictX" in kwargs.keys()
@@ -205,6 +210,7 @@ class HLMModel(Model):
 
         mu = np.random.multivariate_normal(mean=np.zeros(p), cov=T, size=M)
         mu = np.sum(mu, axis=0, keepdims=True)
+        # mu = np.sum(mu, axis=0, keepdims=True) / M
 
         beta = np.dot(W, gamma) + mu.T
         # print(sigma_squ)
@@ -215,6 +221,50 @@ class HLMModel(Model):
 
         predictY = np.dot(X, beta).flatten() + r
         return predictY
+
+    def fitForUI(self, **kwargs):
+        returnDic = {
+            "第二层模型的系数": None,
+            "第一层随机误差的方差": None,
+            "第二层随机误差的方差": None
+        }
+        assert "testW" in kwargs.keys()
+        assert "testX" in kwargs.keys()
+        assert "testY" in kwargs.keys()
+        gamma, sigma_squ, T = self.fit(**kwargs)
+        returnDic["第二层模型的系数"] = str(gamma)
+        returnDic["第一层随机误差的方差"] = str(sigma_squ)
+        returnDic["第二层随机误差的方差"] = str(T)
+        return returnDic
+
+    def testFotUI(self, **kwargs):
+        returnDic = {
+            "mean_squared_error": None,
+            "mean_absolute_error": None
+        }
+        assert "testW" in kwargs.keys()
+        assert "testX" in kwargs.keys()
+        assert "testY" in kwargs.keys()
+        testW, testX, testY = kwargs.get("testW"), kwargs.get("testX"), kwargs.get("testY")
+        predictResult = self.predict(predictW=testW, predictX=testX)
+        print("predictResult = ", predictResult)
+        mse = mean_squared_error(predictResult, testY)
+        mae = mean_absolute_error(predictResult, testY)
+        returnDic["mean_squared_error"] = str(mse)
+        returnDic["mean_absolute_error"] = str(mae)
+        return returnDic
+
+    def predictForUI(self, **kwargs):
+        returnDic = {
+            "predict_result": None
+        }
+        assert "predictX" in kwargs.keys()
+        assert "predictW" in kwargs.keys()
+        predictW, predictX = kwargs.get("predictW"), kwargs.get("predictX")
+        predictY = self.predict(predictW=predictW, predictX=predictX)
+        print("predictY = ", predictY)
+        returnDic["predict_result"] = str(predictY)
+        return returnDic
 
 
 if __name__ == "__main__":
@@ -234,12 +284,22 @@ if __name__ == "__main__":
     '''
 
     trainW, trainX, trainY = hlm_dataloader.loadTrainData()
-    testW, testX, trainY = hlm_dataloader.loadTestData()
-    hlm_model.fit(trainW=trainW, trainX=trainX, trainY=trainY)
-    predictY = hlm_model.predict(predictW=trainW, predictX=trainX)
+    # print(trainW, "\n", trainX, "\n", trainY)
+    testW, testX, testY = hlm_dataloader.loadTestData()
+    # print(testW, "\n", testX, "\n", testY)
+
+    coef_dic = hlm_model.fitForUI(trainW=trainW, trainX=trainX, trainY=trainY)
+    print(coef_dic)
+    # mean_error = hlm_model.testFotUI(testW=testW, testX=testX, testY=testY)
+    # print(mean_error)
+    predictResult = hlm_model.predictForUI(predictW=testW, predictX=testX)
+    print(predictResult)
+
+    # hlm_model.fit(trainW=trainW, trainX=trainX, trainY=trainY)
+    # predictY = hlm_model.predict(predictW=trainW, predictX=trainX)
 
     # print(trainW)
     # print(trainX)
     # print(trainY)
-    print(predictY)
-    print(mean_squared_error(trainY, predictY))  # mse 0.947
+    # print(predictY)
+    # print(mean_squared_error(trainY, predictY))  # mse 0.947

@@ -45,11 +45,18 @@ modelTypes2models = {
             }
         },
         {
+            "model_name": ("梯度提升机", "GBM"),
+            "model_parameters": {
+                "n_estimator": ("弱学习器的个数", 100),
+                "learning_rate": ("学习率", 1),
+                "max_depth": ("单个回归估计量的最大深度", 3),
+                "loss": ("损失函数", "ls")
+            }
+        },
+        {
             "model_name": ("多层线性模型", "HLM"),
             "model_parameters": {
-                "parameter1": ("参数1", 0.001),
-                "parameter2": ("参数2", 0.25),
-                "parameter3": ("参数3", 123)
+                "No Parameter": ("无参数", "None"),
             }
         },
         {
