@@ -154,7 +154,7 @@ class REBETModel(Model):
     def __init__(self, **kwargs):
         """
         
-        n:int,可选(默认 = 1)
+        n:int,可选(默认 = 100)
         观测对象种类数量
         q：int
         随机效应变量数
@@ -166,14 +166,14 @@ class REBETModel(Model):
         误差的方差
         M:float,可选(默认 = 10)
         迪利克雷分布参数
-        epoch:int,可选(默认=200)
+        epoch:int,可选(默认=50)
         循环轮数
         k:int,可选(默认=1)
         表示第k个变量作为随机效应变量
 
         """
         if "n" not in kwargs.keys():
-            self.n = 1
+            self.n = 100
         else:
             self.n = kwargs["n"]
         if "M" not in kwargs.keys():
@@ -181,7 +181,7 @@ class REBETModel(Model):
         else:
             self.M = kwargs["M"]
         if "epoch" not in kwargs.keys():
-            self.epoch = 200
+            self.epoch = 50
         else:
             self.epoch = kwargs["epoch"]
 
@@ -199,7 +199,6 @@ class REBETModel(Model):
         """ 返回结果到前端
         :return:
         """
-        self.fit(**kwargs)
         # 返回结果为字典形式
         D,σ2 = self.fit(**kwargs)
         returnDic = {
@@ -246,12 +245,12 @@ class REBETModel(Model):
         """
 
         if "epoch" not in kwargs.keys():
-            self.epoch = 200
+            self.epoch = self.epoch
         else:
             self.epoch = kwargs["epoch"]
 
         if "k" not in kwargs.keys():
-            self.k = 1
+            self.k = self.k
         else:
             self.k = kwargs["k"]
         self.trainX = kwargs["trainX"]
@@ -279,17 +278,17 @@ class REBETModel(Model):
            
 
     def test(self, **kwargs):
-        self.predictX = kwargs["predictX"]
-        self.predictY = kwargs["predictY"]
-        N = self.predictX.shape[0]
+        self.testX = kwargs["testX"]
+        self.testY = kwargs["testY"]
+        N = self.testX.shape[0]
         m = int(N / self.n)
         z = np.ones((self.n, m, self.q))
         for i in range(self.n):
-            z[i:i + 1, :, 1:2] = z[i:i + 1, :, 1:2] - 1 + self.predictX[m * i:m * (i + 1), self.k-1:self.k]
-        x0 = self.clf2.predict(self.predictX).reshape(N, 1)
+            z[i:i + 1, :, 1:2] = z[i:i + 1, :, 1:2] - 1 + self.testX[m * i:m * (i + 1), self.k-1:self.k]
+        x0 = self.clf2.predict(self.testX).reshape(N, 1)
         for j in range(self.n):
             x0[j * m:(j + 1) * m, 0:1] = x0[j * m:(j + 1) * m, 0:1] + np.dot(z[j], self.u[j])
-        return mean_squared_error(x0, self.predictY)
+        return mean_squared_error(x0, self.testY)
     
     def predict(self, **kwargs):
         self.predictX = kwargs["predictX"]
@@ -314,9 +313,9 @@ if __name__ == '__main__':
     datapath3="../data/rebet/data_predict.xlsx"
     dataloader = REBETDataLoader()
     trainX, trainY = dataloader.loadTrainData(train_path=datapath1)
-    textX, textY = dataloader.loadTestData(test_path=datapath2)
+    testX, testY = dataloader.loadTestData(test_path=datapath2)
     predictX = dataloader.loadPredictData(predict_path=datapath3)
     model = REBETModel(n=n, epoch=epoch, M=M, k=k)
     print(model.fitForUI(trainX=trainX, trainY=trainY))
-    print(model.testForUI(predictX=textX, predictY=textY))
+    print(model.testForUI(testX=testX, testY=testY))
     model.predictForUI(predictX=predictX)
