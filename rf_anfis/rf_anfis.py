@@ -49,6 +49,13 @@ def train_anfis_with(model, data, optimizer, criterion,
         Train the given model using the given (x,y) data.
     '''
     print(data.__len__())
+    #处理data,将data从numpy二元组合并为dataLoader
+    tensor_X = torch.from_numpy(data[0])
+    tensor_y = torch.from_numpy(data[1])
+    ds = TensorDataset(tensor_X,tensor_y)
+    data = DataLoader(ds, batch_size=16, shuffle=True)
+
+
     errors = []  # Keep a list of these for plotting afterwards
     # optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
     #print('### Training for {} epochs, training size = {} cases'.
@@ -513,6 +520,11 @@ class rf_anfisModel(torch.nn.Module):
 
     def predict(self, test):
         # Get the error rate for the whole batch:
+        # 处理test,将test从numpy二元组合并为dataLoader
+        tensor_X = torch.from_numpy(test[0])
+        tensor_y = torch.from_numpy(test[1])
+        ds = TensorDataset(tensor_X, tensor_y)
+        test = DataLoader(ds, batch_size=16, shuffle=True)
 
         y_pred = np.array([[0]])
         for batch_x, batch_y in test:
@@ -544,6 +556,7 @@ if __name__ == '__main__':
     model = rf_anfisModel()
     data = anfisDataLoader()
     train_data = data.loadTrainData()
+    print(train_data[0].shape, train_data[1].shape)
     test_data = data.loadTestData()
     #train_anfis(model, train_data, 20)
     model.fit(train_data)

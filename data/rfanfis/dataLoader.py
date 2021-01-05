@@ -82,11 +82,15 @@ class anfisDataLoader(DataLoader):
 
 
     def loadTrainData(self):
-        return self.train_dl
+        train_X = self.train_dl.dataset.tensors[0].numpy().reshape(-1,3)
+        train_y =  self.train_dl.dataset.tensors[1].numpy().reshape(-1,1)
+        return train_X, train_y
 
     def loadTestData(self):
-        return self.test_dl
+        test_X = self.test_dl.dataset.tensors[0].numpy().reshape(-1, 3)
+        test_y = self.test_dl.dataset.tensors[1].numpy().reshape(-1, 1)
+        return test_X, test_y
 
 if __name__ == "__main__":
-    model = anfisDataLoader(100,16)
-    print(model.loadTrainData())
+    model = anfisDataLoader()
+    print('shape: ',model.loadTrainData()[0].shape, model.loadTrainData()[1].shape)
