@@ -1,35 +1,44 @@
-import numpy as np
+import pandas
 
 from data.dataLoader import DataLoader
 
 
 class MERTDataLoader(DataLoader):
-    def __init__(self, datapath1, datapath2):
-        with open(datapath1, "rb") as f:
-            data_train = np.loadtxt(f, delimiter=",", skiprows=0)
-        with open(datapath2, "rb") as f:
-            data_test = np.loadtxt(f, delimiter=",", skiprows=0)
-        self.trainY = data_train[:, 0:1]
-        self.trainX = data_train[:, 1:]
+    def __init__(self):
+        pass
+    
+    def __loadExcelData(self, data_path):
+        """
+        :param data_path: excel数据 第1列为Y
+        :return:
+        """
+        df = pandas.read_excel(data_path, index_col=0)
+        y = df.values[:, 0]
+        x = df.values[:, 1:]
+        return x, y
+    
+    def loadTrainData(self, **kwargs):
+        trainX, trainY = self.__loadExcelData(kwargs.get("train_path"))
+        return trainX, trainY
 
-        self.predictY = data_test[:, 0:1]
-        self.predictX = data_test[:, 1:]
-
-    def loadTrainData(self):
-        return self.trainX, self.trainY
-
-    def loadTestData(self):
-        return self.predictX, self.predictY
+    def loadTestData(self, **kwargs):
+        testX, testY = self.__loadExcelData(kwargs.get("test_path"))
+        return testX, testY
+    
+    def loadPredictData(self, **kwargs):
+        """
+        :param predict_path 预测的输入
+        :return: 加载数据
+        """
+        data_path = kwargs.get("predict_path")
+        df = pandas.read_excel(data_path, index_col=0)
+        x = df.values[:, 0:]
+        return x
 
 
 if __name__ == "__main__":
-    datapath1 = "./data_train.csv"
-    datapath2 = "./data_test.csv"
-    dataloder = MERTDataLoader(datapath1, datapath2)
-    data_train = dataloder.loadTrainData()
-    data_test = dataloder.loadTrainData()
-    trainY = data_train[:, 0:1]
-    trainX = data_train[:, 1:]
-
-    predictY = data_test[:, 0:1]
-    predictX = data_test[:, 1:]
+    datapath1 = "./data_train.xlsx"
+    datapath2 = "./data_test.xlsx"
+    dataloder = MERTDataLoader()
+    trainX, trainY = dataloder.loadTrainData(train_path=datapath1)
+    testX, testY = dataloder.loadTestData(test_path=datapath2)

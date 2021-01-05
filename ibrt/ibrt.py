@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
 
 from data.ibrt.dataLoader import IBRTDataLoader
@@ -277,6 +279,49 @@ class IBRTModel(Model):
         else:
             return np.zeros(X_data.shape[0])
 
+    def fitForUI(self, *args):
+        """ 返回结果到前端
+        :return:
+        """
+        self.fit(*args)
+        # 返回结果为字典形式
+        #excludeFeatures, coefs = self.fit(*args)
+        returnDic = {
+            "排除特征": str(None),
+            "系数": str(None)
+        }
+        return returnDic
+
+    def testForUI(self, *args):
+        """
+        :param args:
+        :return: 字典形式结果
+        """
+        returnDic = {
+            "mean_squared_error": None,
+            "mean_absolute_error": None
+        }
+        #args["predictX"] = args[0]
+        predictResult = self.predict(args[0])
+        testY = args[1]
+        mse = mean_squared_error(predictResult, testY)
+        mae = mean_absolute_error(predictResult, testY)
+        returnDic["预测结果"] = str(predictResult)
+        returnDic["mean_absolute_error"] = str(mae)
+        returnDic["mean_squared_error"] = str(mse)
+        return returnDic
+
+    def predictForUI(self, *args):
+        """
+        :param args:
+        :return: 字典形式结果
+        """
+        returnDic = {
+            "预测结果": None
+        }
+        predictResult = self.predict(*args)
+        returnDic["预测结果"] = str(predictResult)
+        return returnDic
 
 if __name__ == '__main__':
     from sklearn.datasets import load_boston
@@ -284,17 +329,24 @@ if __name__ == '__main__':
     from sklearn.metrics import mean_absolute_error
     import matplotlib.pyplot as plt
 
-    ibrt = IBRTModel(10, 0, 1.0, 2)
+    model = IBRTModel(5, 0, 1.0, 2)
     ibrt_loader = IBRTDataLoader(datapath="../data/ibrt/test.xlsx")
 
     trainX, trainY = ibrt_loader.loadTrainData()
     testX, testY = ibrt_loader.loadTestData()
     print(trainX.shape,testX.shape)
 
-    ibrt.fit(trainX, trainY)
-    predictY = ibrt.predict(testX)
-    print(mean_absolute_error(testY, predictY))
+    model.fit(trainX, trainY)
 
+    #print(mean_absolute_error(testY, predictY))
+
+    model.fitForUI(trainX, trainY)
+    predictY = model.predict(testX)
+    predictYForUI = model.predictForUI(testX)
+    predictTrainY = model.predict(trainX)
+    #print(model.model.coef_)
+    print(mean_squared_error(predictY, testY))
+    print(mean_squared_error(predictTrainY, trainY))
 
 
 
