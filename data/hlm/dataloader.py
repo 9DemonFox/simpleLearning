@@ -26,64 +26,56 @@ def loadData(erosion_datapath, soil_datapath):
 
 class HLMDataLoader(DataLoader):
     def __init__(self):
-        # x, y = self.__loadErosionData(datapath=EROSION_DATAPATH)
+        # x, y = self.__loadEroionData(datapath=EROSION_DATAPATH)
         # w = self.__loadSoilData(datapath=SOIL_DATAPATH)
         # self.trainX, self.trainY, self.trainW = x, y, w
         # self.testX, self.testY, self.testW = x, y, w
         pass
 
-    def __loadErosionData(self, datapath):
-        erosion_data = pd.read_excel(io=datapath, index_col=0)
+    def __loadExcelData(self, datapath):
+        erosion_data = pd.read_excel(io=datapath, sheet_name="erosion", index_col=0)
+        soil_data = pd.read_excel(io=datapath, sheet_name="soil", index_col=0)
         y = erosion_data.values[:, 0].astype(float)
         x = erosion_data.values[:, 1:-1].astype(float)
-        return x, y
-
-    def __loadSoilData(self, datapath):
-        soil_data = pd.read_excel(io=datapath, index_col=0)
         w = soil_data.values[:, :-1].astype(float)
-        return w
+        return w, x, y
 
     def loadTrainData(self, **kwargs):
         assert "train_path" in kwargs.keys()
-        assert "soil_path" in kwargs.keys()
-        train_path, soil_path = kwargs.get("train_path"), kwargs.get("soil_path")
-        trainX, trainY = self.__loadErosionData(datapath=train_path)
-        trainW = self.__loadSoilData(datapath=soil_path)
+        train_path = kwargs.get("train_path")
+        trainW, trainX, trainY = self.__loadExcelData(datapath=train_path)
         return trainW, trainX, trainY
 
     def loadTestData(self, **kwargs):
         assert "test_path" in kwargs.keys()
-        assert "soil_path" in kwargs.keys()
-        test_path, soil_path = kwargs.get("test_path"), kwargs.get("soil_path")
-        testX, testY = self.__loadErosionData(datapath=test_path)
-        testW = self.__loadSoilData(datapath=soil_path)
+        test_path = kwargs.get("test_path")
+        testW, testX, testY = self.__loadExcelData(datapath=test_path)
         return testW, testX, testY
 
     def loadPredictData(self, **kwargs):
         assert "predict_path" in kwargs.keys()
-        assert "soil_path" in kwargs.keys()
-        predict_path, soil_path = kwargs.get("predict_path"), kwargs.get("soil_path")
-        df = pd.read_excel(io=predict_path, index_col=0)
-        predictX = df.values[:, :-1].astype(float)
-        predictW = self.__loadSoilData(datapath=soil_path)
+        predict_path = kwargs.get("predict_path")
+        df_erosion = pd.read_excel(io=predict_path, sheet_name="erosion", index_col=0)
+        df_soil = pd.read_excel(io=predict_path, sheet_name="soil", index_col=0)
+        predictX = df_erosion.values[:, :-1].astype(float)
+        predictW = df_soil.values[:, :-1].astype(float)
         return predictW, predictX
 
 
 if __name__ == "__main__":
     dataloader = HLMDataLoader()
 
-    soil_path = "soil_data.xlsx"
     train_path = "train_erosion_data.xlsx"
     test_path = "test_erosion_data.xlsx"
     predict_path = "predict_erosion_data.xlsx"
 
-    trainW, trainX, trainY = dataloader.loadTrainData(train_path=train_path, soil_path=soil_path)
+    trainW, trainX, trainY = dataloader.loadTrainData(train_path=train_path)
     print(trainW.shape, trainX.shape, trainY.shape)
 
-    testW, testX, testY = dataloader.loadTestData(test_path=test_path, soil_path=soil_path)
+    testW, testX, testY = dataloader.loadTestData(test_path=test_path)
     print(testW.shape, testX.shape, testY.shape)
 
-    predictW, predictX = dataloader.loadPredictData(predict_path=predict_path, soil_path=soil_path)
+    predictW, predictX = dataloader.loadPredictData(predict_path=predict_path)
     print(predictW.shape, predictX.shape)
     # X = np.c_[np.ones(trainX.shape[0]), trainX]
     # w = np.hstack((np.ones((trainW.shape[0], 1)), trainW))

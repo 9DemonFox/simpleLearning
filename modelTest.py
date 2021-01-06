@@ -8,6 +8,7 @@ from sklearn.metrics import mean_squared_error
 from ahp.AHP import AHPModel
 from data.ahp.dataLoader import AHPDataLoader
 from data.gbm.dataLoader import GBMDataLoader
+from data.hlm.dataloader import HLMDataLoader
 from data.ibrt.dataLoader import IBRTDataLoader
 from data.mert.dataLoder import MERTDataLoader
 from data.rebet.dataLoder import REBETDataLoader
@@ -15,6 +16,7 @@ from data.salp.dataLoder import SalpDataLoader
 from data.rfanfis.dataLoader import anfisDataLoader
 from ga.ga import GAModel
 from gbm.GBM import GBMModel
+from hlm.HLM import HLMModel
 from ibrt.ibrt import IBRTModel
 from mert.mert import MERTModel
 from rebet.rebet import REBETModel
