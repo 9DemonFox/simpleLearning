@@ -11,11 +11,8 @@ def normalize(X):
 
 
 class GBMDataLoader(DataLoader):
-    def __init__(self, datapath=DATAPATH):
-        # split train data and target
-        X, y = self.__loadExcelData(datapath=datapath)
-        self.trainX, self.testX = train_test_split(X, test_size=0.1, random_state=7)
-        self.trainY, self.testY = train_test_split(y, test_size=0.1, random_state=7)
+    def __init__(self):
+        pass
 
     def __loadExcelData(self, datapath):
         """
@@ -28,33 +25,34 @@ class GBMDataLoader(DataLoader):
         return X, y
 
     def loadTrainData(self, **kwargs):
-        if "train_path" in kwargs.keys():
-            train_datapath = kwargs["train_path"]
-            trainX, trainY = self.__loadExcelData(datapath=train_datapath)
-            return trainX, trainY
-        else:
-            return self.trainX, self.trainY
+        assert "train_path" in kwargs.keys()
+        train_datapath = kwargs["train_path"]
+        trainX, trainY = self.__loadExcelData(datapath=train_datapath)
+        return trainX, trainY
 
     def loadTestData(self, **kwargs):
-        if "test_path" in kwargs.keys():
-            test_datapath = kwargs["test_path"]
-            testX, testY = self.__loadExcelData(datapath=test_datapath)
-            return testX, testY
-        else:
-            return self.testX, self.testY
+        assert "test_path" in kwargs.keys()
+        test_datapath = kwargs["test_path"]
+        testX, testY = self.__loadExcelData(datapath=test_datapath)
+        return testX, testY
+
+    def loadPredictData(self, **kwargs):
+        assert "predict_path" in kwargs.keys()
+        predict_path = kwargs["predict_path"]
+        df = pd.read_excel(io=predict_path, index_col=0)
+        predictX = df.values[:, :]
+        return predictX
 
 
 if __name__ == "__main__":
-    datapath = "data/gbm/oil_field_data_for_gbm.xlsx"
+    train_datapath = "gbm_train_data.xlsx"
+    test_datapath = "gbm_test_data.xlsx"
+    predict_datapath = "gbm_predict_data.xlsx"
+    gbm_dataloader = GBMDataLoader()
+    trainX, trainY = gbm_dataloader.loadTrainData(train_path=train_datapath)
+    testX, testY = gbm_dataloader.loadTestData(test_path=test_datapath)
+    predictX = gbm_dataloader.loadPredictData(predict_path=predict_datapath)
+    print(trainX.shape, trainY.shape)
+    print(testX.shape, testY.shape)
+    print(predictX.shape)
 
-    """
-    # split train data and target
-    X, y = data.iloc[:, :-1], data.iloc[:, -1]
-    # print(X.shape, y.shape)  # (18, 10) (18,)
-    # normX = (X - X.mean()) / X.std()
-    # print(normX.head())
-    trainX, testX = train_test_split(X, test_size=0.1, random_state=7)
-    trainY, testY = train_test_split(y, test_size=0.1, random_state=7)
-    # print(trainX.shape, testX.shape)
-    # print(trainY.shape, testY.shape)
-    """
