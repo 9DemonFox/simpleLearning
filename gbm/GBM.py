@@ -35,13 +35,16 @@ class GBMModel(Model):
     def predict(self, predictX):
         return self.model.predict(predictX)
 
-    def fitFotUI(self, **kwargs):
+    def fitForUI(self, **kwargs):
         init_params = self.model.get_params()
         assert "trainX" in kwargs.keys()
         assert "trainY" in kwargs.keys()
         trainX, trainY = kwargs.get("trainX"), kwargs.get("trainY")
         self.fit(trainX, trainY)
-        return None
+        returnDic = {
+            "None": "None",
+        }
+        return returnDic
 
     def testForUI(self, **kwargs):
         returnDic = {
@@ -95,7 +98,7 @@ if __name__ == "__main__":
     predictX = gbm_loader.loadPredictData(predict_path=predict_path)
     print(predictX.shape)
 
-    gbm_reg.fitFotUI(trainX=trainX, trainY=trainY)
+    gbm_reg.fitForUI(trainX=trainX, trainY=trainY)
     predict_result = gbm_reg.testForUI(testX=testX, testY=testY)
     print(predict_result)
     predictY = gbm_reg.predictForUI(predictX=predictX)

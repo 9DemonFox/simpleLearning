@@ -1,21 +1,21 @@
 from UI.UIConfig import machineLearningModels, modelDefaultConfig, modelTypes2models, mainleftFrameTextList
 from ahp.AHP import AHPModel
 from data.ahp.dataLoader import AHPDataLoader
+from data.ga.dataLoder import GADataLoader
 from data.gbm.dataLoader import GBMDataLoader
 from data.hlm.dataloader import HLMDataLoader
 from data.ibrt.dataLoader import IBRTDataLoader
 from data.mert.dataLoder import MERTDataLoader
-from data.rfanfis.dataLoader import anfisDataLoader as RE_ANFISDataLoader
 from data.rebet.dataLoder import REBETDataLoader
+from data.rfanfis.dataLoader import anfisDataLoader as RE_ANFISDataLoader
 from data.salp.dataLoder import SALPDataLoader
-from data.ga.dataLoder import GADataLoader
 from ga.ga import GAModel
 from gbm.GBM import GBMModel
 from hlm.HLM import HLMModel
 from ibrt.ibrt import IBRTModel
 from mert.mert import MERTModel
-from rf_anfis.rf_anfis import rf_anfisModel as RE_ANFISModel
 from rebet.rebet import REBETModel
+from rf_anfis.rf_anfis import rf_anfisModel as RE_ANFISModel
 from salp.SALP import SVRModel, SALPModel
 
 
@@ -51,7 +51,7 @@ class Modeler:
 
     def test_step_3(self, test_path):
         self.curDataLoader = self.name2DataLoader.get(self.curModelName)()
-        testX, testY = self.curDataLoader.loadTrainData(train_path=test_path)
+        testX, testY = self.curDataLoader.loadTestData(test_path=test_path)
         result = self.curModel.testForUI(testX=testX, testY=testY)
         return result
 
