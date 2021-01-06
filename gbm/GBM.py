@@ -45,7 +45,7 @@ class GBMModel(Model):
 
     def testForUI(self, **kwargs):
         returnDic = {
-            "predict_result": None,
+            # "predict_result": None,
             "mean_squared_error": None,
             "mean_absolute_error": None
         }
@@ -57,7 +57,7 @@ class GBMModel(Model):
         predictResult = self.model.predict(testX)
         mse = mean_squared_error(predictResult, testY)
         mae = mean_absolute_error(predictResult, testY)
-        returnDic["predict_result"] = str(predictResult)
+        # returnDic["predict_result"] = str(predictResult)
         returnDic["mean_squared_error"] = str(mse)
         returnDic["mean_absolute_error"] = str(mae)
         return returnDic
@@ -83,14 +83,20 @@ if __name__ == "__main__":
               # 'loss': 'lad',
               'loss': 'ls'}
     gbm_reg = GBMModel(**params)
-    datapath = "../data/gbm/oil_field_data_for_gbm.xlsx"
-    gbm_loader = GBMDataLoader(datapath=datapath)
+    train_path = "../data/gbm/gbm_train_data.xlsx"
+    test_path = "../data/gbm/gbm_test_data.xlsx"
+    predict_path = "../data/gbm/gbm_predict_data.xlsx"
+    gbm_loader = GBMDataLoader()
 
-    trainX, trainY = gbm_loader.loadTrainData()
-    print(trainX, "\n", trainY)
-    testX, testY = gbm_loader.loadTestData()
-    print(testX, "\n", testY)
+    trainX, trainY = gbm_loader.loadTrainData(train_path=train_path)
+    print(trainX.shape, "\n", trainY.shape)
+    testX, testY = gbm_loader.loadTestData(test_path=test_path)
+    print(testX.shape, "\n", testY.shape)
+    predictX = gbm_loader.loadPredictData(predict_path=predict_path)
+    print(predictX.shape)
 
-    gbm_reg.fit(trainX=trainX, trainY=trainY)
-    predictY = gbm_reg.predict(predictX=testX)
-    print("mse is {:.4f}".format(mean_squared_error(testY, predictY)))
+    gbm_reg.fitFotUI(trainX=trainX, trainY=trainY)
+    predict_result = gbm_reg.testForUI(testX=testX, testY=testY)
+    print(predict_result)
+    predictY = gbm_reg.predictForUI(predictX=predictX)
+    print(predictY)

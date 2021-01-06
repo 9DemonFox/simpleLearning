@@ -228,9 +228,9 @@ class HLMModel(Model):
             "第一层随机误差的方差": None,
             "第二层随机误差的方差": None
         }
-        assert "testW" in kwargs.keys()
-        assert "testX" in kwargs.keys()
-        assert "testY" in kwargs.keys()
+        assert "trainW" in kwargs.keys()
+        assert "trainX" in kwargs.keys()
+        assert "trainY" in kwargs.keys()
         gamma, sigma_squ, T = self.fit(**kwargs)
         returnDic["第二层模型的系数"] = str(gamma)
         returnDic["第一层随机误差的方差"] = str(sigma_squ)
@@ -262,7 +262,7 @@ class HLMModel(Model):
         assert "predictW" in kwargs.keys()
         predictW, predictX = kwargs.get("predictW"), kwargs.get("predictX")
         predictY = self.predict(predictW=predictW, predictX=predictX)
-        print("predictY = ", predictY)
+        # print("predictY = ", predictY)
         returnDic["predict_result"] = str(predictY)
         return returnDic
 
@@ -271,7 +271,11 @@ if __name__ == "__main__":
     hlm_model = HLMModel()
     hlm_dataloader = HLMDataLoader()
 
-    datapath = '../data/hlm/'
+    dirname = '../data/hlm/'
+    soil_path = dirname + "soil_data.xlsx"
+    train_path = dirname + "train_erosion_data.xlsx"
+    test_path = dirname + "test_erosion_data.xlsx"
+    predict_path = dirname + "predict_erosion_data.xlsx"
     '''
     trainW, trainX, trainY = hlm_dataloader.loadTrainData(
         erosion_datapath=datapath + "fake_erosion_data.xlsx",
@@ -283,17 +287,19 @@ if __name__ == "__main__":
     )
     '''
 
-    trainW, trainX, trainY = hlm_dataloader.loadTrainData()
-    # print(trainW, "\n", trainX, "\n", trainY)
-    testW, testX, testY = hlm_dataloader.loadTestData()
-    # print(testW, "\n", testX, "\n", testY)
+    trainW, trainX, trainY = hlm_dataloader.loadTrainData(train_path=train_path, soil_path=soil_path)
+    print(trainW.shape, trainX.shape, trainY.shape)
+    testW, testX, testY = hlm_dataloader.loadTestData(test_path=test_path, soil_path=soil_path)
+    print(testW.shape, testX.shape, testY.shape)
+    predictW, predictX = hlm_dataloader.loadPredictData(predict_path=predict_path, soil_path=soil_path)
+    print(predictW.shape, predictX.shape)
 
     coef_dic = hlm_model.fitForUI(trainW=trainW, trainX=trainX, trainY=trainY)
     print(coef_dic)
-    # mean_error = hlm_model.testFotUI(testW=testW, testX=testX, testY=testY)
-    # print(mean_error)
-    predictResult = hlm_model.predictForUI(predictW=testW, predictX=testX)
-    print(predictResult)
+    mean_error = hlm_model.testFotUI(testW=testW, testX=testX, testY=testY)
+    print(mean_error)
+    # predictResult = hlm_model.predictForUI(predictW=testW, predictX=testX)
+    # print(predictResult)
 
     # hlm_model.fit(trainW=trainW, trainX=trainX, trainY=trainY)
     # predictY = hlm_model.predict(predictW=trainW, predictX=trainX)

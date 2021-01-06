@@ -93,20 +93,26 @@ class MERTTestCase(unittest.TestCase):
 
 
 class GBMTestCase(unittest.TestCase):
+    train_path = "data/gbm/gbm_train_data.xlsx"
+    test_path = "data/gbm/gbm_test_data.xlsx"
+    predict_path = "data/gbm/gbm_predict_data.xlsx"
+
     def testDataLoader(self):
         dataloader = GBMDataLoader()
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
-        assert trainX.shape == (16, 10)
-        assert trainY.shape == (16,)
-        assert testX.shape == (2, 10)
-        assert testY.shape == (2,)
+        trainX, trainY = dataloader.loadTrainData(train_path=self.train_path)
+        testX, testY = dataloader.loadTestData(test_path=self.test_path)
+        predictX = dataloader.loadPredictData(predict_path=self.predict_path)
+        assert trainX.shape == (12, 9)
+        assert trainY.shape == (12,)
+        assert testX.shape == (4, 9)
+        assert testY.shape == (4,)
+        assert predictX.shape == (2, 9)
         pass
 
     def testGBMModel(self):
         dataloader = GBMDataLoader()
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        trainX, trainY = dataloader.loadTrainData(train_path=self.train_path)
+        testX, testY = dataloader.loadTestData(test_path=self.test_path)
         params = {'n_estimators': 500,
                   'max_depth': 4,
                   'min_samples_split': 5,
@@ -122,10 +128,16 @@ class GBMTestCase(unittest.TestCase):
 
 
 class HLMTestCase(unittest.TestCase):
+    train_path = "data/hlm/train_erosion_data.xlsx"
+    test_path = "data/hlm/test_erosion_data.xlsx"
+    predict_path = "data/hlm/predict_erosion_data.xlsx"
+    soil_path = "data/hlm/soil_data.xlsx"
+
     def testDataLoader(self):
         dataloader = HLMDataLoader()
-        trainW, trainX, trainY = dataloader.loadTrainData()
-        testW, testX, testY = dataloader.loadTestData()
+        trainW, trainX, trainY = dataloader.loadTrainData(train_path=self.train_path, soil_path=self.soil_path)
+        testW, testX, testY = dataloader.loadTestData(test_path=self.test_path, soil_path=self.soil_path)
+        predictW, predictX = dataloader.loadPredictData(predict_path=self.predict_path, soil_path=self.soil_path)
 
         assert trainW.shape == (1, 8)
         assert trainX.shape == (4, 1)
@@ -135,17 +147,20 @@ class HLMTestCase(unittest.TestCase):
         assert testX.shape == (4, 1)
         assert testY.shape == (4,)
 
+        assert predictW == (1, 8)
+        assert predictX == (4, 1)
+
     def testHLMModel(self):
         hlm_model = HLMModel()
         hlm_dataloader = HLMDataLoader()
 
-        trainW, trainX, trainY = hlm_dataloader.loadTrainData()
-        testW, testX, trainY = hlm_dataloader.loadTestData()
+        trainW, trainX, trainY = hlm_dataloader.loadTrainData(train_path=self.train_path, soil_path=self.soil_path)
+        testW, testX, testY = hlm_dataloader.loadTestData(test_path=self.test_path, soil_path=self.soil_path)
         hlm_model.fit(trainW=trainW, trainX=trainX, trainY=trainY)
-        predictY = hlm_model.predict(predictW=trainW, predictX=trainX)
+        predictY = hlm_model.predict(predictW=testW, predictX=testX)
 
         # assert mean_squared_error(trainY, predictY) < 1  # 0.947
-        assert mean_squared_error(trainY, predictY) < 3  # 0.947
+        assert mean_squared_error(testY, predictY) < 3  # 0.947
 
 
 class GATestCase(unittest.TestCase):
