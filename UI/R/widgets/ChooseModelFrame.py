@@ -12,7 +12,7 @@ class ChooseModelFrame(Frame):
               font=R.font.NormalWeiRuanYaHeiFont(10)).pack(
             side=LEFT, pady=5)
         self.curModel = StringVar()
-        self.chooseBox = ttk.Combobox(self, width=20, textvariable=self.curModel)
+        self.chooseBox = ttk.Combobox(self, width=40, textvariable=self.curModel, justify=LEFT)
         self.chooseBox.pack(anchor=W, padx=5, pady=5)
         self.chooseBox['values'] = modelsList  # 设置下拉列表的值
         self.chooseBox.current(0)  # 设置第一个为默认值

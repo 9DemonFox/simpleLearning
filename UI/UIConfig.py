@@ -60,7 +60,7 @@ modelTypes2models = {
             }
         },
         {
-            "model_name": ("结合回归树与EM算法的混合效应模型", "MERT"),
+            "model_name": ("回归树与EM算法的混合效应模型", "MERT"),
             "model_parameters": {
                 "n": ("观测对象种类数量",100),
                 "epoch": ("迭代轮数",50),
@@ -68,7 +68,7 @@ modelTypes2models = {
             }
         },
         {
-            "model_name": ("结合回归树与迪利克雷过程贝叶斯分析的混合效应模型", "REBET"),
+            "model_name": ("回归树与Dirichlet贝叶斯分析的混合效应模型", "REBET"),
             "model_parameters": {
                 "n": ("观测对象种类数量",100),
                 "epoch": ("迭代轮数",50),
