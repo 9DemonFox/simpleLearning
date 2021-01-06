@@ -105,6 +105,33 @@ class GBMTestCase(unittest.TestCase):
         pass
 
 
+class HLMTestCase(unittest.TestCase):
+    def testDataLoader(self):
+        dataloader = HLMDataLoader()
+        trainW, trainX, trainY = dataloader.loadTrainData()
+        testW, testX, testY = dataloader.loadTestData()
+
+        assert trainW.shape == (1, 8)
+        assert trainX.shape == (4, 1)
+        assert trainY.shape == (4,)
+
+        assert testW.shape == (1, 8)
+        assert testX.shape == (4, 1)
+        assert testY.shape == (4,)
+
+    def testHLMModel(self):
+        hlm_model = HLMModel()
+        hlm_dataloader = HLMDataLoader()
+
+        trainW, trainX, trainY = hlm_dataloader.loadTrainData()
+        testW, testX, trainY = hlm_dataloader.loadTestData()
+        hlm_model.fit(trainW=trainW, trainX=trainX, trainY=trainY)
+        predictY = hlm_model.predict(predictW=trainW, predictX=trainX)
+
+        # assert mean_squared_error(trainY, predictY) < 1  # 0.947
+        assert mean_squared_error(trainY, predictY) < 3  # 0.947
+
+
 class GATestCase(unittest.TestCase):
     def testGAModel(self):
         import numpy as np

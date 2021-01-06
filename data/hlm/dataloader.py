@@ -26,29 +26,34 @@ def loadData(erosion_datapath, soil_datapath):
 
 class HLMDataLoader(DataLoader):
     def __init__(self):
-        erosion_data = pd.read_excel(io=EROSION_DATAPATH)
-        soil_data = pd.read_excel(io=SOIL_DATAPATH)
-
-        # drop first column
-        erosion_data = erosion_data.drop(erosion_data.columns.values[0], axis=1)
-        soil_data = soil_data.drop(soil_data.columns.values[0], axis=1)
-
-        x = np.array(erosion_data.iloc[:, :-1])
-        y = np.array(erosion_data.iloc[:, -1])
-        w = np.array(soil_data.iloc[:, :]).flatten()
+        x, y = self.__loadErosionData(datapath=EROSION_DATAPATH)
+        w = self.__loadSoilData(datapath=SOIL_DATAPATH)
         self.trainX, self.trainY, self.trainW = x, y, w
         self.testX, self.testY, self.testW = x, y, w
 
+    def __loadErosionData(self, datapath):
+        erosion_data = pd.read_excel(io=datapath, index_col=0)
+        y = erosion_data.values[:, 0].astype(float)
+        x = erosion_data.values[:, 1:-1].astype(float)
+        return x, y
+
+    def __loadSoilData(self, datapath):
+        soil_data = pd.read_excel(io=datapath, index_col=0)
+        w = soil_data.values[:, :-1].astype(float)
+        return w
+
     def loadTrainData(self, **kwargs):
         if "erosion_datapath" in kwargs.keys() and "soil_datapath" in kwargs.keys():
-            trainW, trainX, trainY = loadData(kwargs["erosion_datapath"], kwargs["soil_datapath"])
+            trainX, trainY = self.__loadErosionData(datapath=kwargs.get("erosion_datapath"))
+            trainW = self.__loadSoilData(datapath=kwargs.get("soil_datapath"))
             return trainW, trainX, trainY
         else:
             return self.trainW, self.trainX, self.trainY
 
     def loadTestData(self, **kwargs):
         if "erosion_datapath" in kwargs.keys() and "soil_datapath" in kwargs.keys():
-            testW, testX, testY = loadData(kwargs["erosion_datapath"], kwargs["soil_datapath"])
+            testX, testY = self.__loadErosionData(datapath=kwargs.get("erosion_datapath"))
+            testW = self.__loadSoilData(datapath=kwargs.get("soil_datapath"))
             return testW, testX, testY
         else:
             return self.testW, self.testX, self.testY
@@ -67,3 +72,9 @@ if __name__ == "__main__":
     '''
     testW, testX, testY = dataloader.loadTestData()
     print(trainW.shape, '\n', trainX.shape, '\n', trainY.shape)
+    print(trainW, "\n", trainX, "\n", trainY)
+    # print(testW, "\n", testX, "\n", testY)
+    X = np.c_[np.ones(trainX.shape[0]), trainX]
+    w = np.hstack((np.ones((trainW.shape[0], 1)), trainW))
+    W = np.vstack((np.hstack((w, np.zeros((1, w.shape[1])))), np.hstack((np.zeros((1, w.shape[1])), w))))
+    # print(W)

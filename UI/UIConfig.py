@@ -45,15 +45,22 @@ modelTypes2models = {
             }
         },
         {
-            "model_name": ("多层线性模型", "HLM"),
+            "model_name": ("梯度提升机", "GBM"),
             "model_parameters": {
-                "parameter1": ("参数1", 0.001),
-                "parameter2": ("参数2", 0.25),
-                "parameter3": ("参数3", 123)
+                "n_estimators": ("弱学习器的个数", 100),
+                "learning_rate": ("学习率", 1),
+                "max_depth": ("单个回归估计量的最大深度", 3),
+                "loss": ("损失函数", "\"ls\"")
             }
         },
         {
-            "model_name": ("结合回归树与EM算法的混合效应模型", "MERT"),
+            "model_name": ("多层线性模型", "HLM"),
+            "model_parameters": {
+                "No Parameter": ("无参数", "None"),
+            }
+        },
+        {
+            "model_name": ("回归树与EM算法的混合效应模型", "MERT"),
             "model_parameters": {
                 "n": ("观测对象种类数量",100),
                 "epoch": ("迭代轮数",50),
@@ -61,7 +68,7 @@ modelTypes2models = {
             }
         },
         {
-            "model_name": ("结合回归树与迪利克雷过程贝叶斯分析的混合效应模型", "REBET"),
+            "model_name": ("回归树与Dirichlet贝叶斯分析的混合效应模型", "REBET"),
             "model_parameters": {
                 "n": ("观测对象种类数量",100),
                 "epoch": ("迭代轮数",50),
@@ -81,8 +88,9 @@ modelTypes2models = {
             "model_name": ("遗传算法", "GA"),
             "model_parameters": {
                 "c": ("指定求函数的最大值或最小值",0),
-                "n": ("函数所含变量个数",1),
-                "ranges": ("各个变量的取值范围",[[-1000, 1000]]),
+                "n": ("函数所含变量个数",3),
+                "xmin": ("所有变量的上界",1000),
+                "xmax": ("所有变量的下界",-1000),
                 "precisions": ("精度",24),
                 "N_GENERATIONS": ("迭代轮数",50),
                 "POP_SIZE": ("种群大小",200),

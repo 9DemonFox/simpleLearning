@@ -8,6 +8,7 @@ from data.mert.dataLoder import MERTDataLoader
 from data.rfanfis.dataLoader import anfisDataLoader as RE_ANFISDataLoader
 from data.rebet.dataLoder import REBETDataLoader
 from data.salp.dataLoder import SALPDataLoader
+from data.ga.dataLoder import GADataLoader
 from ga.ga import GAModel
 from gbm.GBM import GBMModel
 from hlm.HLM import HLMModel
@@ -23,7 +24,7 @@ class Modeler:
         allModels = [AHPModel, GAModel, GBMModel, HLMModel,
                      IBRTModel, MERTModel, RE_ANFISModel, REBETModel,
                      SALPModel, SVRModel]
-        allDataLoader = [AHPDataLoader, None, GBMDataLoader, HLMDataLoader,
+        allDataLoader = [AHPDataLoader, GADataLoader, GBMDataLoader, HLMDataLoader,
                          IBRTDataLoader, MERTDataLoader, RE_ANFISDataLoader, REBETDataLoader,
                          SALPDataLoader, SALPDataLoader]
         allModelsName = [str(m.__name__)[:-5] for m in allModels]
