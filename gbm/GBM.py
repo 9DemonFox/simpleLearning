@@ -1,6 +1,6 @@
 from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
 
 from data.gbm.dataLoader import GBMDataLoader
 from model import Model
