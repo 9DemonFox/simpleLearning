@@ -5,7 +5,7 @@ import pandas as pd
 from data.dataLoader import DataLoader
 
 
-DATAPATH = "data/ibrt/test.xlsx"
+DATAPATH = "test.xlsx"
 
 def fra_Data(data, fra):  # fra为正整数
     ret = data.copy()

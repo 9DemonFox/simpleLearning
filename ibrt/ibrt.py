@@ -1,5 +1,8 @@
 import numpy as np
 import pandas as pd
+from scipy.optimize import minimize
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
 
 from data.ibrt.dataLoader import IBRTDataLoader
@@ -46,6 +49,7 @@ class Tree:
         self._gamma = _gamma  # 正则化项中T前面的系数
         self._lambda = _lambda  # 正则化项w前面的系数
         # self.max_leaves = max_leaves
+        self.max_depth = max_depth
         self.root = None
         # self.m_eta = 1.0
 
@@ -61,9 +65,7 @@ class Tree:
     def split(self, X_data, sp):
         # 劈裂数据集，返回左右子数据集索引（行索引）
         lind = np.where(X_data[:, sp[0]] <= sp[1])[0]
-        # print(lind)
         rind = list(set(range(X_data.shape[0])) - set(lind))
-        # print(rind)
         return lind, rind
 
     """def calEta(self, garr, X_data):
@@ -113,6 +115,7 @@ class Tree:
         # print("calobj")
         # print(garr,harr)
         # print((-1.0 / 2) * sum(garr) ** 2 / (sum(harr) + self._lambda) + self._gamma)
+        # print(garr)
         return (-1.0 / 2) * sum(garr) ** 2 / self._lambda + self._gamma  # 修改过
 
     def getBestSplit(self, X_data, garr, splits):
@@ -123,9 +126,11 @@ class Tree:
             bestSplit = None
             maxScore = -float('inf')
             score_pre = self.calObj(garr)  # 当前树叶节点的最佳损失值
+            # print('sc_pre:%f'%score_pre)
             subinds = None
             for sp in splits:
                 lind, rind = self.split(X_data, sp)
+
                 if len(rind) < 2 or len(lind) < 2:
                     # print("short!")
                     continue
@@ -133,13 +138,16 @@ class Tree:
                 gr = garr[rind]
                 # hl = harr[lind]
                 # hr = harr[rind]
-                # print(score_pre)
+                # print('garr:',garr)
+                # print('sc:bef:',score_pre)
+                # print('sc_aft:%f'%(self.calObj(gl) + self.calObj(gr)))
                 score = score_pre - self.calObj(gl) - self.calObj(gr)  # 切分后目标函数值下降量
                 # print(score, maxScore)
                 if score > maxScore:
                     maxScore = score
                     bestSplit = sp  # 最佳切分点，元祖（feature, data）
                     subinds = (lind, rind)
+            # print('maxscore:%f'%maxScore)
             if maxScore < 0:  # pre-stopping
                 return None
             else:
@@ -149,15 +157,20 @@ class Tree:
         # 递归构建树
         res = self.getBestSplit(X_data, garr, splits)  # 最佳分割点
         depth += 1
+        # print("depth,res:",depth,res)
+        # print(res)#res都为None
         if not res or depth >= self.max_depth:
-            return Node(w=self.calWeight(garr))
+            # print("w:",self.calWeight(garr))
+            return Node(w=self.calWeight(garr) + 0.0001)  # 为了防止把w结果0视为None
+
+        # print("bestSplit:",res[0])
         bestSplit, subinds = res
         # print("bestSplit")
         # print(depth)
         splits.remove(bestSplit)
         # leaves += 1
-        left = self.buildTree(X_data[subinds[0]], garr[subinds[0]], splits, depth + 1)  # splits减去本身节点，depth++
-        right = self.buildTree(X_data[subinds[1]], garr[subinds[1]], splits, depth + 1)
+        left = self.buildTree(X_data[subinds[0]], garr[subinds[0]], splits, depth)  # splits减去本身节点，depth++
+        right = self.buildTree(X_data[subinds[1]], garr[subinds[1]], splits, depth)
 
         return Node(sp=bestSplit, right=right, left=left)
 
@@ -165,10 +178,12 @@ class Tree:
         splits = self._candSplits(X_data)
         self.root = self.buildTree(X_data, garr, splits, 0)
 
-    def predict(self, x):
+    def predict(self, x):  # 这里x为一维
         def helper(currentNode):
             if currentNode.isLeaf():
                 return currentNode.w
+            # print('currentNode.sp:',currentNode.sp)
+            # print('_display:',self._display())
             fea, val = currentNode.sp
             if x[fea] <= val:
                 return helper(currentNode.left)
@@ -180,16 +195,15 @@ class Tree:
     def _display(self):
         def helper(currentNode):
             if currentNode.isLeaf():
-                print(currentNode.w)
+                print('currentNode.w:', currentNode.w)
             else:
-                print(currentNode.sp)
+                print('currentNode.sp:', currentNode.sp)
             if currentNode.left:
                 helper(currentNode.left)
             if currentNode.right:
                 helper(currentNode.right)
 
         helper(self.root)
-
 
 class IBRTModel(Model):
     def __init__(self, n_iter, _gamma, _lambda, max_depth):
@@ -204,7 +218,17 @@ class IBRTModel(Model):
 
     def calGrad(self, y_pred, y_data):
         # 计算一阶导数
-        return np.sign(y_data - y_pred)
+        len_y = len(y_data)
+        ebcl = 3 * np.std(y_data - y_pred, ddof=1) * np.sqrt(np.log(len_y) / len_y) / 10  # 为了继续/10
+        ret = []
+        for i in y_data - y_pred:
+            # print(i,ebcl)
+            if np.abs(i) >= ebcl:
+                ret.append(np.sign(i))
+            else:
+                ret.append(0)
+        # print(np.array(ret))
+        return np.array(ret)
 
     # def calHess(self, y_pred, y_data):
     #    return 2 * np.ones_like(y_data)
@@ -213,21 +237,35 @@ class IBRTModel(Model):
 
     def fit(self, X_data, y_data):
         step = 0
+
         while step < self.n_iter:
-            # if step==0:
+            print("---------------------")
+            print("step", step)
 
             tree = Tree(self._gamma, self._lambda, self.max_depth)
-            y_pred = self.predict(X_data)  # 会调用Tree.predict()（前step-1轮的）
-
+            if step == 0:
+                fun = lambda y: sum(np.abs(y_data - y))  # ebcl
+                res = minimize(fun, 0, method='SLSQP')
+                # print(res.x)
+                y_pred = np.full(len(y_data), res.x)
+            else:
+                y_pred = self.predict(X_data)  # 会调用Tree.predict()（前step-1轮的）
+            print('残差:%f' % (np.mean(y_data - y_pred)))
             garr = self.calGrad(y_pred, y_data)
-
-            tree.fit(X_data, garr)
-
+            # print(garr)
+            tree.fit(X_data, garr)  # 每次迭代由于garr不一样，迭代结果不一样
+            tree._display()
             self.eta_trees.append(tree.calEtaTree(self.trees, garr, X_data, 0.005))
 
             self.trees.append(tree)
-
+            '''
+            for t in self.trees:
+                print('t.sp')
+                print(t.root.sp)
+                print('tree_pre:%f'%t.predict(X_data[0]))
+            '''
             step += 1
+            print("---------------------")
 
     def predict(self, X_data):
         if self.trees:
@@ -236,10 +274,54 @@ class IBRTModel(Model):
             # print(self.eta_trees)
             for x in X_data:
                 y_pred.append(sum([self.eta_trees[i] * self.trees[i].predict(x) for i in range(len(self.trees))]))
+                # print('y_pred:', y_pred)
             return np.array(y_pred)
         else:
             return np.zeros(X_data.shape[0])
 
+    def fitForUI(self, *args):
+        """ 返回结果到前端
+        :return:
+        """
+        self.fit(*args)
+        # 返回结果为字典形式
+        #excludeFeatures, coefs = self.fit(*args)
+        returnDic = {
+            "排除特征": str(None),
+            "系数": str(None)
+        }
+        return returnDic
+
+    def testForUI(self, *args):
+        """
+        :param args:
+        :return: 字典形式结果
+        """
+        returnDic = {
+            "mean_squared_error": None,
+            "mean_absolute_error": None
+        }
+        #args["predictX"] = args[0]
+        predictResult = self.predict(args[0])
+        testY = args[1]
+        mse = mean_squared_error(predictResult, testY)
+        mae = mean_absolute_error(predictResult, testY)
+        returnDic["预测结果"] = str(predictResult)
+        returnDic["mean_absolute_error"] = str(mae)
+        returnDic["mean_squared_error"] = str(mse)
+        return returnDic
+
+    def predictForUI(self, *args):
+        """
+        :param args:
+        :return: 字典形式结果
+        """
+        returnDic = {
+            "预测结果": None
+        }
+        predictResult = self.predict(*args)
+        returnDic["预测结果"] = str(predictResult)
+        return returnDic
 
 if __name__ == '__main__':
     from sklearn.datasets import load_boston
@@ -247,17 +329,24 @@ if __name__ == '__main__':
     from sklearn.metrics import mean_absolute_error
     import matplotlib.pyplot as plt
 
-    ibrt = IBRTModel(20, 0, 1.0, 2)
+    model = IBRTModel(5, 0, 1.0, 2)
     ibrt_loader = IBRTDataLoader(datapath="../data/ibrt/test.xlsx")
 
     trainX, trainY = ibrt_loader.loadTrainData()
     testX, testY = ibrt_loader.loadTestData()
     print(trainX.shape,testX.shape)
 
-    ibrt.fit(trainX, trainY)
-    predictY = ibrt.predict(testX)
-    print(mean_absolute_error(testY, predictY))
+    model.fit(trainX, trainY)
 
+    #print(mean_absolute_error(testY, predictY))
+
+    model.fitForUI(trainX, trainY)
+    predictY = model.predict(testX)
+    predictYForUI = model.predictForUI(testX)
+    predictTrainY = model.predict(trainX)
+    #print(model.model.coef_)
+    print(mean_squared_error(predictY, testY))
+    print(mean_squared_error(predictTrainY, trainY))
 
 
 
