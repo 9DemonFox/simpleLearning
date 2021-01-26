@@ -12,7 +12,7 @@ pip install -r requirements.txt
 
 # 3. UI
 
-待完善
+能运行相关模型，模型训练目前是同步的，训练时UI会卡顿
 
 ```
 双击目录下 app.bat 可以看到目前版本
