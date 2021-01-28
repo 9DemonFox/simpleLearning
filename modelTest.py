@@ -1,7 +1,7 @@
 import unittest
 import warnings
-import torch
 
+import torch
 # other package
 from sklearn.metrics import mean_squared_error
 
@@ -12,16 +12,16 @@ from data.hlm.dataloader import HLMDataLoader
 from data.ibrt.dataLoader import IBRTDataLoader
 from data.mert.dataLoder import MERTDataLoader
 from data.rebet.dataLoder import REBETDataLoader
-from data.salp.dataLoder import SalpDataLoader
 from data.rfanfis.dataLoader import anfisDataLoader
+from data.salp.dataLoder import SALPDataLoader
 from ga.ga import GAModel
 from gbm.GBM import GBMModel
 from hlm.HLM import HLMModel
 from ibrt.ibrt import IBRTModel
 from mert.mert import MERTModel
 from rebet.rebet import REBETModel
-from salp.SALP import SVRModel, SALPModel
 from rf_anfis.rf_anfis import rf_anfisModel
+from salp.SALP import SVRModel, SALPModel
 
 warnings.filterwarnings("ignore")
 
@@ -168,22 +168,22 @@ class GATestCase(unittest.TestCase):
         pass
 
 
-class SAPTestCase(unittest.TestCase):
+class SALPTestCase(unittest.TestCase):
     def testDataLoder(self):
-        dataloader = SalpDataLoader("data/salp/SALP_DATA.npy")
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        dataloader = SALPDataLoader()
+        trainX, trainY = dataloader.loadTrainData(train_path="data/salp/SALP_TRAIN_DATA.xlsx")
+        testX, testY = dataloader.loadTestData(test_path="data/salp/SALP_TEST_DATA.xlsx")
         # 验证数据集形状
-        assert trainX.shape == (100, 100)
-        assert trainY.shape == (100,)
-        assert testX.shape == (100, 100)
-        assert testY.shape == (100,)
+        assert trainX.shape == (80, 100)
+        assert trainY.shape == (80,)
+        assert testX.shape == (20, 100)
+        assert testY.shape == (20,)
         pass
 
     def testSVRModel(self):
-        dataloader = SalpDataLoader("data/salp/SALP_DATA.npy")
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        dataloader = SALPDataLoader()
+        trainX, trainY = dataloader.loadTrainData(train_path="data/salp/SALP_TRAIN_DATA.xlsx")
+        testX, testY = dataloader.loadTestData(test_path="data/salp/SALP_TEST_DATA.xlsx")
         model = SVRModel()
         model.fit(trainX=trainX, trainY=trainY)
         predictY = model.predict(predictX=testX)
@@ -191,17 +191,16 @@ class SAPTestCase(unittest.TestCase):
         pass
 
     def testSALPModel(self):
-        from data.salp.dataLoder import SalpDataLoader
+        from data.salp.dataLoder import SALPDataLoader
         from sklearn.metrics import mean_squared_error
 
-        dataloader = SalpDataLoader("./data/salp/SALP_DATA.npy")
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        dataloader = SALPDataLoader()
+        trainX, trainY = dataloader.loadTrainData(train_path="data/salp/SALP_TRAIN_DATA.xlsx")
+        testX, testY = dataloader.loadTestData(test_path="data/salp/SALP_TEST_DATA.xlsx")
         model = SALPModel()
         model.fit(trainX=trainX, trainY=trainY)
         predictY = model.predict(predictX=testX)
-        # FIXME SALP模型的性能不好
-        assert mean_squared_error(predictY, testY) < 100
+        assert mean_squared_error(predictY, testY) < 1
 
 
 class IBRTTestCase(unittest.TestCase):
@@ -224,6 +223,7 @@ class IBRTTestCase(unittest.TestCase):
         predictY = ibrt.predict(testX)
         assert (mean_squared_error(testY, predictY) < 10)
         pass
+
 
 class rf_anfisTestCase(unittest.TestCase):
     def testDataLoader(self):
@@ -248,17 +248,16 @@ class rf_anfisTestCase(unittest.TestCase):
 class AHPTestCase(unittest.TestCase):
 
     def testDataLoader(self):
-        dataLoader = AHPDataLoader("./data/ahp/ahpInput.txt")
-        dic = dataLoader.loadTrainData()
+        dataLoader = AHPDataLoader()
+        dic = dataLoader.loadPredictData(predict_path="./data/ahp/ahpInput.txt")
         assert type(dic) == dict
 
     def testATPModel1(self):
         # 输入数据
-        dataLoader = AHPDataLoader("./data/ahp/ahpInput.txt")
-        trainX = dataLoader.loadTrainData()
+        dataLoader = AHPDataLoader()
+        predictX = dataLoader.loadPredictData(predict_path="./data/ahp/ahpInput.txt")
         model = AHPModel()
-        model.fit(trainX=trainX)
-        result = model.predict()
+        result = model.predict(predictX=predictX)
         expect = """合理使用留成利润[1]
 ├── 提高技术水平[0.638]
 │   ├── 引进设备技术[0.833]
@@ -272,11 +271,10 @@ class AHPTestCase(unittest.TestCase):
         assert result.strip() == expect.strip()
 
     def testATPModel2(self):
-        dataLoader = AHPDataLoader("./data/ahp/ahpInput2.txt")
-        trainX = dataLoader.loadTrainData()
+        dataLoader = AHPDataLoader()
+        predictX = dataLoader.loadPredictData(predict_path="./data/ahp/ahpInput2.txt")
         model = AHPModel()
-        model.fit(trainX=trainX)
-        result = model.predict()
+        result = model.predict(predictX=predictX)
         expect = """画像[1]
 ├── 子准则层1[0.253]
 │   ├── 兽残不合格量[0.25]
