@@ -1,96 +1,41 @@
-import itertools
-import numpy as np
-
-import torch
-
 from torch.utils.data import TensorDataset, DataLoader
-
-
-
-dtype = torch.float
-
-
-def sinc( x1, x2, x3):
-    '''
-        Sinc is a simple two-input non-linear function
-        used by Jang in section V of his paper (equation 30).
-        修改为3个变量
-    '''
-
-    def s(z):
-        return (1 if z == 0 else np.sin(z) / z)
-
-    return s(x1) * s(x2) * s(x3)
-
-
-def x_filter( x, y, sigma):
-    x_np = x.numpy().T
-    y_np = y.numpy().T
-    # print(x_np.shape,y_np.shape)
-    # for i in x_np:
-    corration = np.corrcoef(x_np, y_np)
-    tobedelete = []
-    for i in range(x_np.shape[0]):
-        if corration[i, x_np.shape[0]] <= sigma:
-            tobedelete.append(i)
-    x_np = np.delete(x_np, tobedelete, axis=0)
-    return x_np.T
-
-
+import pandas
+import torch
 class anfisDataLoader(DataLoader):
     def __init__(self, num_cases=100, batch_size=16):
-        pts = torch.linspace(-10, 10, int(np.sqrt(num_cases)))
-        x = list(itertools.product(pts, repeat=3))
-        x = torch.tensor(x, dtype=dtype)
+        pass
 
-        print(x.numpy())
+    def __loadExcelData(self, data_path):
+        """
+        :param data_path: excel数据 第1列为Y
+        :return:
+        """
+        df = pandas.read_excel(data_path, index_col=0)
+        y = df.values[:, 0]
+        x = df.values[:, 1:]
+        return x, y
 
-        sigma = torch.min(x)
-        y = torch.tensor([[sinc(*p)] for p in x], dtype=dtype)
-        x = torch.from_numpy(x_filter(x, y, sigma))  # sigma需要视情况调整
+    def loadTrainData(self, **kwargs):
+        assert "train_path" in kwargs.keys()
+        trainX, trainY = self.__loadExcelData(kwargs.get("train_path"))
+        trainX = torch.from_numpy(trainX)
+        trainY = torch.from_numpy(trainY)
+        train_db = TensorDataset(trainX, trainY)
+        train_dl = DataLoader(train_db, batch_size=16, shuffle=True)
+        trainX = train_dl.dataset.tensors[0].numpy().reshape(-1, 3)
+        trainY = train_dl.dataset.tensors[1].numpy().reshape(-1, 1)
+        return trainX, trainY
 
-        print(x.size(), y.size())
-        print(type(x),type(y))
-
-        #将x,y转成array，构造train/test再转回
-        data_np = np.concatenate((x.numpy(),y.numpy()),axis=1)
-        np.random.shuffle(data_np)
-
-        trainX_np = data_np[0:900, :-1]
-        trainy_np = data_np[0:900, -1]
-        trainX_torch = torch.from_numpy(trainX_np)
-        trainy_torch = torch.from_numpy(trainy_np)
-        testX_np = data_np[900:,:-1]
-        testy_np = data_np[900:, -1]
-        testX_torch = torch.from_numpy(testX_np)
-        testy_torch = torch.from_numpy(testy_np)
-
-        train_db = TensorDataset(trainX_torch, trainy_torch)
-        test_db = TensorDataset(testX_torch, testy_torch)
-
-
-        #data = torch.cat((x,y), 1)
-        #td = TensorDataset(x, y)
-        #train_db, test_db = torch.utils.data.random_split(td, [900, 100])
-
-        #self.dl = DataLoader(td, batch_size=batch_size, shuffle=True)
-        self.train_dl = DataLoader(train_db, batch_size=batch_size, shuffle=True)
-        self.test_dl = DataLoader(test_db, batch_size=batch_size, shuffle=True)
-
-        #dataiter = iter(dl)
-        #print(dataiter.next())
-
-
-    def loadTrainData(self):
-        train_X = self.train_dl.dataset.tensors[0].numpy().reshape(-1,3)
-        train_y =  self.train_dl.dataset.tensors[1].numpy().reshape(-1,1)
-        return train_X, train_y
-
-    def loadTestData(self):
-        test_X = self.test_dl.dataset.tensors[0].numpy().reshape(-1, 3)
-        test_y = self.test_dl.dataset.tensors[1].numpy().reshape(-1, 1)
-        return test_X, test_y
+    def loadTestData(self, **kwargs):
+        assert "test_path" in kwargs.keys()
+        testX, testY = self.__loadExcelData(kwargs.get("test_path"))
+        testX, testY = torch.from_numpy(testX), torch.from_numpy(testY)
+        test_db = TensorDataset(testX, testY)
+        test_dl = DataLoader(test_db, batch_size=16, shuffle=True)
+        testX = test_dl.dataset.tensors[0].numpy().reshape(-1, 3)
+        testY = test_dl.dataset.tensors[1].numpy().reshape(-1, 1)
+        return testX, testY
 
 if __name__ == "__main__":
     model = anfisDataLoader()
-    print('shape: ',model.loadTrainData()[0].shape, model.loadTrainData()[1].shape)
+    print('shape: ', model.loadTrainData(train_path="RFANFIS_TRAIN_DATA.xlsx")[0].shape)

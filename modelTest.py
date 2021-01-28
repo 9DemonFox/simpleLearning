@@ -219,8 +219,8 @@ class SALPTestCase(unittest.TestCase):
 class IBRTTestCase(unittest.TestCase):
     def testDataLoader(self):
         dataloader = IBRTDataLoader()
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        trainX, trainY = dataloader.loadTrainData(train_path="data/ibrt/IBRT_TRAIN_DATA.xlsx")
+        testX, testY = dataloader.loadTestData(test_path="data/ibrt/IBRT_TEST_DATA.xlsx")
         assert trainX.shape == (48, 10)
         assert trainY.shape == (48,)
         assert testX.shape == (6, 10)
@@ -229,23 +229,23 @@ class IBRTTestCase(unittest.TestCase):
 
     def testIBRTModel(self):
         dataloader = IBRTDataLoader()
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        trainX, trainY = dataloader.loadTrainData(train_path="data/ibrt/IBRT_TRAIN_DATA.xlsx")
+        testX, testY = dataloader.loadTestData(test_path="data/ibrt/IBRT_TEST_DATA.xlsx")
+        print('trainX:', trainX)
+        print('trainY:', trainY)
         ibrt = IBRTModel(20, 0, 1.0, 2)
         ibrt.fit(trainX, trainY)
         predictY = ibrt.predict(testX)
         assert (mean_squared_error(testY, predictY) < 10)
         pass
 
-
 class rf_anfisTestCase(unittest.TestCase):
     def testDataLoader(self):
         dataloader = anfisDataLoader()
-        train = dataloader.loadTrainData()
-        test = dataloader.loadTestData()
-        assert train.dataset.tensors[0].size() == torch.Size([900, 3])
-        assert test.dataset.tensors[0].size() == torch.Size([100, 3])
-        pass
+        trainX, trainY = dataloader.loadTrainData(train_path="data/rfanfis/RFANFIS_TRAIN_DATA.xlsx")
+        testX, testY = dataloader.loadTestData(test_path="data/rfanfis/RFANFIS_TEST_DATA.xlsx")
+        assert trainX.shape == (900, 3)
+        assert testX.shape == (100, 3)
 
     def testrf_anfisModel(self):
         dataloader = anfisDataLoader()
