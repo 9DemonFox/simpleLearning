@@ -12,8 +12,9 @@ from data.hlm.dataloader import HLMDataLoader
 from data.ibrt.dataLoader import IBRTDataLoader
 from data.mert.dataLoder import MERTDataLoader
 from data.rebet.dataLoder import REBETDataLoader
-from data.rfanfis.dataLoader import anfisDataLoader
+from data.rfanfis.dataLoader import ANFISDataLoader
 from data.salp.dataLoder import SALPDataLoader
+from data.ga.dataLoder import GADataLoader
 from ga.ga import GAModel
 from gbm.GBM import GBMModel
 from hlm.HLM import HLMModel
@@ -28,54 +29,65 @@ warnings.filterwarnings("ignore")
 
 class REBETTestCase(unittest.TestCase):
     def testDataLoder(self):
-        dataloader = REBETDataLoader(datapath1="./data/rebet/data_train.csv", datapath2="./data/rebet/data_test.csv")
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        datapath1 = "./data/rebet/data_train.xlsx"
+        datapath2 = "./data/rebet/data_test.xlsx"
+        dataloder = REBETDataLoader()
+        trainX, trainY = dataloder.loadTrainData(train_path=datapath1)
+        testX, testY = dataloder.loadTestData(test_path=datapath2)
         # 验证数据集形状
         assert trainX.shape == (5000, 3)
-        assert trainY.shape == (5000, 1)
+        assert trainY.shape == (5000 ,)
         assert testX.shape == (500, 3)
-        assert testY.shape == (500, 1)
+        assert testY.shape == (500 ,)
         pass
 
     def testREBETModel(self):
         import numpy as np
-        dataloader = REBETDataLoader(datapath1="./data/rebet/data_train.csv", datapath2="./data/rebet/data_test.csv")
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        datapath1 = "./data/rebet/data_train.xlsx"
+        datapath2 = "./data/rebet/data_test.xlsx"
+        dataloder = REBETDataLoader()
+        trainX, trainY = dataloder.loadTrainData(train_path=datapath1)
+        testX, testY = dataloder.loadTestData(test_path=datapath2)
         n = 100
         epoch = 5
-        model = REBETModel(n=n)
-        model.fit(trainX=trainX, trainY=trainY, epoch=epoch)
-        predictY = model.predict(predictX=testX, predictY=testY)
-        assert (np.mean(testY - predictY) < 1)
+        k = 1
+        model = REBETModel(n=n, epoch=epoch, k=k)
+        model.fit(trainX=trainX, trainY=trainY)
+        predictY = model.test(testX=testX, testY=testY)
+        assert (np.mean(testY - predictY) < 5)
         pass
 
 
 class MERTTestCase(unittest.TestCase):
     def testDataLoder(self):
-        dataloader = MERTDataLoader(datapath1="./data/mert/data_train.csv", datapath2="./data/mert/data_test.csv")
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        datapath1 = "./data/mert/data_train.xlsx"
+        datapath2 = "./data/mert/data_test.xlsx"
+        dataloder = MERTDataLoader()
+        trainX, trainY = dataloder.loadTrainData(train_path=datapath1)
+        testX, testY = dataloder.loadTestData(test_path=datapath2)
         # 验证数据集形状
         assert trainX.shape == (5000, 3)
-        assert trainY.shape == (5000, 1)
+        assert trainY.shape == (5000 ,)
         assert testX.shape == (500, 3)
-        assert testY.shape == (500, 1)
+        assert testY.shape == (500 ,)
         pass
 
     def testMERTModel(self):
         import numpy as np
-        dataloader = MERTDataLoader(datapath1="./data/mert/data_train.csv", datapath2="./data/mert/data_test.csv")
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        datapath1 = "./data/mert/data_train.xlsx"
+        datapath2 = "./data/mert/data_test.xlsx"
+        dataloder = MERTDataLoader()
+        trainX, trainY = dataloder.loadTrainData(train_path=datapath1)
+        testX, testY = dataloder.loadTestData(test_path=datapath2)
         n = 100
         epoch = 5
-        model = MERTModel(n=n)
-        model.fit(trainX=trainX, trainY=trainY, epoch=epoch)
-        predictY = model.predict(predictX=testX, predictY=testY)
-        assert (np.mean(testY - predictY) < 1)
+        k = 1
+        model = MERTModel(n=n, epoch=epoch, k=k)
+        model.fit(trainX=trainX, trainY=trainY)
+        predictY = model.test(testX=testX, testY=testY)
+        assert (np.mean(testY - predictY) < 5)
         pass
+
 
 
 class GBMTestCase(unittest.TestCase):
@@ -117,13 +129,12 @@ class HLMTestCase(unittest.TestCase):
     train_path = "data/hlm/train_erosion_data.xlsx"
     test_path = "data/hlm/test_erosion_data.xlsx"
     predict_path = "data/hlm/predict_erosion_data.xlsx"
-    soil_path = "data/hlm/soil_data.xlsx"
 
     def testDataLoader(self):
         dataloader = HLMDataLoader()
-        trainW, trainX, trainY = dataloader.loadTrainData(train_path=self.train_path, soil_path=self.soil_path)
-        testW, testX, testY = dataloader.loadTestData(test_path=self.test_path, soil_path=self.soil_path)
-        predictW, predictX = dataloader.loadPredictData(predict_path=self.predict_path, soil_path=self.soil_path)
+        trainW, trainX, trainY = dataloader.loadTrainData(train_path=self.train_path)
+        testW, testX, testY = dataloader.loadTestData(test_path=self.test_path)
+        predictW, predictX = dataloader.loadPredictData(predict_path=self.predict_path)
 
         assert trainW.shape == (1, 8)
         assert trainX.shape == (4, 1)
@@ -133,15 +144,15 @@ class HLMTestCase(unittest.TestCase):
         assert testX.shape == (4, 1)
         assert testY.shape == (4,)
 
-        assert predictW == (1, 8)
-        assert predictX == (4, 1)
+        assert predictW.shape == (1, 8)
+        assert predictX.shape == (4, 1)
 
     def testHLMModel(self):
         hlm_model = HLMModel()
         hlm_dataloader = HLMDataLoader()
 
-        trainW, trainX, trainY = hlm_dataloader.loadTrainData(train_path=self.train_path, soil_path=self.soil_path)
-        testW, testX, testY = hlm_dataloader.loadTestData(test_path=self.test_path, soil_path=self.soil_path)
+        trainW, trainX, trainY = hlm_dataloader.loadTrainData(train_path=self.train_path)
+        testW, testX, testY = hlm_dataloader.loadTestData(test_path=self.test_path)
         hlm_model.fit(trainW=trainW, trainX=trainX, trainY=trainY)
         predictY = hlm_model.predict(predictW=testW, predictX=testX)
 
@@ -152,18 +163,20 @@ class HLMTestCase(unittest.TestCase):
 class GATestCase(unittest.TestCase):
     def testGAModel(self):
         import numpy as np
-        model = GAModel()
-
-        def F(x):
-            return 3 * (1 - x[0]) ** 2 * np.exp(-(x[0] ** 2) - (x[1] + 1) ** 2) - 10 * (
-                    x[0] / 5 - x[0] ** 3 - x[1] ** 5) * np.exp(-x[0] ** 2 - x[1] ** 2) - 1 / 3 ** np.exp(
-                -(x[0] + 1) ** 2 - x[1] ** 2) - (x[2] - 3) ** 2
-
-        c = 1
-        F = F
+        c = 0
+        a = GADataLoader()
+        F = a.loadPredictData(predict_path="./data/ga/F.txt")
         n = 3
-        ranges = np.array([[-3, 3], [-3, 3], [0, 4]])
-        value, x = model.fit(c=c, F=F, n=n, ranges=ranges)
+        xmax = 10
+        xmin = -10
+        precisions = 24
+        N_GENERATIONS = 50
+        POP_SIZE = 200
+        MUTATION_RATE = 0.005
+        CROSSOVER_RATE = 0.8
+        model = GAModel(c=c, n=n, xmax=xmax, xmin=xmin, precisions=precisions, N_GENERATIONS=N_GENERATIONS, 
+                    POP_SIZE=POP_SIZE,MUTATION_RATE=MUTATION_RATE, CROSSOVER_RATE=CROSSOVER_RATE)
+        value,x = model.predict(predictX=F)
         assert (F(x) == value)
         pass
 
@@ -206,8 +219,8 @@ class SALPTestCase(unittest.TestCase):
 class IBRTTestCase(unittest.TestCase):
     def testDataLoader(self):
         dataloader = IBRTDataLoader()
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        trainX, trainY = dataloader.loadTrainData(train_path="data/ibrt/IBRT_TRAIN_DATA.xlsx")
+        testX, testY = dataloader.loadTestData(test_path="data/ibrt/IBRT_TEST_DATA.xlsx")
         assert trainX.shape == (48, 10)
         assert trainY.shape == (48,)
         assert testX.shape == (6, 10)
@@ -216,28 +229,28 @@ class IBRTTestCase(unittest.TestCase):
 
     def testIBRTModel(self):
         dataloader = IBRTDataLoader()
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        trainX, trainY = dataloader.loadTrainData(train_path="data/ibrt/IBRT_TRAIN_DATA.xlsx")
+        testX, testY = dataloader.loadTestData(test_path="data/ibrt/IBRT_TEST_DATA.xlsx")
+        print('trainX:', trainX)
+        print('trainY:', trainY)
         ibrt = IBRTModel(20, 0, 1.0, 2)
         ibrt.fit(trainX, trainY)
         predictY = ibrt.predict(testX)
         assert (mean_squared_error(testY, predictY) < 10)
         pass
 
-
 class rf_anfisTestCase(unittest.TestCase):
     def testDataLoader(self):
-        dataloader = anfisDataLoader()
-        train = dataloader.loadTrainData()
-        test = dataloader.loadTestData()
-        assert train.dataset.tensors[0].size() == torch.Size([900, 3])
-        assert test.dataset.tensors[0].size() == torch.Size([100, 3])
-        pass
+        dataloader = ANFISDataLoader()
+        trainX, trainY = dataloader.loadTrainData(train_path="data/rfanfis/RFANFIS_TRAIN_DATA.xlsx")
+        testX, testY = dataloader.loadTestData(test_path="data/rfanfis/RFANFIS_TEST_DATA.xlsx")
+        assert trainX.shape == (900, 3)
+        assert testX.shape == (100, 3)
 
     def testrf_anfisModel(self):
-        dataloader = anfisDataLoader()
-        train = dataloader.loadTrainData()
-        test = dataloader.loadTestData()
+        dataloader = ANFISDataLoader()
+        train = dataloader.loadTrainData(train_path="data/rfanfis/RFANFIS_TRAIN_DATA.xlsx")
+        test = dataloader.loadTestData(test_path="data/rfanfis/RFANFIS_TEST_DATA.xlsx")
         re_anfis = rf_anfisModel()
         re_anfis.fit(train)
         predictY = re_anfis.predict(test)

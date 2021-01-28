@@ -239,8 +239,8 @@ class IBRTModel(Model):
         step = 0
 
         while step < self.n_iter:
-            print("---------------------")
-            print("step", step)
+            # print("---------------------")
+            # print("step", step)
 
             tree = Tree(self._gamma, self._lambda, self.max_depth)
             if step == 0:
@@ -250,7 +250,7 @@ class IBRTModel(Model):
                 y_pred = np.full(len(y_data), res.x)
             else:
                 y_pred = self.predict(X_data)  # 会调用Tree.predict()（前step-1轮的）
-            print('残差:%f' % (np.mean(y_data - y_pred)))
+            # print('残差:%f' % (np.mean(y_data - y_pred)))
             garr = self.calGrad(y_pred, y_data)
             # print(garr)
             tree.fit(X_data, garr)  # 每次迭代由于garr不一样，迭代结果不一样
@@ -265,7 +265,7 @@ class IBRTModel(Model):
                 print('tree_pre:%f'%t.predict(X_data[0]))
             '''
             step += 1
-            print("---------------------")
+            # print("---------------------")
 
     def predict(self, X_data):
         if self.trees:
