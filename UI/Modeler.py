@@ -7,7 +7,7 @@ from data.hlm.dataloader import HLMDataLoader
 from data.ibrt.dataLoader import IBRTDataLoader
 from data.mert.dataLoder import MERTDataLoader
 from data.rebet.dataLoder import REBETDataLoader
-from data.rfanfis.dataLoader import anfisDataLoader as RE_ANFISDataLoader
+from data.rfanfis.dataLoader import ANFISDataLoader as RE_ANFISDataLoader
 from data.salp.dataLoder import SALPDataLoader
 from ga.ga import GAModel
 from gbm.GBM import GBMModel

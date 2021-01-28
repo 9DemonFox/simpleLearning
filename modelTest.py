@@ -12,7 +12,7 @@ from data.hlm.dataloader import HLMDataLoader
 from data.ibrt.dataLoader import IBRTDataLoader
 from data.mert.dataLoder import MERTDataLoader
 from data.rebet.dataLoder import REBETDataLoader
-from data.rfanfis.dataLoader import anfisDataLoader
+from data.rfanfis.dataLoader import ANFISDataLoader
 from data.salp.dataLoder import SALPDataLoader
 from data.ga.dataLoder import GADataLoader
 from ga.ga import GAModel
@@ -241,16 +241,16 @@ class IBRTTestCase(unittest.TestCase):
 
 class rf_anfisTestCase(unittest.TestCase):
     def testDataLoader(self):
-        dataloader = anfisDataLoader()
+        dataloader = ANFISDataLoader()
         trainX, trainY = dataloader.loadTrainData(train_path="data/rfanfis/RFANFIS_TRAIN_DATA.xlsx")
         testX, testY = dataloader.loadTestData(test_path="data/rfanfis/RFANFIS_TEST_DATA.xlsx")
         assert trainX.shape == (900, 3)
         assert testX.shape == (100, 3)
 
     def testrf_anfisModel(self):
-        dataloader = anfisDataLoader()
-        train = dataloader.loadTrainData()
-        test = dataloader.loadTestData()
+        dataloader = ANFISDataLoader()
+        train = dataloader.loadTrainData(train_path="data/rfanfis/RFANFIS_TRAIN_DATA.xlsx")
+        test = dataloader.loadTestData(test_path="data/rfanfis/RFANFIS_TEST_DATA.xlsx")
         re_anfis = rf_anfisModel()
         re_anfis.fit(train)
         predictY = re_anfis.predict(test)

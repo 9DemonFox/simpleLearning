@@ -1,7 +1,7 @@
 from torch.utils.data import TensorDataset, DataLoader
 import pandas
 import torch
-class anfisDataLoader(DataLoader):
+class ANFISDataLoader(DataLoader):
     def __init__(self, num_cases=100, batch_size=16):
         pass
 
@@ -37,5 +37,5 @@ class anfisDataLoader(DataLoader):
         return testX, testY
 
 if __name__ == "__main__":
-    model = anfisDataLoader()
+    model = ANFISDataLoader()
     print('shape: ', model.loadTrainData(train_path="RFANFIS_TRAIN_DATA.xlsx")[0].shape)

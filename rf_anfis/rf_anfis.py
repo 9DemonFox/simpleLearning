@@ -15,7 +15,7 @@ import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
 
 from collections import OrderedDict
-from data.rfanfis.dataLoader import anfisDataLoader
+from data.rfanfis.dataLoader import ANFISDataLoader
 
 
 dtype = torch.float
@@ -597,7 +597,7 @@ class rf_anfisModel(torch.nn.Module):
 
 if __name__ == '__main__' and False:
     model = rf_anfisModel()
-    data = anfisDataLoader()
+    data = ANFISDataLoader()
     train_data = data.loadTrainData()
     print(train_data[0].shape, train_data[1].shape)
     test_data = data.loadTestData()
@@ -612,7 +612,7 @@ if __name__ == "__main__" and True:
     from sklearn.linear_model import LassoLars
 
     model = rf_anfisModel()
-    data = anfisDataLoader()
+    data = ANFISDataLoader()
     train_data = data.loadTrainData()
     print(train_data[0].shape, train_data[1].shape)
     test_data = data.loadTestData()
