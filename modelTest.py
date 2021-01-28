@@ -14,6 +14,7 @@ from data.mert.dataLoder import MERTDataLoader
 from data.rebet.dataLoder import REBETDataLoader
 from data.rfanfis.dataLoader import anfisDataLoader
 from data.salp.dataLoder import SALPDataLoader
+from data.ga.dataLoder import GADataLoader
 from ga.ga import GAModel
 from gbm.GBM import GBMModel
 from hlm.HLM import HLMModel
@@ -28,54 +29,65 @@ warnings.filterwarnings("ignore")
 
 class REBETTestCase(unittest.TestCase):
     def testDataLoder(self):
-        dataloader = REBETDataLoader(datapath1="./data/rebet/data_train.csv", datapath2="./data/rebet/data_test.csv")
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        datapath1 = "./data/rebet/data_train.xlsx"
+        datapath2 = "./data/rebet/data_test.xlsx"
+        dataloder = REBETDataLoader()
+        trainX, trainY = dataloder.loadTrainData(train_path=datapath1)
+        testX, testY = dataloder.loadTestData(test_path=datapath2)
         # 验证数据集形状
         assert trainX.shape == (5000, 3)
-        assert trainY.shape == (5000, 1)
+        assert trainY.shape == (5000 ,)
         assert testX.shape == (500, 3)
-        assert testY.shape == (500, 1)
+        assert testY.shape == (500 ,)
         pass
 
     def testREBETModel(self):
         import numpy as np
-        dataloader = REBETDataLoader(datapath1="./data/rebet/data_train.csv", datapath2="./data/rebet/data_test.csv")
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        datapath1 = "./data/rebet/data_train.xlsx"
+        datapath2 = "./data/rebet/data_test.xlsx"
+        dataloder = REBETDataLoader()
+        trainX, trainY = dataloder.loadTrainData(train_path=datapath1)
+        testX, testY = dataloder.loadTestData(test_path=datapath2)
         n = 100
         epoch = 5
-        model = REBETModel(n=n)
-        model.fit(trainX=trainX, trainY=trainY, epoch=epoch)
-        predictY = model.predict(predictX=testX, predictY=testY)
-        assert (np.mean(testY - predictY) < 1)
+        k = 1
+        model = REBETModel(n=n, epoch=epoch, k=k)
+        model.fit(trainX=trainX, trainY=trainY)
+        predictY = model.test(testX=testX, testY=testY)
+        assert (np.mean(testY - predictY) < 5)
         pass
 
 
 class MERTTestCase(unittest.TestCase):
     def testDataLoder(self):
-        dataloader = MERTDataLoader(datapath1="./data/mert/data_train.csv", datapath2="./data/mert/data_test.csv")
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        datapath1 = "./data/mert/data_train.xlsx"
+        datapath2 = "./data/mert/data_test.xlsx"
+        dataloder = MERTDataLoader()
+        trainX, trainY = dataloder.loadTrainData(train_path=datapath1)
+        testX, testY = dataloder.loadTestData(test_path=datapath2)
         # 验证数据集形状
         assert trainX.shape == (5000, 3)
-        assert trainY.shape == (5000, 1)
+        assert trainY.shape == (5000 ,)
         assert testX.shape == (500, 3)
-        assert testY.shape == (500, 1)
+        assert testY.shape == (500 ,)
         pass
 
     def testMERTModel(self):
         import numpy as np
-        dataloader = MERTDataLoader(datapath1="./data/mert/data_train.csv", datapath2="./data/mert/data_test.csv")
-        trainX, trainY = dataloader.loadTrainData()
-        testX, testY = dataloader.loadTestData()
+        datapath1 = "./data/mert/data_train.xlsx"
+        datapath2 = "./data/mert/data_test.xlsx"
+        dataloder = MERTDataLoader()
+        trainX, trainY = dataloder.loadTrainData(train_path=datapath1)
+        testX, testY = dataloder.loadTestData(test_path=datapath2)
         n = 100
         epoch = 5
-        model = MERTModel(n=n)
-        model.fit(trainX=trainX, trainY=trainY, epoch=epoch)
-        predictY = model.predict(predictX=testX, predictY=testY)
-        assert (np.mean(testY - predictY) < 1)
+        k = 1
+        model = MERTModel(n=n, epoch=epoch, k=k)
+        model.fit(trainX=trainX, trainY=trainY)
+        predictY = model.test(testX=testX, testY=testY)
+        assert (np.mean(testY - predictY) < 5)
         pass
+
 
 
 class GBMTestCase(unittest.TestCase):
@@ -152,18 +164,20 @@ class HLMTestCase(unittest.TestCase):
 class GATestCase(unittest.TestCase):
     def testGAModel(self):
         import numpy as np
-        model = GAModel()
-
-        def F(x):
-            return 3 * (1 - x[0]) ** 2 * np.exp(-(x[0] ** 2) - (x[1] + 1) ** 2) - 10 * (
-                    x[0] / 5 - x[0] ** 3 - x[1] ** 5) * np.exp(-x[0] ** 2 - x[1] ** 2) - 1 / 3 ** np.exp(
-                -(x[0] + 1) ** 2 - x[1] ** 2) - (x[2] - 3) ** 2
-
-        c = 1
-        F = F
+        c = 0
+        a = GADataLoader()
+        F = a.loadPredictData(predict_path="./data/ga/F.txt")
         n = 3
-        ranges = np.array([[-3, 3], [-3, 3], [0, 4]])
-        value, x = model.fit(c=c, F=F, n=n, ranges=ranges)
+        xmax = 10
+        xmin = -10
+        precisions = 24
+        N_GENERATIONS = 50
+        POP_SIZE = 200
+        MUTATION_RATE = 0.005
+        CROSSOVER_RATE = 0.8
+        model = GAModel(c=c, n=n, xmax=xmax, xmin=xmin, precisions=precisions, N_GENERATIONS=N_GENERATIONS, 
+                    POP_SIZE=POP_SIZE,MUTATION_RATE=MUTATION_RATE, CROSSOVER_RATE=CROSSOVER_RATE)
+        value,x = model.predict(predictX=F)
         assert (F(x) == value)
         pass
 
