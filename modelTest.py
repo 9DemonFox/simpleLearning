@@ -254,7 +254,8 @@ class rf_anfisTestCase(unittest.TestCase):
         re_anfis = rf_anfisModel()
         re_anfis.fit(train)
         predictY = re_anfis.predict(test)
-        assert (mean_squared_error(test.dataset.tensors[1], predictY) < 10)
+        #print(type(test))
+        assert (mean_squared_error(test[1], predictY) < 10)
         pass
 
 
