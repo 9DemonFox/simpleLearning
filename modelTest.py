@@ -117,13 +117,12 @@ class HLMTestCase(unittest.TestCase):
     train_path = "data/hlm/train_erosion_data.xlsx"
     test_path = "data/hlm/test_erosion_data.xlsx"
     predict_path = "data/hlm/predict_erosion_data.xlsx"
-    soil_path = "data/hlm/soil_data.xlsx"
 
     def testDataLoader(self):
         dataloader = HLMDataLoader()
-        trainW, trainX, trainY = dataloader.loadTrainData(train_path=self.train_path, soil_path=self.soil_path)
-        testW, testX, testY = dataloader.loadTestData(test_path=self.test_path, soil_path=self.soil_path)
-        predictW, predictX = dataloader.loadPredictData(predict_path=self.predict_path, soil_path=self.soil_path)
+        trainW, trainX, trainY = dataloader.loadTrainData(train_path=self.train_path)
+        testW, testX, testY = dataloader.loadTestData(test_path=self.test_path)
+        predictW, predictX = dataloader.loadPredictData(predict_path=self.predict_path)
 
         assert trainW.shape == (1, 8)
         assert trainX.shape == (4, 1)
@@ -133,15 +132,15 @@ class HLMTestCase(unittest.TestCase):
         assert testX.shape == (4, 1)
         assert testY.shape == (4,)
 
-        assert predictW == (1, 8)
-        assert predictX == (4, 1)
+        assert predictW.shape == (1, 8)
+        assert predictX.shape == (4, 1)
 
     def testHLMModel(self):
         hlm_model = HLMModel()
         hlm_dataloader = HLMDataLoader()
 
-        trainW, trainX, trainY = hlm_dataloader.loadTrainData(train_path=self.train_path, soil_path=self.soil_path)
-        testW, testX, testY = hlm_dataloader.loadTestData(test_path=self.test_path, soil_path=self.soil_path)
+        trainW, trainX, trainY = hlm_dataloader.loadTrainData(train_path=self.train_path)
+        testW, testX, testY = hlm_dataloader.loadTestData(test_path=self.test_path)
         hlm_model.fit(trainW=trainW, trainX=trainX, trainY=trainY)
         predictY = hlm_model.predict(predictW=testW, predictX=testX)
 
