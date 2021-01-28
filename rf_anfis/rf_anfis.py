@@ -377,7 +377,8 @@ class ConsequentLayer(torch.nn.Module):
         # Append 1 to each list of input vals, for the constant term:
         x_plus = torch.cat([x, torch.ones(x.shape[0], 1)], dim=1)
         # Need to switch dimansion for the multipy, then switch back:
-        y_pred = torch.matmul(self.coeff, x_plus.t()) #矩阵相乘
+        #print(type(self.coeff), type(x_plus.t()))
+        y_pred = torch.matmul(self.coeff.double(), x_plus.t().double()) #矩阵相乘
         return y_pred.transpose(0, 2)  # swaps cases and rules
 
 
@@ -513,7 +514,7 @@ class rf_anfisModel(torch.nn.Module):
         self.weights = F.normalize(self.raw_weights, p=1, dim=1)
         self.rule_tsk = self.layer['consequent'](x)
         # y_pred = self.layer['weighted_sum'](self.weights, self.rule_tsk)
-        y_pred = torch.bmm(self.rule_tsk, self.weights.unsqueeze(2))
+        y_pred = torch.bmm(self.rule_tsk.double(), self.weights.unsqueeze(2).double())
         self.y_pred = y_pred.squeeze(2)
         return self.y_pred
 
