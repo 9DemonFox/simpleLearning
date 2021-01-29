@@ -530,40 +530,28 @@ class rf_anfisModel(torch.nn.Module):
         # Get the error rate for the whole batch:
         # 处理test,将test从numpy二元组合并为dataLoader
         assert "predictX" in kwargs.keys()
-        if len(kwargs.get("predictX"))==2:
-            tensor_X = torch.from_numpy(kwargs.get("predictX")[0])
-            tensor_y = torch.from_numpy(kwargs.get("predictX")[1])
-            ds = TensorDataset(tensor_X, tensor_y)
-            test = DataLoader(ds, batch_size=16, shuffle=True)
+        #if len(kwargs.get("predictX"))==2:
+        tensor_X = torch.from_numpy(kwargs.get("predictX"))
+        tensor_y = torch.from_numpy(kwargs.get("predictX")[:,0])
+        ds = TensorDataset(tensor_X, tensor_y)
+        test = DataLoader(ds, batch_size=16, shuffle=True)
 
-            y_pred = np.array([[0]])
-            for batch_x, batch_y in test:
-                y_pred_batch = self(batch_x)
-                print(y_pred_batch.detach().numpy().shape)
-                y_pred = np.concatenate((y_pred, y_pred_batch.detach().numpy()))
-            y_pred = torch.from_numpy(y_pred[1:,:])
+        y_pred = np.array([[0]])
+        for batch_x, batch_y in test:
+            y_pred_batch = self(batch_x)
+            print(y_pred_batch.detach().numpy().shape)
+            y_pred = np.concatenate((y_pred, y_pred_batch.detach().numpy()))
+        y_pred = torch.from_numpy(y_pred[1:,:])
 
-            #y_pred = []
-            y_test = torch.reshape(test.dataset.tensors[1], [-1,1])
-            print(test.dataset.tensors[1])
-            print(y_pred)
-            print(calc_error(y_pred.double(), y_test.double()))
-
-        else:
-            tensor_X = torch.from_numpy(kwargs.get("predictX"))
-            tensor_y = torch.from_numpy(kwargs.get("predictX")[:,0])
-            ds = TensorDataset(tensor_X, tensor_y)
-            test = DataLoader(ds, batch_size=16, shuffle=True)
-
-            y_pred = np.array([[0]])
-            for batch_x, _ in test:
-                y_pred_batch = self(batch_x)
-                print(y_pred_batch.detach().numpy().shape)
-                y_pred = np.concatenate((y_pred, y_pred_batch.detach().numpy()))
-            y_pred = torch.from_numpy(y_pred[1:, :])
-
+        #y_pred = []
+        y_test = torch.reshape(test.dataset.tensors[1], [-1,1])
+        print(test.dataset.tensors[1])
+        print(y_pred)
+        print(calc_error(y_pred.double(), y_test.double()))
         y_pred = y_pred.numpy()
         return y_pred
+
+
 
     def fitForUI(self, **kwargs):
         """ 返回结果到前端
@@ -634,11 +622,10 @@ if __name__ == "__main__" and True:
     train_data = data.loadTrainData(train_path='../data/rfanfis/RFANFIS_TRAIN_DATA.xlsx')
     print("train_data",train_data)
     test_data = data.loadTestData(test_path='../data/rfanfis/RFANFIS_TEST_DATA.xlsx')
+    predict_data = data.loadPredictData(predict_path='../data/rfanfis/RFANFIS_PREDICT_DATA.xlsx')
     model.fitForUI(train_data=train_data)
-    predictY = model.predict(predictX=test_data)
-    predictYForUI = model.predictForUI(predictX=test_data)
-    predictTrainY = model.predict(predictX=train_data)
+    predictY = model.predict(predictX=predict_data)
+    predictYForUI = model.predictForUI(predictX=predict_data)
+    predictTrainY = model.predict(predictX=predict_data)
     #print(model.model.coef_)
-    print(predictTrainY.shape, train_data[1].shape)
-    print(mean_squared_error(predictY, test_data[1]))
-    print(mean_squared_error(predictTrainY, train_data[1]))
+
