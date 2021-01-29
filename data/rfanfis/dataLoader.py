@@ -40,6 +40,18 @@ class ANFISDataLoader(DataLoader):
         testY = test_dl.dataset.tensors[1].numpy().reshape(-1, 1)
         return testX, testY
 
+    def loadPredictData(self, **kwargs):
+        assert "predict_path" in kwargs.keys()
+
+        predictX = pandas.read_excel(kwargs.get("predict_path"), index_col=0).values[:,:]
+        print(predictX)
+        predicty = pandas.read_excel(kwargs.get("predict_path"), index_col=0).values[:,0]
+        predictX, predicty = torch.from_numpy(predictX), torch.from_numpy(predicty)
+        predict_db = TensorDataset(predictX, predicty)
+        predict_dl = DataLoader(predict_db, batch_size=16, shuffle=True)
+        predictX = predict_dl.dataset.tensors[0].numpy().reshape(-1, 3)
+        return predictX
+
 if __name__ == "__main__":
     model = ANFISDataLoader()
     print('shape: ', model.loadTrainData(train_path="RFANFIS_TRAIN_DATA.xlsx")[0].shape)

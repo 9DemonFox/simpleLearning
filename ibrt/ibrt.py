@@ -249,7 +249,7 @@ class IBRTModel(Model):
                 # print(res.x)
                 y_pred = np.full(len(y_data), res.x)
             else:
-                y_pred = self.predict(X_data)  # 会调用Tree.predict()（前step-1轮的）
+                y_pred = self.predict(predictX=X_data)  # 会调用Tree.predict()（前step-1轮的）
             # print('残差:%f' % (np.mean(y_data - y_pred)))
             garr = self.calGrad(y_pred, y_data)
             # print(garr)
@@ -267,7 +267,9 @@ class IBRTModel(Model):
             step += 1
             # print("---------------------")
 
-    def predict(self, X_data):
+    def predict(self, **kwargs):
+        assert "predictX" in kwargs
+        X_data = kwargs.get("predictX")
         if self.trees:
             y_pred = []
             # print("et")
@@ -311,7 +313,7 @@ class IBRTModel(Model):
         returnDic["mean_squared_error"] = str(mse)
         return returnDic
 
-    def predictForUI(self, *args):
+    def predictForUI(self, **kwargs):
         """
         :param args:
         :return: 字典形式结果
@@ -319,7 +321,7 @@ class IBRTModel(Model):
         returnDic = {
             "预测结果": None
         }
-        predictResult = self.predict(*args)
+        predictResult = self.predict(**kwargs)
         returnDic["预测结果"] = str(predictResult)
         return returnDic
 
@@ -341,9 +343,9 @@ if __name__ == '__main__':
     #print(mean_absolute_error(testY, predictY))
 
     model.fitForUI(trainX, trainY)
-    predictY = model.predict(testX)
-    predictYForUI = model.predictForUI(testX)
-    predictTrainY = model.predict(trainX)
+    predictY = model.predict(predictX=testX)
+    predictYForUI = model.predictForUI(predictX=testX)
+    predictTrainY = model.predict(predictX=trainX)
     #print(model.model.coef_)
     print(mean_squared_error(predictY, testY))
     print(mean_squared_error(predictTrainY, trainY))
