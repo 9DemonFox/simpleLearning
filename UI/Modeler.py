@@ -48,12 +48,28 @@ class Modeler:
         trainX, trainY = self.curDataLoader.loadTrainData(train_path=train_path)
         result = self.curModel.fitForUI(trainX=trainX, trainY=trainY)
         return result
+        # try:
+        #     trainX, trainY = self.curDataLoader.loadTrainData(train_path=train_path)
+        #     result = self.curModel.fitForUI(trainX=trainX, trainY=trainY)
+        #     return result
+        # except:
+        #     return {
+        #         "提示": "当前模型{}不需要{}方法".format(self.curModelName, "train")
+        #     }
 
     def test_step_3(self, test_path):
         self.curDataLoader = self.name2DataLoader.get(self.curModelName)()
         testX, testY = self.curDataLoader.loadTestData(test_path=test_path)
         result = self.curModel.testForUI(testX=testX, testY=testY)
         return result
+        # try:
+        #     testX, testY = self.curDataLoader.loadTestData(test_path=test_path)
+        #     result = self.curModel.testForUI(testX=testX, testY=testY)
+        #     return result
+        # except:
+        #     return {
+        #         "提示": "当前模型{}不需要{}方法".format(self.curModelName, "test")
+        #     }
 
     def predict_step_4(self, predict_path):
         """

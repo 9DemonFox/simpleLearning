@@ -84,6 +84,11 @@ class SALPDataLoader(DataLoader):
         testX, testY = self.__loadExcelData(kwargs.get("test_path"))
         return testX, testY
 
+    def loadPredictData(self, **kwargs):
+        assert "predict_path" in kwargs.keys()
+        df = pandas.read_excel(kwargs.get("predict_path"), index_col=0)
+        predictX = df.values[:, :]
+        return predictX
 
 if __name__ == "__main__":
     from sklearn.svm import SVR

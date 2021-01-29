@@ -68,7 +68,7 @@ dataloader参数
 
 该论文中提到了其它相关的方法，SVR
 
-## 3.1 SVR参数说明，默认采用
+## 3.1 SVR
 
 论文原文
 
@@ -107,19 +107,18 @@ data_test = np.loadtxt(open(datapath2, "rb"), delimiter=",", skiprows=0)
 
 ## 3.2 SALP
 
-算法在转换权重后再使用Lasso将不再获得参数，待处理
-### 与原论文对比
-偏最小二乘算法获得的系数完全无效，采用OLS算法得出的系数有效，但是对比带有Grid搜索的相关算法来选取最优参数，似乎以偏最小二乘作为初始化参数并不能正确的选择变量，甚至OLS的都有效果。
+### 3.2.1 算法描述
 
-### 3.2.1 通过转换X，将标准的Lasso转为为Adaptive Lasso
+改进的自适应Lasso（Least Absolute Shrinkage and Selection Operator）算法。包含普通Lasso算法与改进的自适应Lasso算法。改进算法中首先采用Bayesian Bootstrap算法重构数据样本，通过多模型集成对预测变量进行预筛选，采用偏最小二乘加权系数改善原方法处理小样本数据的性能；
+
+### 3.2.2 与原论文对比
+偏最小二乘算法获得的系数完全无效，采用OLS算法得出的系数有效。
+
+### 3.2.3 通过转换X，将标准的Lasso转为为Adaptive Lasso
 
 取对于每个x,取x* = x/w
 
 ![img](doc.pics/v2-67052a6bc15bc9b9e703526054307e45_720w.jpg)
-
-### 3.2.2  ASGL
-asgl是一个处理线性回归相关的python包，可以直接采用其中的相关算法。
-https://github.com/alvaromc317/asgl/blob/master/user_guide.ipynb
 
 # 4. RE-BET
 

@@ -186,21 +186,24 @@ class SALPTestCase(unittest.TestCase):
         dataloader = SALPDataLoader()
         trainX, trainY = dataloader.loadTrainData(train_path="data/salp/SALP_TRAIN_DATA.xlsx")
         testX, testY = dataloader.loadTestData(test_path="data/salp/SALP_TEST_DATA.xlsx")
+        predictX = dataloader.loadPredictData(predict_path="data/salp/SALP_PREDICT_DATA.xlsx")
         # 验证数据集形状
         assert trainX.shape == (80, 100)
         assert trainY.shape == (80,)
         assert testX.shape == (20, 100)
         assert testY.shape == (20,)
+        assert predictX.shape == (1, 100)
         pass
 
     def testSVRModel(self):
         dataloader = SALPDataLoader()
         trainX, trainY = dataloader.loadTrainData(train_path="data/salp/SALP_TRAIN_DATA.xlsx")
         testX, testY = dataloader.loadTestData(test_path="data/salp/SALP_TEST_DATA.xlsx")
+        predictX = dataloader.loadPredictData(predict_path="data/salp/SALP_PREDICT_DATA.xlsx")
         model = SVRModel()
         model.fit(trainX=trainX, trainY=trainY)
-        predictY = model.predict(predictX=testX)
-        assert (mean_squared_error(testY, predictY) < 1)
+        predict_test_Y = model.predict(predictX=testX)
+        assert (mean_squared_error(testY, predict_test_Y) < 1)
         pass
 
     def testSALPModel(self):

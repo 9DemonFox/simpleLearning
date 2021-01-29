@@ -44,13 +44,13 @@ class HLMDataLoader(DataLoader):
         assert "train_path" in kwargs.keys()
         train_path = kwargs.get("train_path")
         trainW, trainX, trainY = self.__loadExcelData(datapath=train_path)
-        return trainW, trainX, trainY
+        return (trainX, trainW), trainY
 
     def loadTestData(self, **kwargs):
         assert "test_path" in kwargs.keys()
         test_path = kwargs.get("test_path")
         testW, testX, testY = self.__loadExcelData(datapath=test_path)
-        return testW, testX, testY
+        return (testX, testW), testY
 
     def loadPredictData(self, **kwargs):
         assert "predict_path" in kwargs.keys()
@@ -59,7 +59,7 @@ class HLMDataLoader(DataLoader):
         df_soil = pd.read_excel(io=predict_path, sheet_name="soil", index_col=0)
         predictX = df_erosion.values[:, :-1].astype(float)
         predictW = df_soil.values[:, :-1].astype(float)
-        return predictW, predictX
+        return (predictX, predictW)
 
 
 if __name__ == "__main__":

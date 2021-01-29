@@ -177,14 +177,12 @@ class HLMModel(Model):
 
         """
         assert "trainX" in kwargs.keys()
-        assert "trainW" in kwargs.keys()
         assert "trainY" in kwargs.keys()
         iters = 24
         if "iters" in kwargs.keys():
             iters = kwargs["iters"]
 
-        x = kwargs["trainX"]
-        w = kwargs["trainW"]
+        x, w = kwargs["trainX"]
         y = kwargs["trainY"]
 
         X, W = append_ones(x, w)
@@ -228,7 +226,6 @@ class HLMModel(Model):
             "第一层随机误差的方差": None,
             "第二层随机误差的方差": None
         }
-        assert "trainW" in kwargs.keys()
         assert "trainX" in kwargs.keys()
         assert "trainY" in kwargs.keys()
         gamma, sigma_squ, T = self.fit(**kwargs)
@@ -237,15 +234,14 @@ class HLMModel(Model):
         returnDic["第二层随机误差的方差"] = str(T)
         return returnDic
 
-    def testFotUI(self, **kwargs):
+    def testForUI(self, **kwargs):
         returnDic = {
             "mean_squared_error": None,
             "mean_absolute_error": None
         }
-        assert "testW" in kwargs.keys()
         assert "testX" in kwargs.keys()
         assert "testY" in kwargs.keys()
-        testW, testX, testY = kwargs.get("testW"), kwargs.get("testX"), kwargs.get("testY")
+        (testX, testW), testY = kwargs.get("testX"), kwargs.get("testY")
         predictResult = self.predict(predictW=testW, predictX=testX)
         print("predictResult = ", predictResult)
         mse = mean_squared_error(predictResult, testY)
@@ -259,8 +255,7 @@ class HLMModel(Model):
             "predict_result": None
         }
         assert "predictX" in kwargs.keys()
-        assert "predictW" in kwargs.keys()
-        predictW, predictX = kwargs.get("predictW"), kwargs.get("predictX")
+        predictW, predictX = kwargs.get("predictX")
         predictY = self.predict(predictW=predictW, predictX=predictX)
         # print("predictY = ", predictY)
         returnDic["predict_result"] = str(predictY)
