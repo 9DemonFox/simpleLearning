@@ -526,26 +526,41 @@ class rf_anfisModel(torch.nn.Module):
         criterion = torch.nn.MSELoss(reduction='sum')
         train_anfis_with(self, data, optimizer, criterion, epochs, show_plots)
 
-    def predict(self, test):
+    def predict(self, **kwargs):
         # Get the error rate for the whole batch:
         # 处理test,将test从numpy二元组合并为dataLoader
-        tensor_X = torch.from_numpy(test[0])
-        tensor_y = torch.from_numpy(test[1])
-        ds = TensorDataset(tensor_X, tensor_y)
-        test = DataLoader(ds, batch_size=16, shuffle=True)
+        assert "predictX" in kwargs.keys()
+        if len(kwargs.get("predictX"))==2:
+            tensor_X = torch.from_numpy(kwargs.get("predictX")[0])
+            tensor_y = torch.from_numpy(kwargs.get("predictX")[1])
+            ds = TensorDataset(tensor_X, tensor_y)
+            test = DataLoader(ds, batch_size=16, shuffle=True)
 
-        y_pred = np.array([[0]])
-        for batch_x, batch_y in test:
-            y_pred_batch = self(batch_x)
-            print(y_pred_batch.detach().numpy().shape)
-            y_pred = np.concatenate((y_pred, y_pred_batch.detach().numpy()))
-        y_pred = torch.from_numpy(y_pred[1:,:])
+            y_pred = np.array([[0]])
+            for batch_x, batch_y in test:
+                y_pred_batch = self(batch_x)
+                print(y_pred_batch.detach().numpy().shape)
+                y_pred = np.concatenate((y_pred, y_pred_batch.detach().numpy()))
+            y_pred = torch.from_numpy(y_pred[1:,:])
 
-        #y_pred = []
-        y_test = torch.reshape(test.dataset.tensors[1], [-1,1])
-        print(test.dataset.tensors[1])
-        print(y_pred)
-        print(calc_error(y_pred.double(), y_test.double()))
+            #y_pred = []
+            y_test = torch.reshape(test.dataset.tensors[1], [-1,1])
+            print(test.dataset.tensors[1])
+            print(y_pred)
+            print(calc_error(y_pred.double(), y_test.double()))
+
+        else:
+            tensor_X = torch.from_numpy(kwargs.get("predictX"))
+            tensor_y = torch.from_numpy(kwargs.get("predictX")[:,0])
+            ds = TensorDataset(tensor_X, tensor_y)
+            test = DataLoader(ds, batch_size=16, shuffle=True)
+
+            y_pred = np.array([[0]])
+            for batch_x, _ in test:
+                y_pred_batch = self(batch_x)
+                print(y_pred_batch.detach().numpy().shape)
+                y_pred = np.concatenate((y_pred, y_pred_batch.detach().numpy()))
+            y_pred = torch.from_numpy(y_pred[1:, :])
 
         y_pred = y_pred.numpy()
         return y_pred
@@ -565,7 +580,7 @@ class rf_anfisModel(torch.nn.Module):
         }
         return returnDic
 
-    def testForUI(self, *args):
+    def testForUI(self, **kwargs):
         """
         :param kwargs:
         :return: 字典形式结果
@@ -574,9 +589,9 @@ class rf_anfisModel(torch.nn.Module):
             "mean_squared_error": None,
             "mean_absolute_error": None
         }
-        args["predictX"] = args.get("testX")
-        predictResult = self.predict(*args)
-        testY = args.get("testY")
+        kwargs["predictX"] = kwargs.get("predictX")
+        predictResult = self.predict(**kwargs)
+        testY = kwargs.get("predictY")
         mse = mean_squared_error(predictResult, testY)
         mae = mean_absolute_error(predictResult, testY)
         returnDic["预测结果"] = str(predictResult)
@@ -584,7 +599,7 @@ class rf_anfisModel(torch.nn.Module):
         returnDic["mean_squared_error"] = str(mse)
         return returnDic
 
-    def predictForUI(self, *args):
+    def predictForUI(self, **kwargs):
         """
         :param kwargs:
         :return: 字典形式结果
@@ -592,7 +607,7 @@ class rf_anfisModel(torch.nn.Module):
         returnDic = {
             "预测结果": None
         }
-        predictResult = self.predict(*args)
+        predictResult = self.predict(**kwargs)
         returnDic["预测结果"] = str(predictResult)
         return returnDic
 
@@ -617,12 +632,12 @@ if __name__ == "__main__" and True:
     model = rf_anfisModel()
     data = ANFISDataLoader()
     train_data = data.loadTrainData(train_path='../data/rfanfis/RFANFIS_TRAIN_DATA.xlsx')
-    print(train_data[0].shape, train_data[1].shape)
+    print("train_data",train_data)
     test_data = data.loadTestData(test_path='../data/rfanfis/RFANFIS_TEST_DATA.xlsx')
     model.fitForUI(train_data=train_data)
-    predictY = model.predict(test_data)
-    predictYForUI = model.predictForUI(test_data)
-    predictTrainY = model.predict(train_data)
+    predictY = model.predict(predictX=test_data)
+    predictYForUI = model.predictForUI(predictX=test_data)
+    predictTrainY = model.predict(predictX=train_data)
     #print(model.model.coef_)
     print(predictTrainY.shape, train_data[1].shape)
     print(mean_squared_error(predictY, test_data[1]))
