@@ -330,10 +330,10 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     model = IBRTModel(5, 0, 1.0, 2)
-    ibrt_loader = IBRTDataLoader(datapath="../data/ibrt/test.xlsx")
+    ibrt_loader = IBRTDataLoader()
 
-    trainX, trainY = ibrt_loader.loadTrainData()
-    testX, testY = ibrt_loader.loadTestData()
+    trainX, trainY = ibrt_loader.loadTrainData(train_path="../data/ibrt/IBRT_TRAIN_DATA.xlsx")
+    testX, testY = ibrt_loader.loadTestData(test_path="../data/ibrt/IBRT_TEST_DATA.xlsx")
     print(trainX.shape,testX.shape)
 
     model.fit(trainX, trainY)

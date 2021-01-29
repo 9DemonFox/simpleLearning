@@ -550,11 +550,13 @@ class rf_anfisModel(torch.nn.Module):
         y_pred = y_pred.numpy()
         return y_pred
 
-    def fitForUI(self, td):
+    def fitForUI(self, **kwargs):
         """ 返回结果到前端
         :return:
         """
-        self.fit(td)
+        assert "train_data" in kwargs.keys()
+        train_data = kwargs.get("train_data")
+        self.fit(train_data)
         # 返回结果为字典形式
         #excludeFeatures, coefs = self.fit(**kwargs)
         returnDic = {
@@ -614,10 +616,10 @@ if __name__ == "__main__" and True:
 
     model = rf_anfisModel()
     data = ANFISDataLoader()
-    train_data = data.loadTrainData()
+    train_data = data.loadTrainData(train_path='../data/rfanfis/RFANFIS_TRAIN_DATA.xlsx')
     print(train_data[0].shape, train_data[1].shape)
-    test_data = data.loadTestData()
-    model.fitForUI(train_data)
+    test_data = data.loadTestData(test_path='../data/rfanfis/RFANFIS_TEST_DATA.xlsx')
+    model.fitForUI(train_data=train_data)
     predictY = model.predict(test_data)
     predictYForUI = model.predictForUI(test_data)
     predictTrainY = model.predict(train_data)
