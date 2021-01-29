@@ -150,15 +150,6 @@ class MERTModel(Model):
         随机效应参数
 
         """
-        if "epoch" not in kwargs.keys():
-            self.epoch = self.epoch
-        else:
-            self.epoch = kwargs["epoch"]
-
-        if "k" not in kwargs.keys():
-            self.k = self.k
-        else:
-            self.k = kwargs["k"]
         self.trainX = kwargs["trainX"]
         self.trainY = kwargs["trainY"]
         N = self.trainY.shape[0]
