@@ -255,7 +255,7 @@ class HLMModel(Model):
             "predict_result": None
         }
         assert "predictX" in kwargs.keys()
-        predictW, predictX = kwargs.get("predictX")
+        predictX, predictW = kwargs.get("predictX")
         predictY = self.predict(predictW=predictW, predictX=predictX)
         # print("predictY = ", predictY)
         returnDic["predict_result"] = str(predictY)
