@@ -235,7 +235,7 @@ class IBRTTestCase(unittest.TestCase):
         print('trainY:', trainY)
         ibrt = IBRTModel(20, 0, 1.0, 2)
         ibrt.fit(trainX, trainY)
-        predictY = ibrt.predict(testX)
+        predictY = ibrt.predict(predictX=testX)
         assert (mean_squared_error(testY, predictY) < 10)
         pass
 
@@ -254,8 +254,8 @@ class rf_anfisTestCase(unittest.TestCase):
         test = dataloader.loadTestData(test_path="data/rfanfis/RFANFIS_TEST_DATA.xlsx")
         re_anfis = rf_anfisModel()
         re_anfis.fit(train)
-        predictY = re_anfis.predict(test)
-        # print(type(test))
+        predictY = re_anfis.predict(predictX= test)
+        #print(type(test))
         assert (mean_squared_error(test[1], predictY) < 10)
 
 class AHPTestCase(unittest.TestCase):
