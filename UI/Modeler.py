@@ -7,7 +7,7 @@ from data.hlm.dataloader import HLMDataLoader
 from data.ibrt.dataLoader import IBRTDataLoader
 from data.mert.dataLoder import MERTDataLoader
 from data.rebet.dataLoder import REBETDataLoader
-from data.rfanfis.dataLoader import ANFISDataLoader as RE_ANFISDataLoader
+from data.rfanfis.dataLoader import ANFISDataLoader as RF_ANFISDataLoader
 from data.salp.dataLoder import SALPDataLoader
 from ga.ga import GAModel
 from gbm.GBM import GBMModel
@@ -15,17 +15,17 @@ from hlm.HLM import HLMModel
 from ibrt.ibrt import IBRTModel
 from mert.mert import MERTModel
 from rebet.rebet import REBETModel
-from rf_anfis.rf_anfis import rf_anfisModel as RE_ANFISModel
+from rf_anfis.rf_anfis import RF_ANFISModel
 from salp.SALP import SVRModel, SALPModel
 
 
 class Modeler:
     def __init__(self):
         allModels = [AHPModel, GAModel, GBMModel, HLMModel,
-                     IBRTModel, MERTModel, RE_ANFISModel, REBETModel,
+                     IBRTModel, MERTModel, RF_ANFISModel, REBETModel,
                      SALPModel, SVRModel]
         allDataLoader = [AHPDataLoader, GADataLoader, GBMDataLoader, HLMDataLoader,
-                         IBRTDataLoader, MERTDataLoader, RE_ANFISDataLoader, REBETDataLoader,
+                         IBRTDataLoader, MERTDataLoader, RF_ANFISDataLoader, REBETDataLoader,
                          SALPDataLoader, SALPDataLoader]
         allModelsName = [str(m.__name__)[:-5] for m in allModels]
         self.name2Model = dict(zip(allModelsName, allModels))

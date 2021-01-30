@@ -88,7 +88,7 @@ modelTypes2models = {
             }
         },
         {
-            "model_name": ("通过相关因素构建的自适应神经模糊推理系统", "RF-ANFIS"),
+            "model_name": ("通过相关因素构建的自适应神经模糊推理系统", "RF_ANFIS"),
             "model_parameters": {
                 "No Parameter": ("无参数", "None"),
             }

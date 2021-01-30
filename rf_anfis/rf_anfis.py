@@ -418,7 +418,7 @@ class WeightedSumLayer(torch.nn.Module):
         return y_pred.squeeze(2)
 
 
-class rf_anfisModel(torch.nn.Module):
+class RF_ANFISModel(torch.nn.Module):
     '''
         This is a container for the 5 layers of the ANFIS net.
         The forward pass maps inputs to outputs based on current settings,
@@ -426,7 +426,7 @@ class rf_anfisModel(torch.nn.Module):
     '''
 
     def __init__(self, hybrid=True):
-        super(rf_anfisModel, self).__init__()
+        super(RF_ANFISModel, self).__init__()
         # self.description = description
         self.invardefs = [
             ('x0', make_bell_mfs(3.33333, 2, [-10, -3.333333, 3.333333, 10])),
@@ -589,7 +589,7 @@ class rf_anfisModel(torch.nn.Module):
 
 
 if __name__ == '__main__' and False:
-    model = rf_anfisModel()
+    model = RF_ANFISModel()
     data = ANFISDataLoader()
     train_data = data.loadTrainData()
     print(train_data[0].shape, train_data[1].shape)
@@ -602,7 +602,7 @@ if __name__ == '__main__' and False:
 if __name__ == "__main__" and True:
     from sklearn.metrics import mean_squared_error
 
-    model = rf_anfisModel()
+    model = RF_ANFISModel()
     data = ANFISDataLoader()
     train_data = data.loadTrainData(train_path='../data/rfanfis/RFANFIS_TRAIN_DATA.xlsx')
     print("train_data", train_data)
