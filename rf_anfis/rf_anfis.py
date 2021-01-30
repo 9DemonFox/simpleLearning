@@ -511,10 +511,15 @@ class RF_ANFISModel(torch.nn.Module):
         self.y_pred = y_pred.squeeze(2)
         return self.y_pred
 
-    def fit(self, data, epochs=10, show_plots=False):
+    def fit(self, **kwargs):
         '''
             Train the given model using the given (x,y) data.
         '''
+        epochs = 10
+        show_plots = False
+        self.trainX = kwargs["trainX"]
+        self.trainY = kwargs["trainY"]
+        data = self.trainX, self.trainY
         optimizer = torch.optim.SGD(self.parameters(), lr=1e-4, momentum=0.99)
         criterion = torch.nn.MSELoss(reduction='sum')
         train_anfis_with(self, data, optimizer, criterion, epochs, show_plots)
@@ -545,9 +550,11 @@ class RF_ANFISModel(torch.nn.Module):
         """ 返回结果到前端
         :return:
         """
-        assert "train_data" in kwargs.keys()
-        train_data = kwargs.get("train_data")
-        self.fit(train_data)
+        assert "trainX" in kwargs.keys()
+        assert "trainy" in kwargs.keys()
+        trainX = kwargs["trainX"]
+        trainY = kwargs["trainY"]
+        self.fit(trainX=trainX, trainY=trainY)
         # 返回结果为字典形式
         # excludeFeatures, coefs = self.fit(**kwargs)
         returnDic = {
@@ -565,8 +572,8 @@ class RF_ANFISModel(torch.nn.Module):
             "mean_squared_error": None,
             "mean_absolute_error": None
         }
-        kwargs["predictX"] = kwargs.get("predictX")
-        predictResult = self.predict(**kwargs)
+        testX = kwargs.get("predictX")
+        predictResult = self.predict(predictX=testX)
         testY = kwargs.get("predictY")
         mse = mean_squared_error(predictResult, testY)
         mae = mean_absolute_error(predictResult, testY)
