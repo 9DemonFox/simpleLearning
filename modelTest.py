@@ -251,10 +251,10 @@ class rf_anfisTestCase(unittest.TestCase):
         dataloader = ANFISDataLoader()
         train = dataloader.loadTrainData(train_path="data/rfanfis/RFANFIS_TRAIN_DATA.xlsx")
         test = dataloader.loadTestData(test_path="data/rfanfis/RFANFIS_TEST_DATA.xlsx")
+
         re_anfis = rf_anfisModel()
         re_anfis.fit(train)
-        predictY = re_anfis.predict(predictX= test)
-        #print(type(test))
+        predictY = re_anfis.predict(predictX= test[0])
         assert (mean_squared_error(test[1], predictY) < 10)
         pass
 
