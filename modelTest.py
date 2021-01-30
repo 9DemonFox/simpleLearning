@@ -1,12 +1,12 @@
 import unittest
 import warnings
 
-import torch
 # other package
 from sklearn.metrics import mean_squared_error
 
 from ahp.AHP import AHPModel
 from data.ahp.dataLoader import AHPDataLoader
+from data.ga.dataLoder import GADataLoader
 from data.gbm.dataLoader import GBMDataLoader
 from data.hlm.dataloader import HLMDataLoader
 from data.ibrt.dataLoader import IBRTDataLoader
@@ -14,7 +14,6 @@ from data.mert.dataLoder import MERTDataLoader
 from data.rebet.dataLoder import REBETDataLoader
 from data.rfanfis.dataLoader import ANFISDataLoader
 from data.salp.dataLoder import SALPDataLoader
-from data.ga.dataLoder import GADataLoader
 from ga.ga import GAModel
 from gbm.GBM import GBMModel
 from hlm.HLM import HLMModel
@@ -36,9 +35,9 @@ class REBETTestCase(unittest.TestCase):
         testX, testY = dataloder.loadTestData(test_path=datapath2)
         # 验证数据集形状
         assert trainX.shape == (5000, 3)
-        assert trainY.shape == (5000 ,)
+        assert trainY.shape == (5000,)
         assert testX.shape == (500, 3)
-        assert testY.shape == (500 ,)
+        assert testY.shape == (500,)
         pass
 
     def testREBETModel(self):
@@ -67,9 +66,9 @@ class MERTTestCase(unittest.TestCase):
         testX, testY = dataloder.loadTestData(test_path=datapath2)
         # 验证数据集形状
         assert trainX.shape == (5000, 3)
-        assert trainY.shape == (5000 ,)
+        assert trainY.shape == (5000,)
         assert testX.shape == (500, 3)
-        assert testY.shape == (500 ,)
+        assert testY.shape == (500,)
         pass
 
     def testMERTModel(self):
@@ -87,7 +86,6 @@ class MERTTestCase(unittest.TestCase):
         predictY = model.test(testX=testX, testY=testY)
         assert (np.mean(testY - predictY) < 5)
         pass
-
 
 
 class GBMTestCase(unittest.TestCase):
@@ -132,9 +130,9 @@ class HLMTestCase(unittest.TestCase):
 
     def testDataLoader(self):
         dataloader = HLMDataLoader()
-        trainW, trainX, trainY = dataloader.loadTrainData(train_path=self.train_path)
-        testW, testX, testY = dataloader.loadTestData(test_path=self.test_path)
-        predictW, predictX = dataloader.loadPredictData(predict_path=self.predict_path)
+        (trainX, trainW), trainY = dataloader.loadTrainData(train_path=self.train_path)
+        (testX, testW), testY = dataloader.loadTestData(test_path=self.test_path)
+        (predictX, predictW) = dataloader.loadPredictData(predict_path=self.predict_path)
 
         assert trainW.shape == (1, 8)
         assert trainX.shape == (4, 1)
@@ -149,11 +147,11 @@ class HLMTestCase(unittest.TestCase):
 
     def testHLMModel(self):
         hlm_model = HLMModel()
-        hlm_dataloader = HLMDataLoader()
+        dataloader = HLMDataLoader()
 
-        trainW, trainX, trainY = hlm_dataloader.loadTrainData(train_path=self.train_path)
-        testW, testX, testY = hlm_dataloader.loadTestData(test_path=self.test_path)
-        hlm_model.fit(trainW=trainW, trainX=trainX, trainY=trainY)
+        (trainX, trainW), trainY = dataloader.loadTrainData(train_path=self.train_path)
+        (testX, testW), testY = dataloader.loadTestData(test_path=self.test_path)
+        hlm_model.fit(trainX=(trainX, trainW), trainY=trainY)
         predictY = hlm_model.predict(predictW=testW, predictX=testX)
 
         # assert mean_squared_error(trainY, predictY) < 1  # 0.947
@@ -162,7 +160,6 @@ class HLMTestCase(unittest.TestCase):
 
 class GATestCase(unittest.TestCase):
     def testGAModel(self):
-        import numpy as np
         c = 0
         a = GADataLoader()
         F = a.loadPredictData(predict_path="./data/ga/F.txt")
@@ -174,9 +171,9 @@ class GATestCase(unittest.TestCase):
         POP_SIZE = 200
         MUTATION_RATE = 0.005
         CROSSOVER_RATE = 0.8
-        model = GAModel(c=c, n=n, xmax=xmax, xmin=xmin, precisions=precisions, N_GENERATIONS=N_GENERATIONS, 
-                    POP_SIZE=POP_SIZE,MUTATION_RATE=MUTATION_RATE, CROSSOVER_RATE=CROSSOVER_RATE)
-        value,x = model.predict(predictX=F)
+        model = GAModel(c=c, n=n, xmax=xmax, xmin=xmin, precisions=precisions, N_GENERATIONS=N_GENERATIONS,
+                        POP_SIZE=POP_SIZE, MUTATION_RATE=MUTATION_RATE, CROSSOVER_RATE=CROSSOVER_RATE)
+        value, x = model.predict(predictX=F)
         assert (F(x) == value)
         pass
 
@@ -242,6 +239,7 @@ class IBRTTestCase(unittest.TestCase):
         assert (mean_squared_error(testY, predictY) < 10)
         pass
 
+
 class rf_anfisTestCase(unittest.TestCase):
     def testDataLoader(self):
         dataloader = ANFISDataLoader()
@@ -250,17 +248,15 @@ class rf_anfisTestCase(unittest.TestCase):
         assert trainX.shape == (900, 3)
         assert testX.shape == (100, 3)
 
-    def testrf_anfisModel(self):
+    def test_rf_anfisModel(self):
         dataloader = ANFISDataLoader()
         train = dataloader.loadTrainData(train_path="data/rfanfis/RFANFIS_TRAIN_DATA.xlsx")
         test = dataloader.loadTestData(test_path="data/rfanfis/RFANFIS_TEST_DATA.xlsx")
         re_anfis = rf_anfisModel()
         re_anfis.fit(train)
         predictY = re_anfis.predict(test)
-        #print(type(test))
+        # print(type(test))
         assert (mean_squared_error(test[1], predictY) < 10)
-        pass
-
 
 class AHPTestCase(unittest.TestCase):
 

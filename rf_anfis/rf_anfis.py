@@ -1,32 +1,26 @@
-import sys
 import itertools
-import numpy as np
-import matplotlib.pyplot as plt
-import sklearn
-from sklearn.cross_decomposition import PLSRegression
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_absolute_error
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import GridSearchCV
-from sklearn.svm import SVR
+from collections import OrderedDict
 
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 import torch.nn.functional as F
+from sklearn.metrics import mean_absolute_error
 from torch.utils.data import TensorDataset, DataLoader
 
-from collections import OrderedDict
 from data.rfanfis.dataLoader import ANFISDataLoader
 
-
 dtype = torch.float
+
 
 def calc_error(y_pred, y_actual):
     with torch.no_grad():
         tot_loss = F.mse_loss(y_pred, y_actual)
         rmse = torch.sqrt(tot_loss).item()
         perc_loss = torch.mean(100. * torch.abs((y_pred - y_actual)
-                               / y_actual))
-    return(tot_loss, rmse, perc_loss)
+                                                / y_actual))
+    return (tot_loss, rmse, perc_loss)
+
 
 def plotErrors(errors):
     '''
@@ -37,40 +31,26 @@ def plotErrors(errors):
     plt.xlabel('Epoch')
     plt.show()
 
-def ex1_model():
-    '''
-        These are the original (untrained) MFS for Jang's example 1.
-    '''
-    invardefs = [
-            ('x0', make_bell_mfs(3.33333, 2, [-10, -3.333333, 3.333333, 10])),
-            ('x1', make_bell_mfs(3.33333, 2, [-10, -3.333333, 3.333333, 10])),
-            ('x2', make_bell_mfs(3.33333, 2, [-10, -3.333333, 3.333333, 10])),
-            ]
-    outvars = ['y0']
-    anf = re_anfisModel('Jang\'s example 1', invardefs, outvars)
-    return anf
 
 def train_anfis_with(model, data, optimizer, criterion,
                      epochs=500, show_plots=False):
     '''
         Train the given model using the given (x,y) data.
     '''
-    print(data.__len__())
-    #处理data,将data从numpy二元组合并为dataLoader
+    # 处理data,将data从numpy二元组合并为dataLoader
     tensor_X = torch.from_numpy(data[0])
     tensor_y = torch.from_numpy(data[1])
-    ds = TensorDataset(tensor_X,tensor_y)
+    ds = TensorDataset(tensor_X, tensor_y)
     data = DataLoader(ds, batch_size=16, shuffle=True)
-
 
     errors = []  # Keep a list of these for plotting afterwards
     # optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-    #print('### Training for {} epochs, training size = {} cases'.
+    # print('### Training for {} epochs, training size = {} cases'.
     #      format(epochs, data.dataset.tensors[0].shape[0]))
     for t in range(epochs):
         # Process each mini-batch in turn:
         for x, y_actual in data:
-            #print(x.size())
+            # print(x.size())
             y_pred = model(x)
             # Compute and print loss
             loss = criterion(y_pred, y_actual)
@@ -99,6 +79,7 @@ def train_anfis_with(model, data, optimizer, criterion,
         plotResults(y_actual, y_pred)
         '''
 
+
 '''
 def train_anfis(model, data, epochs=500, show_plots=False):
     
@@ -108,9 +89,12 @@ def train_anfis(model, data, epochs=500, show_plots=False):
     criterion = torch.nn.MSELoss(reduction='sum')
     train_anfis_with(model, data, optimizer, criterion, epochs, show_plots)
 '''
+
+
 def make_bell_mfs(a, b, clist):
     '''Return a list of bell mfs, same (a,b), list of centers'''
     return [BellMembFunc(a, b, c) for c in clist]
+
 
 def _mk_param(val):
     '''Make a torch parameter from a scalar value'''
@@ -126,6 +110,7 @@ class BellMembFunc(torch.nn.Module):
             b, controls the slope at the crossover point (which is -b/2a)
             c, the center point
     '''
+
     def __init__(self, a, b, c):
         super(BellMembFunc, self).__init__()
         self.register_parameter('a', _mk_param(a))
@@ -143,7 +128,7 @@ class BellMembFunc(torch.nn.Module):
         return grad
 
     def forward(self, x):
-        dist = torch.pow((x - self.c)/self.a, 2)
+        dist = torch.pow((x - self.c) / self.a, 2)
         return torch.reciprocal(1 + torch.pow(dist, self.b))
 
     def pretty(self):
@@ -155,6 +140,7 @@ class FuzzifyVariable(torch.nn.Module):
         Represents a single fuzzy variable, holds a list of its MFs.
         Forward pass will then fuzzify the input (value for each MF).
     '''
+
     def __init__(self, mfdefs):
         super(FuzzifyVariable, self).__init__()
         if isinstance(mfdefs, list):  # No MF names supplied
@@ -188,7 +174,7 @@ class FuzzifyVariable(torch.nn.Module):
         '''
         for mfname, mfdef in self.mfdefs.items():
             yvals = mfdef(x)
-            yield(mfname, yvals)
+            yield (mfname, yvals)
 
     def forward(self, x):
         '''
@@ -210,6 +196,7 @@ class FuzzifyLayer(torch.nn.Module):
         We pad the variables so they all seem to have the same number of MFs,
         as this allows us to put all results in the same tensor.
     '''
+
     def __init__(self, varmfs, varnames=None):
         print('varmfs')
         print(varmfs)
@@ -242,9 +229,9 @@ class FuzzifyLayer(torch.nn.Module):
             r.append('Variable {}'.format(varname))
             for mfname, mfdef in members.mfdefs.items():
                 r.append('- {}: {}({})'.format(mfname,
-                         mfdef.__class__.__name__,
-                         ', '.join(['{}={}'.format(n, p.item())
-                                   for n, p in mfdef.named_parameters()])))
+                                               mfdef.__class__.__name__,
+                                               ', '.join(['{}={}'.format(n, p.item())
+                                                          for n, p in mfdef.named_parameters()])))
         return '\n'.join(r)
 
     def forward(self, x):
@@ -252,9 +239,9 @@ class FuzzifyLayer(torch.nn.Module):
             x.shape = n_cases * n_in
             y.shape = n_cases * n_in * n_mfs
         '''
-        assert x.shape[1] == self.num_in,\
+        assert x.shape[1] == self.num_in, \
             '{} is wrong no. of input values'.format(self.num_in)
-        y_pred = torch.stack([var(x[:, i:i+1])
+        y_pred = torch.stack([var(x[:, i:i + 1])
                               for i, var in enumerate(self.varmfs.values())],
                              dim=1)
         return y_pred
@@ -265,6 +252,7 @@ class AntecedentLayer(torch.nn.Module):
         Form the 'rules' by taking all possible combinations of the MFs
         for each variable. Forward pass then calculates the fire-strengths.
     '''
+
     def __init__(self, varlist):
         super(AntecedentLayer, self).__init__()
         # Count the (actual) mfs for each variable:
@@ -311,9 +299,10 @@ class ConsequentLayer(torch.nn.Module):
         Hybrid learning, so use MSE (not BP) to adjust coefficients.
         Hence, coeffs are no longer parameters for backprop.
     '''
+
     def __init__(self, d_in, d_rule, d_out):
         super(ConsequentLayer, self).__init__()
-        c_shape = torch.Size([d_rule, d_out, d_in+1])
+        c_shape = torch.Size([d_rule, d_out, d_in + 1])
         self._coeff = torch.zeros(c_shape, dtype=dtype, requires_grad=True)
 
     @property
@@ -332,8 +321,8 @@ class ConsequentLayer(torch.nn.Module):
                    a coefficient for each input variable, plus a constant
         '''
         assert new_coeff.shape == self.coeff.shape, \
-            'Coeff shape should be {}, but is actually {}'\
-            .format(self.coeff.shape, new_coeff.shape)
+            'Coeff shape should be {}, but is actually {}' \
+                .format(self.coeff.shape, new_coeff.shape)
         self._coeff = new_coeff
 
     def fit_coeff(self, x, weights, y_actual):
@@ -355,7 +344,7 @@ class ConsequentLayer(torch.nn.Module):
         y_actual_2d = y_actual.view(y_actual.shape[0], -1)
         # Use gels to do LSE, then pick out the solution rows:
         try:
-            #print(y_actual_2d.size(), weighted_x_2d.size())
+            # print(y_actual_2d.size(), weighted_x_2d.size())
             coeff_2d, _ = torch.lstsq(y_actual_2d, weighted_x_2d)
         except RuntimeError as e:
             print('Internal error in gels', e)
@@ -363,7 +352,7 @@ class ConsequentLayer(torch.nn.Module):
             raise e
         coeff_2d = coeff_2d[0:weighted_x_2d.shape[1]]
         # Reshape to 3D tensor: divide by rules, n_in+1, then swap last 2 dims
-        self.coeff = coeff_2d.view(weights.shape[1], x.shape[1]+1, -1)\
+        self.coeff = coeff_2d.view(weights.shape[1], x.shape[1] + 1, -1) \
             .transpose(1, 2)
         # coeff dim is thus: n_rules * n_out * (n_in+1)
 
@@ -377,8 +366,8 @@ class ConsequentLayer(torch.nn.Module):
         # Append 1 to each list of input vals, for the constant term:
         x_plus = torch.cat([x, torch.ones(x.shape[0], 1)], dim=1)
         # Need to switch dimansion for the multipy, then switch back:
-        #print(type(self.coeff), type(x_plus.t()))
-        y_pred = torch.matmul(self.coeff.double(), x_plus.t().double()) #矩阵相乘
+        # print(type(self.coeff), type(x_plus.t()))
+        y_pred = torch.matmul(self.coeff.double(), x_plus.t().double())  # 矩阵相乘
         return y_pred.transpose(0, 2)  # swaps cases and rules
 
 
@@ -387,6 +376,7 @@ class PlainConsequentLayer(ConsequentLayer):
         A linear layer to represent the TSK consequents.
         Not hybrid learning, so coefficients are backprop-learnable parameters.
     '''
+
     def __init__(self, *params):
         super(PlainConsequentLayer, self).__init__(*params)
         self.register_parameter('coefficients',
@@ -403,7 +393,7 @@ class PlainConsequentLayer(ConsequentLayer):
     def fit_coeff(self, x, weights, y_actual):
         '''
         '''
-        assert False,\
+        assert False, \
             'Not hybrid learning: I\'m using BP to learn coefficients'
 
 
@@ -413,6 +403,7 @@ class WeightedSumLayer(torch.nn.Module):
         This could/should be layer 5 of the Anfis net.
         I don't actually use this class, since it's just one line of code.
     '''
+
     def __init__(self):
         super(WeightedSumLayer, self).__init__()
 
@@ -426,15 +417,17 @@ class WeightedSumLayer(torch.nn.Module):
         y_pred = torch.bmm(tsk, weights.unsqueeze(2))
         return y_pred.squeeze(2)
 
+
 class rf_anfisModel(torch.nn.Module):
     '''
         This is a container for the 5 layers of the ANFIS net.
         The forward pass maps inputs to outputs based on current settings,
         and then fit_coeff will adjust the TSK coeff using LSE.
     '''
+
     def __init__(self, hybrid=True):
         super(rf_anfisModel, self).__init__()
-        #self.description = description
+        # self.description = description
         self.invardefs = [
             ('x0', make_bell_mfs(3.33333, 2, [-10, -3.333333, 3.333333, 10])),
             ('x1', make_bell_mfs(3.33333, 2, [-10, -3.333333, 3.333333, 10])),
@@ -442,7 +435,7 @@ class rf_anfisModel(torch.nn.Module):
         ]
         self.outvarnames = ['y0']
         self.hybrid = hybrid
-        print('hi',self.hybrid)
+        print('hi', self.hybrid)
         varnames = [v for v, _ in self.invardefs]
         mfdefs = [FuzzifyVariable(mfs) for _, mfs in self.invardefs]
         self.num_in = len(self.invardefs)
@@ -458,7 +451,7 @@ class rf_anfisModel(torch.nn.Module):
             # normalisation layer is just implemented as a function.
             ('consequent', cl),
             # weighted-sum layer is just implemented as a function.
-            ]))
+        ]))
 
     @property
     def num_out(self):
@@ -500,7 +493,7 @@ class rf_anfisModel(torch.nn.Module):
         rule_ants = self.layer['rules'].extra_repr(vardefs).split('\n')
         for i, crow in enumerate(self.layer['consequent'].coeff):
             rstr.append('Rule {:2d}: IF {}'.format(i, rule_ants[i]))
-            rstr.append(' '*9+'THEN {}'.format(crow.tolist()))
+            rstr.append(' ' * 9 + 'THEN {}'.format(crow.tolist()))
         return '\n'.join(rstr)
 
     def forward(self, x):
@@ -530,9 +523,9 @@ class rf_anfisModel(torch.nn.Module):
         # Get the error rate for the whole batch:
         # 处理test,将test从numpy二元组合并为dataLoader
         assert "predictX" in kwargs.keys()
-        #if len(kwargs.get("predictX"))==2:
+        # if len(kwargs.get("predictX"))==2:
         tensor_X = torch.from_numpy(kwargs.get("predictX"))
-        tensor_y = torch.from_numpy(kwargs.get("predictX")[:,0])
+        tensor_y = torch.from_numpy(kwargs.get("predictX")[:, 0])
         ds = TensorDataset(tensor_X, tensor_y)
         test = DataLoader(ds, batch_size=16, shuffle=True)
 
@@ -541,17 +534,9 @@ class rf_anfisModel(torch.nn.Module):
             y_pred_batch = self(batch_x)
             print(y_pred_batch.detach().numpy().shape)
             y_pred = np.concatenate((y_pred, y_pred_batch.detach().numpy()))
-        y_pred = torch.from_numpy(y_pred[1:,:])
-
-        #y_pred = []
-        y_test = torch.reshape(test.dataset.tensors[1], [-1,1])
-        print(test.dataset.tensors[1])
-        print(y_pred)
-        print(calc_error(y_pred.double(), y_test.double()))
+        y_pred = torch.from_numpy(y_pred[1:, :])
         y_pred = y_pred.numpy()
         return y_pred
-
-
 
     def fitForUI(self, **kwargs):
         """ 返回结果到前端
@@ -561,7 +546,7 @@ class rf_anfisModel(torch.nn.Module):
         train_data = kwargs.get("train_data")
         self.fit(train_data)
         # 返回结果为字典形式
-        #excludeFeatures, coefs = self.fit(**kwargs)
+        # excludeFeatures, coefs = self.fit(**kwargs)
         returnDic = {
             str(None): str(None),
             str(None): str(None)
@@ -600,32 +585,28 @@ class rf_anfisModel(torch.nn.Module):
         return returnDic
 
 
-
 if __name__ == '__main__' and False:
     model = rf_anfisModel()
     data = ANFISDataLoader()
     train_data = data.loadTrainData()
     print(train_data[0].shape, train_data[1].shape)
     test_data = data.loadTestData()
-    #train_anfis(model, train_data, 20)
+    # train_anfis(model, train_data, 20)
     model.fit(train_data)
     print(type(train_data))
     predict_y = model.predict(test_data)
 
 if __name__ == "__main__" and True:
-    from data.salp.dataLoder import SALPDataLoader
     from sklearn.metrics import mean_squared_error
-    from sklearn.linear_model import LassoLars
 
     model = rf_anfisModel()
     data = ANFISDataLoader()
     train_data = data.loadTrainData(train_path='../data/rfanfis/RFANFIS_TRAIN_DATA.xlsx')
-    print("train_data",train_data)
+    print("train_data", train_data)
     test_data = data.loadTestData(test_path='../data/rfanfis/RFANFIS_TEST_DATA.xlsx')
     predict_data = data.loadPredictData(predict_path='../data/rfanfis/RFANFIS_PREDICT_DATA.xlsx')
     model.fitForUI(train_data=train_data)
     predictY = model.predict(predictX=predict_data)
     predictYForUI = model.predictForUI(predictX=predict_data)
     predictTrainY = model.predict(predictX=predict_data)
-    #print(model.model.coef_)
-
+    # print(model.model.coef_)
