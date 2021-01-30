@@ -523,12 +523,12 @@ class rf_anfisModel(torch.nn.Module):
         # Get the error rate for the whole batch:
         # 处理test,将test从numpy二元组合并为dataLoader
         assert "predictX" in kwargs.keys()
-        if len(kwargs.get("predictX"))==2:
+        '''if len(kwargs.get("predictX"))==2:
             tensor_X = torch.from_numpy(kwargs.get("predictX")[0])
-            tensor_y = torch.from_numpy(kwargs.get("predictX")[1])
-        else:
-            tensor_X = torch.from_numpy(kwargs.get("predictX"))
-            tensor_y = torch.from_numpy(kwargs.get("predictX")[:,0])
+            tensor_y = torch.from_numpy(kwargs.get("predictX")[1])'''
+
+        tensor_X = torch.from_numpy(kwargs.get("predictX"))
+        tensor_y = torch.from_numpy(kwargs.get("predictX")[:,0])
         ds = TensorDataset(tensor_X, tensor_y)
         test = DataLoader(ds, batch_size=16, shuffle=True)
 
