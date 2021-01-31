@@ -235,27 +235,30 @@ class IBRTModel(Model):
 
     # def calEtaTree(self, trees):
 
-    def fit(self, X_data, y_data):
-        step = 0
+    def fit(self, **kwargs):
 
+        trainX = kwargs["trainX"]
+        trainY = kwargs["trainY"]
+
+        step = 0
         while step < self.n_iter:
             # print("---------------------")
             # print("step", step)
 
             tree = Tree(self._gamma, self._lambda, self.max_depth)
             if step == 0:
-                fun = lambda y: sum(np.abs(y_data - y))  # ebcl
+                fun = lambda y: sum(np.abs(trainY - y))  # ebcl
                 res = minimize(fun, 0, method='SLSQP')
                 # print(res.x)
-                y_pred = np.full(len(y_data), res.x)
+                y_pred = np.full(len(trainY), res.x)
             else:
-                y_pred = self.predict(predictX=X_data)  # 会调用Tree.predict()（前step-1轮的）
+                y_pred = self.predict(predictX=trainX)  # 会调用Tree.predict()（前step-1轮的）
             # print('残差:%f' % (np.mean(y_data - y_pred)))
-            garr = self.calGrad(y_pred, y_data)
+            garr = self.calGrad(y_pred, trainY)
             # print(garr)
-            tree.fit(X_data, garr)  # 每次迭代由于garr不一样，迭代结果不一样
+            tree.fit(trainX, garr)  # 每次迭代由于garr不一样，迭代结果不一样
             tree._display()
-            self.eta_trees.append(tree.calEtaTree(self.trees, garr, X_data, 0.005))
+            self.eta_trees.append(tree.calEtaTree(self.trees, garr, trainX, 0.005))
 
             self.trees.append(tree)
             '''
@@ -281,11 +284,11 @@ class IBRTModel(Model):
         else:
             return np.zeros(X_data.shape[0])
 
-    def fitForUI(self, *args):
+    def fitForUI(self, **kwargs):
         """ 返回结果到前端
         :return:
         """
-        self.fit(*args)
+        self.fit(**kwargs)
         # 返回结果为字典形式
         #excludeFeatures, coefs = self.fit(*args)
         returnDic = {
@@ -294,18 +297,20 @@ class IBRTModel(Model):
         }
         return returnDic
 
-    def testForUI(self, *args):
+    def testForUI(self, **kwargs):
         """
         :param args:
         :return: 字典形式结果
         """
+        testX = kwargs["testX"]
+        testY = kwargs["testY"]
+
         returnDic = {
             "mean_squared_error": None,
             "mean_absolute_error": None
         }
         #args["predictX"] = args[0]
-        predictResult = self.predict(args[0])
-        testY = args[1]
+        predictResult = self.predict(predictX=testX)
         mse = mean_squared_error(predictResult, testY)
         mae = mean_absolute_error(predictResult, testY)
         returnDic["预测结果"] = str(predictResult)
@@ -338,11 +343,11 @@ if __name__ == '__main__':
     testX, testY = ibrt_loader.loadTestData(test_path="../data/ibrt/IBRT_TEST_DATA.xlsx")
     print(trainX.shape,testX.shape)
 
-    model.fit(trainX, trainY)
+    model.fit(trainX=trainX, trainY=trainY)
 
     #print(mean_absolute_error(testY, predictY))
 
-    model.fitForUI(trainX, trainY)
+    model.fitForUI(trainX=trainX, trainY=trainY)
     predictY = model.predict(predictX=testX)
     predictYForUI = model.predictForUI(predictX=testX)
     predictTrainY = model.predict(predictX=trainX)
