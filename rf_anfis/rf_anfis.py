@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn.functional as F
-from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 from torch.utils.data import TensorDataset, DataLoader
 
 from data.rfanfis.dataLoader import ANFISDataLoader
@@ -62,33 +62,6 @@ def train_anfis_with(model, data, optimizer, criterion,
         x, y_actual = data.dataset.tensors
         with torch.no_grad():
             model.fit_coeff(x, y_actual)
-        '''
-        # Get the error rate for the whole batch:
-        y_pred = model(x)
-        mse, rmse, perc_loss = calc_error(y_pred, y_actual)
-        errors.append(perc_loss)
-        # Print some progress information as the net is trained:
-        if epochs < 30 or t % 10 == 0:
-            print('epoch {:4d}: MSE={:.5f}, RMSE={:.5f} ={:.2f}%'
-                  .format(t, mse, rmse, perc_loss))
-    # End of training, so graph the results:
-    if show_plots:
-        plotErrors(errors)
-        y_actual = data.dataset.tensors[1]
-        y_pred = model(data.dataset.tensors[0])
-        plotResults(y_actual, y_pred)
-        '''
-
-
-'''
-def train_anfis(model, data, epochs=500, show_plots=False):
-    
-      #  Train the given model using the given (x,y) data.
-    
-    optimizer = torch.optim.SGD(model.parameters(), lr=1e-4, momentum=0.99)
-    criterion = torch.nn.MSELoss(reduction='sum')
-    train_anfis_with(model, data, optimizer, criterion, epochs, show_plots)
-'''
 
 
 def make_bell_mfs(a, b, clist):
@@ -198,8 +171,8 @@ class FuzzifyLayer(torch.nn.Module):
     '''
 
     def __init__(self, varmfs, varnames=None):
-        print('varmfs')
-        print(varmfs)
+        # print('varmfs')
+        # print(varmfs)
         super(FuzzifyLayer, self).__init__()
         if not varnames:
             self.varnames = ['x{}'.format(i) for i in range(len(varmfs))]
@@ -435,12 +408,12 @@ class RF_ANFISModel(torch.nn.Module):
         ]
         self.outvarnames = ['y0']
         self.hybrid = hybrid
-        print('hi', self.hybrid)
+        # print('hi', self.hybrid)
         varnames = [v for v, _ in self.invardefs]
         mfdefs = [FuzzifyVariable(mfs) for _, mfs in self.invardefs]
         self.num_in = len(self.invardefs)
         self.num_rules = np.prod([len(mfs) for _, mfs in self.invardefs])
-        print(self.num_rules)
+        # print(self.num_rules)
         if self.hybrid:
             cl = ConsequentLayer(self.num_in, self.num_rules, self.num_out)
         else:
@@ -533,14 +506,14 @@ class RF_ANFISModel(torch.nn.Module):
             tensor_y = torch.from_numpy(kwargs.get("predictX")[1])'''
 
         tensor_X = torch.from_numpy(kwargs.get("predictX"))
-        tensor_y = torch.from_numpy(kwargs.get("predictX")[:,0])
+        tensor_y = torch.from_numpy(kwargs.get("predictX")[:, 0])
         ds = TensorDataset(tensor_X, tensor_y)
         test = DataLoader(ds, batch_size=16, shuffle=True)
 
         y_pred = np.array([[0]])
         for batch_x, batch_y in test:
             y_pred_batch = self(batch_x)
-            print(y_pred_batch.detach().numpy().shape)
+            # print(y_pred_batch.detach().numpy().shape)
             y_pred = np.concatenate((y_pred, y_pred_batch.detach().numpy()))
         y_pred = torch.from_numpy(y_pred[1:, :])
         y_pred = y_pred.numpy()
@@ -551,7 +524,7 @@ class RF_ANFISModel(torch.nn.Module):
         :return:
         """
         assert "trainX" in kwargs.keys()
-        assert "trainy" in kwargs.keys()
+        assert "trainY" in kwargs.keys()
         trainX = kwargs["trainX"]
         trainY = kwargs["trainY"]
         self.fit(trainX=trainX, trainY=trainY)
@@ -572,12 +545,11 @@ class RF_ANFISModel(torch.nn.Module):
             "mean_squared_error": None,
             "mean_absolute_error": None
         }
-        testX = kwargs.get("predictX")
+        testX = kwargs.get("testX")
         predictResult = self.predict(predictX=testX)
-        testY = kwargs.get("predictY")
+        testY = kwargs.get("testY")
         mse = mean_squared_error(predictResult, testY)
         mae = mean_absolute_error(predictResult, testY)
-        returnDic["预测结果"] = str(predictResult)
         returnDic["mean_absolute_error"] = str(mae)
         returnDic["mean_squared_error"] = str(mse)
         return returnDic
@@ -599,16 +571,14 @@ if __name__ == '__main__' and False:
     model = RF_ANFISModel()
     data = ANFISDataLoader()
     train_data = data.loadTrainData()
-    print(train_data[0].shape, train_data[1].shape)
+    # print(train_data[0].shape, train_data[1].shape)
     test_data = data.loadTestData()
     # train_anfis(model, train_data, 20)
     model.fit(train_data)
-    print(type(train_data))
+    # print(type(train_data))
     predict_y = model.predict(test_data)
 
 if __name__ == "__main__" and True:
-    from sklearn.metrics import mean_squared_error
-
     model = RF_ANFISModel()
     data = ANFISDataLoader()
     train_data = data.loadTrainData(train_path='../data/rfanfis/RFANFIS_TRAIN_DATA.xlsx')
