@@ -21,17 +21,13 @@
 在此处写下版本和命令
 
 ```
-pip install numpy=1.19.2
-pip install scipy=1.4.1
-pip install sklearn
+pip install requirments.txt
 ```
 
 # 4. 提交！！！
 
 ### 新建本地分支myBranch，切换到本地分支myBranch，然后推送到远程，请求合并
 ### 测试用例必须全部通过
-
-
 
 # 会议纪要
 
@@ -88,4 +84,5 @@ pip install sklearn
         dic = eval(text)
         return dic
 ```
+
 
