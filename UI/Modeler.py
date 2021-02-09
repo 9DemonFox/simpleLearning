@@ -1,19 +1,15 @@
 from UI.UIConfig import machineLearningModels, modelDefaultConfig, modelTypes2models, mainleftFrameTextList
 from ahp.AHP import AHPModel
 from data.ahp.dataLoader import AHPDataLoader
-from data.ga.dataLoder import GADataLoader
 from data.gbm.dataLoader import GBMDataLoader
 from data.hlm.dataloader import HLMDataLoader
 from data.ibrt.dataLoader import IBRTDataLoader
-from data.mert.dataLoder import MERTDataLoader
 from data.rebet.dataLoder import REBETDataLoader
 from data.rfanfis.dataLoader import ANFISDataLoader as RF_ANFISDataLoader
 from data.salp.dataLoder import SALPDataLoader
-from ga.ga import GAModel
 from gbm.GBM import GBMModel
 from hlm.HLM import HLMModel
 from ibrt.ibrt import IBRTModel
-from mert.mert import MERTModel
 from rebet.rebet import REBETModel
 from rf_anfis.rf_anfis import RF_ANFISModel
 from salp.SALP import SVRModel, SALPModel
@@ -21,11 +17,11 @@ from salp.SALP import SVRModel, SALPModel
 
 class Modeler:
     def __init__(self):
-        allModels = [AHPModel, GAModel, GBMModel, HLMModel,
-                     IBRTModel, MERTModel, RF_ANFISModel, REBETModel,
+        allModels = [AHPModel, GBMModel, HLMModel,
+                     IBRTModel, RF_ANFISModel, REBETModel,
                      SALPModel, SVRModel]
-        allDataLoader = [AHPDataLoader, GADataLoader, GBMDataLoader, HLMDataLoader,
-                         IBRTDataLoader, MERTDataLoader, RF_ANFISDataLoader, REBETDataLoader,
+        allDataLoader = [AHPDataLoader, GBMDataLoader, HLMDataLoader,
+                         IBRTDataLoader, RF_ANFISDataLoader, REBETDataLoader,
                          SALPDataLoader, SALPDataLoader]
         allModelsName = [str(m.__name__)[:-5] for m in allModels]
         self.name2Model = dict(zip(allModelsName, allModels))

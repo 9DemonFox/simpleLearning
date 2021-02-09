@@ -2,6 +2,7 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
 
+import numpy as np
 from data.gbm.dataLoader import GBMDataLoader
 from model import Model
 
@@ -27,42 +28,88 @@ class GBMModel(Model):
           而如果我们需要对训练集进行分段预测的时候，则采用“quantile”。
 
         """
-        self.model = GradientBoostingRegressor(**kwargs)
+        self.ga = kwargs["ga"]
+        self.n_estimators = kwargs["n_estimators"]
+        self.max_depth = kwargs["max_depth"]
+        self.learning_rate = kwargs["learning_rate"]
+        self.loss = kwargs["loss"]
+        params = {'n_estimators': self.n_estimators,
+              'max_depth': self.max_depth,
+              'min_samples_split': 5,
+              'learning_rate': self.learning_rate,
+              # 'loss': 'lad',
+               'loss': self.loss}
+        self.model = GradientBoostingRegressor(**params)
+       
 
-    def fit(self, trainX, trainY):
+    def fit(self, trainX, trainY):   
+        self.trainX = trainX
+        self.trainY = trainY 
         self.model.fit(trainX, trainY)
+        
+    def test(self, testX, testY):
+        if (self.ga==1):
+            N = 3
+            m = [[50,200],[1,5],[0.01,1]]
+            precisions = 24
+            N_GENERATIONS = 50
+            POP_SIZE = 50
+            MUTATION_RATE = 0.005
+            CROSSOVER_RATE = 0.8
+            model1 = GAModel(loss=self.loss,testX=testX, testY=testY, trainX=self.trainX, trainY=self.trainY, N=N, m=m, precisions=precisions, N_GENERATIONS=N_GENERATIONS, 
+                             POP_SIZE=POP_SIZE,MUTATION_RATE=MUTATION_RATE, CROSSOVER_RATE=CROSSOVER_RATE)
+            y,x = model1.predict()
+            params = {'n_estimators': x[0][0].astype(int),
+              'max_depth': x[1][0].astype(int),
+              'min_samples_split': 5,
+              'learning_rate': x[2][0],
+              # 'loss': 'lad',
+               'loss': self.loss}
+            self.model = GradientBoostingRegressor(**params)
+            self.model.fit(self.trainX, self.trainY)
+            predictResult = self.model.predict(testX)
+            mse = mean_squared_error(predictResult, testY)
+            return x,mse
+        predictResult = self.model.predict(testX)
+        mse = mean_squared_error(predictResult, testY)
+        return mse
 
     def predict(self, predictX):
         return self.model.predict(predictX)
 
     def fitForUI(self, **kwargs):
-        init_params = self.model.get_params()
         assert "trainX" in kwargs.keys()
         assert "trainY" in kwargs.keys()
         trainX, trainY = kwargs.get("trainX"), kwargs.get("trainY")
-        self.fit(trainX, trainY)
         returnDic = {
             "None": "None",
         }
+        self.fit(trainX, trainY)
         return returnDic
 
     def testForUI(self, **kwargs):
-        returnDic = {
-            # "predict_result": None,
-            "mean_squared_error": None,
-            "mean_absolute_error": None
-        }
 
         assert "testX" in kwargs.keys()
         assert "testY" in kwargs.keys()
 
         testX, testY = kwargs.get("testX"), kwargs.get("testY")
-        predictResult = self.model.predict(testX)
-        mse = mean_squared_error(predictResult, testY)
-        mae = mean_absolute_error(predictResult, testY)
+        
         # returnDic["predict_result"] = str(predictResult)
-        returnDic["mean_squared_error"] = str(mse)
-        returnDic["mean_absolute_error"] = str(mae)
+        if (self.ga==0):  
+            mse = self.test(testX, testY)
+            returnDic = {
+              "提示":"未使用参数寻优",
+              "mean_squared_error": str(mse)
+            }
+        if (self.ga==1):    
+            x,mse = self.test(testX, testY)
+            returnDic = {
+              "提示":"使用参数寻优，显示寻优参数值",
+              "n_estimators": str(x[0][0].astype(int)),
+              "max_depth": str(x[1][0].astype(int)),
+              "learning_rate": str(x[2][0]),
+              "mean_squared_error": str(mse)
+            }
         return returnDic
 
     def predictForUI(self, **kwargs):
@@ -76,16 +123,228 @@ class GBMModel(Model):
         return returnDic
 
 
+
+def get_fitness(loss,trainX,trainY,testX,testY,pop, N, precisions, m, POP_SIZE):
+    """
+
+    Returns
+    -------
+    一维向量
+        计算适应度.
+
+    """
+    x = translateDNA(pop, N, m, precisions, POP_SIZE)
+    y1 = x[0].astype(int)
+    y2 = x[1].astype(int)
+    y3 = x[2]
+    pred = np.zeros([POP_SIZE,])
+    for i in range(POP_SIZE): 
+        params = {'n_estimators': y1[i],
+              'max_depth': y2[i],
+              'min_samples_split': 5,
+              'learning_rate': y3[i],
+              # 'loss': 'lad',
+              'loss': loss}
+        model = GBMModel(**params,ga=0)
+        model.fit(trainX=trainX, trainY=trainY)
+        pred[i] = model.test(testX=testX, testY=testY)
+    return -(pred - np.max(pred)) + 1e-28
+
+
+def translateDNA(pop, N, m, precisions, POP_SIZE):
+    """
+
+    Parameters
+    ----------
+    pop : array
+    pop表示种群矩阵，一行表示一个二进制编码表示的DNA，矩阵的行数为种群数目
+    
+    Returns
+    -------
+    x : array
+        解码.
+
+    """
+    x_pop = np.ones((N, POP_SIZE, precisions))
+    x = np.ones((N, POP_SIZE))
+    for i in range(N):
+        x_pop[i] = np.array(pop[:, i::N])
+
+    for i in range(N):
+        x[i] = x_pop[i].dot(2 ** np.arange(precisions)[::-1]) / float(2 ** precisions - 1) * (
+                m[i][1] - m[i][0]) + m[i][0]
+        if (i==0 or i==1):
+            for j in range(POP_SIZE):
+                x[i][j]=np.round(x[i][j])
+    return x
+
+
+def crossover_and_mutation(pop, CROSSOVER_RATE, POP_SIZE, precisions, MUTATION_RATE):
+    """
+
+    Returns
+    -------
+    new_pop : array
+    对种群进行交叉与变异.
+
+    """
+    new_pop = []
+
+    for father in pop:
+        child = father
+        if np.random.rand() < CROSSOVER_RATE:
+            mother = pop[np.random.randint(POP_SIZE)]
+            cross_points = np.random.randint(low=0, high=precisions * 2)
+            child[cross_points:] = mother[cross_points:]
+        mutation(child, MUTATION_RATE, precisions)
+        new_pop.append(child)
+    return new_pop
+
+
+def mutation(child, MUTATION_RATE, precisions):
+    """
+
+    变异
+
+    """
+    if np.random.rand() < MUTATION_RATE:
+        mutate_point = np.random.randint(0, precisions)
+        child[mutate_point] = child[mutate_point] ^ 1
+
+
+def select(pop, fitness, POP_SIZE):
+    """
+
+    Returns
+    -------
+    array
+        重新选择种群.
+
+    """
+    idx = np.random.choice(np.arange(POP_SIZE), size=POP_SIZE, replace=True,
+                           p=(fitness) / (fitness.sum()))
+    return pop[idx]
+
+
+def get_fitness1(loss,trainX,trainY,testX,testY,pop, N, precisions, m, POP_SIZE):
+    """
+
+    Returns
+    -------
+    pred : array
+        种群所对应函数值.
+
+    """
+    x = translateDNA(pop, N, m, precisions, POP_SIZE)
+    y1 = x[0].astype(int)
+    y2 = x[1].astype(int)
+    pred = np.zeros([POP_SIZE,])
+    for i in range(POP_SIZE): 
+        params = {'n_estimators': y1[i],
+              'max_depth': y2[i],
+              'min_samples_split': 5,
+              'learning_rate': x[2][i],
+              # 'loss': 'lad',
+              'loss': loss}
+        model = GBMModel(**params,ga=0)
+        model.fit(trainX=trainX, trainY=trainY)
+        pred[i] = model.test(testX=testX, testY=testY)
+    return pred
+
+
+def print_info(loss,trainX,trainY,testX,testY,pop, N, precisions, m, POP_SIZE):
+    """
+
+    得到最优解
+
+    """
+
+    fitness = get_fitness1(loss,trainX,trainY,testX,testY,pop, N, precisions, m, POP_SIZE)
+    best_fitness_index = np.argmin(fitness)
+    # print("optimal_value:", fitness[best_fitness_index])
+    x = translateDNA(pop, N, m, precisions, POP_SIZE)
+    return fitness[best_fitness_index], x[:, best_fitness_index:best_fitness_index + 1]
+    # for i in range(n):
+    # print(x[i][best_fitness_index])
+    # print("最优的基因型：", pop[best_fitness_index])
+
+
+# print("(x, y):", (x[max_fitness_index], y[max_fitness_index]))
+
+
+def ga(loss,trainX,trainY,testX,testY, N, m, precisions, N_GENERATIONS, POP_SIZE, MUTATION_RATE, CROSSOVER_RATE):
+    pop = np.random.randint(2, size=(POP_SIZE, precisions * N))
+    for _ in range(N_GENERATIONS):
+        pop = np.array(crossover_and_mutation(pop, CROSSOVER_RATE, POP_SIZE, precisions, MUTATION_RATE))
+
+        fitness = get_fitness(loss,trainX,trainY,testX,testY,pop, N, precisions, m, POP_SIZE)
+        pop = select(pop, fitness, POP_SIZE)
+
+    return print_info(loss,trainX,trainY,testX,testY,pop, N, precisions, m, POP_SIZE)
+
+
+class GAModel():
+    def __init__(self, **kwargs):
+        """
+        Parameters
+        ----------
+        N:int,必选
+        指定函数所含变量个数
+        ranges:array,必选
+        指定各个变量的取值范围
+        precisions:int,可选（默认值 = 24）
+        指定精度
+        N_GENERATIONS:int,可选（默认值 = 50）
+        指定迭代轮数
+        POP_SIZE:int,可选（默认值 = 200）
+        指定种群大小
+        MUTATION_RATE:float,可选（默认值 = 0.005）
+        指定变异概率
+        CROSSOVER_RATE:float,可选（默认值 = 0.8）
+        指定交叉概率
+        """
+        self.trainX = kwargs["trainX"]
+        self.trainY = kwargs["trainY"]
+        self.testX = kwargs["testX"]
+        self.testY = kwargs["testY"]
+        self.N = kwargs["N"]
+        self.m = kwargs["m"]
+        self.loss = kwargs["loss"]
+        if "precisions" not in kwargs.keys():
+            self.precisions = 24
+        else:
+            self.precisions = kwargs["precisions"]
+        if "POP_SIZE" not in kwargs.keys():
+            self.POP_SIZE = 50
+        else:
+            self.POP_SIZE = kwargs["POP_SIZE"]
+        if "MUTATION_RATE" not in kwargs.keys():
+            self.MUTATION_RATE = 0.005
+        else:
+            self.MUTATION_RATE = kwargs["MUTATION_RATE"]
+        if "CROSSOVER_RATE" not in kwargs.keys():
+            self.CROSSOVER_RATE = 0.8
+        else:
+            self.CROSSOVER_RATE = kwargs["CROSSOVER_RATE"]
+        if "N_GENERATIONS" not in kwargs.keys():
+            self.N_GENERATIONS = 50
+        else:
+            self.N_GENERATIONS = kwargs["N_GENERATIONS"]
+
+    def predict(self):
+        return ga(self.loss,self.trainX,self.trainY,self.testX,self.testY, self.N, self.m, self.precisions, self.N_GENERATIONS, self.POP_SIZE, self.MUTATION_RATE, self.CROSSOVER_RATE)
+
+
 if __name__ == "__main__":
     # Quadric 损失函数 (y-f(x))^2 / 2 -> ls
     # Laplace 损失函数 abs(y-f(x)) -> lad
-    params = {'n_estimators': 500,
-              'max_depth': 4,
+    params = {'n_estimators': 195,
+              'max_depth': 5,
               'min_samples_split': 5,
-              'learning_rate': 0.01,
+              'learning_rate': 0.76,
               # 'loss': 'lad',
               'loss': 'ls'}
-    gbm_reg = GBMModel(**params)
+    gbm_reg = GBMModel(**params,ga=1)
     train_path = "../data/gbm/gbm_train_data.xlsx"
     test_path = "../data/gbm/gbm_test_data.xlsx"
     predict_path = "../data/gbm/gbm_predict_data.xlsx"
