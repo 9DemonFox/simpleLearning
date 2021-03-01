@@ -84,9 +84,9 @@ if __name__ == '__main__' and False:
 
     std_y = standardrized(y)
     std_x = numpy.apply_along_axis(standardrized, axis=1, arr=x)
-    print((std_y.mean(), std_y.std()), (std_x[0].mean(), std_x[0].std()))
+    # print((std_y.mean(), std_y.std()), (std_x[0].mean(), std_x[0].std()))
     from sklearn.linear_model import LassoLars
 
     clf = LassoLars(alpha=0.1, fit_intercept=False)
     clf.fit(std_x, std_y)
-    print(clf.coef_)
+    # print(clf.coef_)

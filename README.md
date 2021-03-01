@@ -18,3 +18,10 @@ pip install -r requirements.txt
 双击目录下 app.bat 可以看到目前版本
 ```
 
+# 4. 贡献
+| Contributor |                           |      |
+| ----------- | ------------------------- | ---- |
+| @Xzzf       | Rebet、GA                 |      |
+| @motuer97   | GBM、HLM                  |      |
+| @Dokeyy     | RFANFIS、IBRT             |      |
+| @9DemonFox  | AHP、SALP、代码框架和前端 |      |
