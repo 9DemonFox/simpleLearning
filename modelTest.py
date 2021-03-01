@@ -233,10 +233,10 @@ class IBRTTestCase(unittest.TestCase):
         testX, testY = dataloader.loadTestData(test_path="data/ibrt/IBRT_TEST_DATA.xlsx")
         print('trainX:', trainX)
         print('trainY:', trainY)
-        ibrt = IBRTModel(20, 0, 1.0, 2)
+        ibrt = IBRTModel(5, 2)
         ibrt.fit(trainX=trainX, trainY=trainY)
         predictY = ibrt.predict(predictX=testX)
-        assert (mean_squared_error(testY, predictY) < 10)
+        assert (mean_squared_error(testY, predictY) < 1)
         pass
 
 
