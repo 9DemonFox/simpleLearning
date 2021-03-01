@@ -33,8 +33,13 @@ class HLMDataLoader(DataLoader):
         pass
 
     def __loadExcelData(self, datapath):
-        erosion_data = pd.read_excel(io=datapath, sheet_name="erosion", index_col=0)
-        soil_data = pd.read_excel(io=datapath, sheet_name="soil", index_col=0)
+        # erosion_data = pd.read_excel(io=datapath, sheet_name="erosion", index_col=0)
+        # soil_data = pd.read_excel(io=datapath, sheet_name="soil", index_col=0)
+
+        # by default, the first sheet is erosion data, and the second sheet is soil data.
+        erosion_data = pd.read_excel(io=datapath, sheet_name=0, index_col=0)
+        soil_data = pd.read_excel(io=datapath, sheet_name=1, index_col=0)
+
         y = erosion_data.values[:, 0].astype(float)
         x = erosion_data.values[:, 1:-1].astype(float)
         w = soil_data.values[:, :-1].astype(float)
@@ -55,8 +60,13 @@ class HLMDataLoader(DataLoader):
     def loadPredictData(self, **kwargs):
         assert "predict_path" in kwargs.keys()
         predict_path = kwargs.get("predict_path")
-        df_erosion = pd.read_excel(io=predict_path, sheet_name="erosion", index_col=0)
-        df_soil = pd.read_excel(io=predict_path, sheet_name="soil", index_col=0)
+        # df_erosion = pd.read_excel(io=predict_path, sheet_name="erosion", index_col=0)
+        # df_soil = pd.read_excel(io=predict_path, sheet_name="soil", index_col=0)
+
+        # by default, the first sheet is erosion data, and the second sheet is soil data.
+        df_erosion = pd.read_excel(io=predict_path, sheet_name=0, index_col=0)
+        df_soil = pd.read_excel(io=predict_path, sheet_name=1, index_col=0)
+
         predictX = df_erosion.values[:, :-1].astype(float)
         predictW = df_soil.values[:, :-1].astype(float)
         return (predictX, predictW)
