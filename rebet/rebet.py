@@ -272,6 +272,7 @@ class REBETModel(Model):
 
         self.trainX = kwargs["trainX"]
         self.trainY = kwargs["trainY"]
+        self.trainY = self.trainY * 10
             
         self.clf = tree.DecisionTreeRegressor(criterion='mse', max_depth=(self.trainX.shape[1]))
         N = self.trainX.shape[0]
@@ -317,7 +318,7 @@ class REBETModel(Model):
             x0 = self.clf2.predict(self.testX).reshape(N, 1)
             for j in range(self.n):
                 x0[j * m:(j + 1) * m, 0:1] = x0[j * m:(j + 1) * m, 0:1] + np.dot(z[j], self.u[j])
-            mse = mean_squared_error(x0, self.testY)
+            mse = mean_squared_error(x0/10, self.testY)
             return x,mse
         N = self.testX.shape[0]
         m = int(N / self.n)
@@ -329,7 +330,7 @@ class REBETModel(Model):
         for j in range(self.n):
             x0[j * m:(j + 1) * m, 0:1] = x0[j * m:(j + 1) * m, 0:1] + np.dot(z[j], self.u[j])
         #print(x0)
-        return mean_squared_error(x0, self.testY)
+        return mean_squared_error(x0/10, self.testY)
     
     def predict(self, **kwargs):
         self.predictX = kwargs["predictX"]
@@ -341,7 +342,7 @@ class REBETModel(Model):
         x0 = self.clf2.predict(self.predictX).reshape(N, 1)
         for j in range(self.n):
             x0[j * m:(j + 1) * m, 0:1] = x0[j * m:(j + 1) * m, 0:1] + np.dot(z[j], self.u[j])
-        return x0
+        return x0/10
 
 
 
