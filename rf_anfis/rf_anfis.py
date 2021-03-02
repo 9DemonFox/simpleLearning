@@ -398,8 +398,12 @@ class RF_ANFISModel(torch.nn.Module):
         and then fit_coeff will adjust the TSK coeff using LSE.
     '''
 
-    def __init__(self, hybrid=True):
+    def __init__(self, **kwargs):
         super(RF_ANFISModel, self).__init__()
+        if "sigma" not in kwargs.keys():
+            self.sigma = 1
+        else:
+            self.sigma = kwargs["sigma"]
         # self.description = description
         self.invardefs = [
             ('x0', make_bell_mfs(3.33333, 2, [-10, -3.333333, 3.333333, 10])),
@@ -407,17 +411,20 @@ class RF_ANFISModel(torch.nn.Module):
             ('x2', make_bell_mfs(3.33333, 2, [-10, -3.333333, 3.333333, 10])),
         ]
         self.outvarnames = ['y0']
-        self.hybrid = hybrid
-        # print('hi', self.hybrid)
+
+        #self.hybrid = hybrid
+
         varnames = [v for v, _ in self.invardefs]
         mfdefs = [FuzzifyVariable(mfs) for _, mfs in self.invardefs]
         self.num_in = len(self.invardefs)
         self.num_rules = np.prod([len(mfs) for _, mfs in self.invardefs])
+
         # print(self.num_rules)
-        if self.hybrid:
-            cl = ConsequentLayer(self.num_in, self.num_rules, self.num_out)
-        else:
-            cl = PlainConsequentLayer(self.num_in, self.num_rules, self.num_out)
+        #if self.hybrid:
+        cl = ConsequentLayer(self.num_in, self.num_rules, self.num_out)
+        #else:
+        #    cl = PlainConsequentLayer(self.num_in, self.num_rules, self.num_out)
+
         self.layer = torch.nn.ModuleDict(OrderedDict([
             ('fuzzify', FuzzifyLayer(mfdefs, varnames)),
             ('rules', AntecedentLayer(mfdefs)),
@@ -438,14 +445,28 @@ class RF_ANFISModel(torch.nn.Module):
     def coeff(self, new_coeff):
         self.layer['consequent'].coeff = new_coeff
 
+    def x_filter(self, x, y, sigma):
+        x_np = x.T
+        y_np = y.T
+        # print(x_np.shape,y_np.shape)
+        # for i in x_np:
+        corration = np.corrcoef(x_np, y_np)
+        #print("corr:", corration)
+        tobedelete = []
+        for i in range(x_np.shape[0]):
+            if np.abs(corration[i, x_np.shape[0]]) <= sigma:
+                tobedelete.append(i)
+        x_np = np.delete(x_np, tobedelete, axis=0)
+        return x_np
+
     def fit_coeff(self, x, y_actual):
         '''
             Do a forward pass (to get weights), then fit to y_actual.
             Does nothing for a non-hybrid ANFIS, so we have same interface.
         '''
-        if self.hybrid:
-            self(x)
-            self.layer['consequent'].fit_coeff(x, self.weights, y_actual)
+        #if self.hybrid:
+        self(x)
+        self.layer['consequent'].fit_coeff(x, self.weights, y_actual)
 
     def input_variables(self):
         '''
@@ -491,7 +512,10 @@ class RF_ANFISModel(torch.nn.Module):
         epochs = 10
         show_plots = False
         self.trainX = kwargs["trainX"]
+        #print("tX:", self.trainX.shape)
         self.trainY = kwargs["trainY"]
+        self.x_filter(self.trainX, self.trainY, self.sigma)
+        #print("tX1:", self.trainX.shape)
         data = self.trainX, self.trainY
         optimizer = torch.optim.SGD(self.parameters(), lr=1e-4, momentum=0.99)
         criterion = torch.nn.MSELoss(reduction='sum')
@@ -579,7 +603,11 @@ if __name__ == '__main__' and False:
     predict_y = model.predict(test_data)
 
 if __name__ == "__main__" and True:
-    model = RF_ANFISModel()
+
+    from sklearn.metrics import mean_squared_error
+
+    model = RF_ANFISModel(sigma=0.4)
+
     data = ANFISDataLoader()
     train_data = data.loadTrainData(train_path='../data/rfanfis/RFANFIS_TRAIN_DATA.xlsx')
     print("train_data", train_data)
