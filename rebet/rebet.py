@@ -279,8 +279,9 @@ class REBETModel(Model):
         self.trainY = self.trainY.reshape(N,1)
         m = int(N / self.n)
         z = np.zeros((self.n, m, self.q))
-        for i in range(self.n):
-            z[i:i + 1, :, 0:1] = z[i:i + 1, :, 0:1]  + self.trainX[m * i:m * (i + 1), self.k-1:self.k]
+        if(self.k!=0):
+            for i in range(self.n):
+                z[i:i + 1, :, 0:1] = z[i:i + 1, :, 0:1]  + self.trainX[m * i:m * (i + 1), self.k-1:self.k]
         #print(z)
         y0 = np.empty((N, 1))
         update(self.trainX, self.trainY, self.epoch, self.n, N, m, self.D, self.q, self.u, self.σ2, self.clf, y0, z, self.M)
@@ -313,8 +314,9 @@ class REBETModel(Model):
             N = self.testX.shape[0]
             m = int(N / self.n)
             z = np.zeros((self.n, m, self.q))
-            for i in range(self.n):
-                z[i:i + 1, :, 0:1] = z[i:i + 1, :, 0:1]  + self.testX[m * i:m * (i + 1), self.k-1:self.k]
+            if(self.k!=0):
+                for i in range(self.n):
+                    z[i:i + 1, :, 0:1] = z[i:i + 1, :, 0:1]  + self.testX[m * i:m * (i + 1), self.k-1:self.k]
             x0 = self.clf2.predict(self.testX).reshape(N, 1)
             for j in range(self.n):
                 x0[j * m:(j + 1) * m, 0:1] = x0[j * m:(j + 1) * m, 0:1] + np.dot(z[j], self.u[j])
@@ -323,8 +325,9 @@ class REBETModel(Model):
         N = self.testX.shape[0]
         m = int(N / self.n)
         z = np.zeros((self.n, m, self.q))
-        for i in range(self.n):
-            z[i:i + 1, :, 0:1] = z[i:i + 1, :, 0:1]  + self.testX[m * i:m * (i + 1), self.k-1:self.k]
+        if(self.k!=0):
+            for i in range(self.n):
+                z[i:i + 1, :, 0:1] = z[i:i + 1, :, 0:1]  + self.testX[m * i:m * (i + 1), self.k-1:self.k]
         x0 = self.clf2.predict(self.testX).reshape(N, 1)
         #print(x0,self.testX)
         for j in range(self.n):
@@ -337,8 +340,9 @@ class REBETModel(Model):
         N = self.predictX.shape[0]
         m = int(N / self.n)
         z = np.zeros((self.n, m, self.q))
-        for i in range(self.n):
-            z[i:i + 1, :, 0:1] = z[i:i + 1, :, 0:1] + self.predictX[m * i:m * (i + 1), self.k-1:self.k]
+        if(self.k!=0):
+            for i in range(self.n):
+                z[i:i + 1, :, 0:1] = z[i:i + 1, :, 0:1] + self.predictX[m * i:m * (i + 1), self.k-1:self.k]
         x0 = self.clf2.predict(self.predictX).reshape(N, 1)
         for j in range(self.n):
             x0[j * m:(j + 1) * m, 0:1] = x0[j * m:(j + 1) * m, 0:1] + np.dot(z[j], self.u[j])
@@ -562,7 +566,7 @@ class GAModel(Model):
 if __name__ == '__main__':
     n = 1
     epoch = 200
-    k = 2
+    k = 0
     M = 1
     datapath1="../data/rebet/data_train.xlsx"
     datapath2="../data/rebet/data_test.xlsx"
