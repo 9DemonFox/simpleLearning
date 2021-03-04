@@ -569,7 +569,7 @@ class RF_ANFISModel(torch.nn.Module):
         :return:
         """
         assert "trainX" in kwargs.keys()
-        assert "trainy" in kwargs.keys()
+        assert "trainY" in kwargs.keys()
         trainX = kwargs["trainX"]
         trainY = kwargs["trainY"]
         self.fit(trainX=trainX, trainY=trainY)
