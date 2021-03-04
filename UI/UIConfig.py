@@ -71,6 +71,15 @@ modelTypes2models = {
             }
         },
         {
+            "model_name": ("加入回归树的混合效应模型", "MERT"),
+            "model_parameters": {
+                "n": ("观测对象种类数量",1),
+                "epoch": ("迭代轮数",50),
+                "k": ("指定第k个变量作为随机效应变量",1),
+                "ga": ("是否进行参数寻优", 0)
+            }
+        },
+        {
             "model_name": ("提升回归机", "IBRT"),
             "model_parameters": {
                 "n_iter": ("迭代次数", 5),
@@ -88,21 +97,6 @@ modelTypes2models = {
             "model_name": ("层次分析法", "AHP"),
             "model_parameters": {
                 "No Parameter": ("无参数", "None"),
-            }
-        }],
-    "参数寻优": [
-        {
-            "model_name": ("遗传算法", "GA"),
-            "model_parameters": {
-                "c": ("指定求函数的最大值或最小值",0),
-                "n": ("函数所含变量个数",3),
-                "xmin": ("所有变量的上界",1000),
-                "xmax": ("所有变量的下界",-1000),
-                "precisions": ("精度",24),
-                "N_GENERATIONS": ("迭代轮数",50),
-                "POP_SIZE": ("种群大小",200),
-                "MUTATION_RATE": ("变异概率",0.005),
-                "CROSSOVER_RATE": ("交叉概率",0.8),
             }
         }],
 }
