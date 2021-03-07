@@ -51,7 +51,6 @@ class MERF(object):
 
         self.cluster_counts = None
         # Note fixed_effects_model must already be instantiated when passed in.
-        self.fe_model = fixed_effects_model
         self.trained_fe_model = None
         self.trained_b = None
 
@@ -110,6 +109,7 @@ class MERF(object):
         Z: np.ndarray,
         clusters: pd.Series,
         y: np.ndarray,
+        n_estimators,
         X_val: np.ndarray = None,
         Z_val: np.ndarray = None,
         clusters_val: pd.Series = None,
@@ -128,6 +128,7 @@ class MERF(object):
             MERF: fitted model
         """
 
+        self.fe_model = RandomForestRegressor(n_estimators=n_estimators, n_jobs=-1)
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Input Checks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         if type(clusters) != pd.Series:
             raise TypeError("clusters must be a pandas Series.")

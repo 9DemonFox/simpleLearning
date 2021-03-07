@@ -38,6 +38,10 @@ class MERFModel(Model):
             self.k = 1
         else:
             self.k = kwargs["k"]
+        if "n_estimators" not in kwargs.keys():
+            self.n_estimators = 20
+        else:
+            self.n_estimators = kwargs["n_estimators"]
         if "ga" not in kwargs.keys():
             self.ga = 0
         else:
@@ -121,7 +125,7 @@ class MERFModel(Model):
                     a = (i+1)*np.ones((m)).astype(int)
                     d = pd.Series(a)
                     c = pd.concat([c,d], ignore_index=True)
-            _,b,e = self.merf.fit(self.trainX, z, c, self.trainY)
+            _,b,e = self.merf.fit(self.trainX, z, c, self.trainY,self.n_estimators)
             return b,e
         
        
@@ -173,7 +177,7 @@ class MERFModel(Model):
                     a = (i+1)*np.ones((m)).astype(int)
                     d = pd.Series(a)
                     c = pd.concat([c,d], ignore_index=True)
-            self.merf.fit(self.trainX, z, c, self.trainY)
+            self.merf.fit(self.trainX, z, c, self.trainY,self.n_estimators)
         N = self.predictX.shape[0]
         m = int(N / self.n)
         z = np.ones((N,1))
@@ -192,6 +196,7 @@ class MERFModel(Model):
 if __name__ == '__main__':
     n = 1
     k = 1
+    n_estimators = 20
     datapath1="../data/merf/data_train1.xlsx"
     datapath2="../data/merf/data_test1.xlsx"
     datapath3="../data/merf/data_predict1.xlsx"
@@ -199,7 +204,7 @@ if __name__ == '__main__':
     trainX, trainY = dataloader.loadTrainData(train_path=datapath1)
     testX, testY = dataloader.loadTestData(test_path=datapath2)
     predictX = dataloader.loadPredictData(predict_path=datapath3)  
-    model = MERFModel(n=n, k=k ,ga=0)
+    model = MERFModel(n=n, k=k, n_estimators=n_estimators ,ga=0)
     print(model.fitForUI(trainX=trainX, trainY=trainY))
     print(model.testForUI(testX=testX, testY=testY))
     print(model.predictForUI(predictX=predictX))
