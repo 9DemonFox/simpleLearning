@@ -93,8 +93,8 @@ class HLMTestCase(unittest.TestCase):
         (predictX, predictW) = dataloader.loadPredictData(predict_path=self.predict_path)
 
         assert trainW.shape == (1, 8)
-        assert trainX.shape == (4, 1)
-        assert trainY.shape == (4,)
+        assert trainX.shape == (20, 1)
+        assert trainY.shape == (20,)
 
         assert testW.shape == (1, 8)
         assert testX.shape == (4, 1)
@@ -110,9 +110,9 @@ class HLMTestCase(unittest.TestCase):
         (trainX, trainW), trainY = dataloader.loadTrainData(train_path=self.train_path)
         (testX, testW), testY = dataloader.loadTestData(test_path=self.test_path)
         hlm_model.fit(trainX=(trainX, trainW), trainY=trainY)
-        predictY = hlm_model.predict(predictW=testW, predictX=testX)
+        predictY = hlm_model.predict(predictW=testW, predictX=testX).reshape(testY.shape[0], -1)
 
-        # assert mean_squared_error(trainY, predictY) < 1  # 0.947
+        print(mean_squared_error(testY, predictY))  # 0.947
         assert mean_squared_error(testY, predictY) < 3  # 0.947
 
 class SALPTestCase(unittest.TestCase):
