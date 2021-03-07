@@ -1,5 +1,7 @@
 import numpy as np
 from sklearn import tree
+import sys
+sys.path.append('..')
 from data.rebet.dataLoder import REBETDataLoader
 from model import Model
 from scipy.stats import gamma
@@ -43,44 +45,12 @@ def update(trainX, trainY, epoch, n, N, m, D, q, u, σ2, clf, y0, z, M):
     None.
 
     """
-    u[0] = np.random.multivariate_normal(np.zeros(q), D, size=(1)).reshape(q, 1)
-    #print(u)
-    for i in range(n):
-        if i != 0:
-            j = i + 1
-            a = np.random.binomial(1, M / (M + j - 1), 1)
-            if a == 1:
-                u[i] = np.random.multivariate_normal(np.zeros(q), D, size=(1)).reshape(q, 1)
-
-            else:
-                b = np.random.randint(1, j)
-                u[i] = u[b - 1]
-
     for i in range(epoch):
         for j in range(n):
             y0[j * m:(j + 1) * m, 0:1] = trainY[j * m:(j + 1) * m, 0:1] - np.dot(z[j], u[j])
         clf.fit(trainX, y0)
         y1 = clf.predict(trainX).reshape(N, 1)
 
-        a = 0
-        for j in range(n):
-            #print(y1[j * m:(j + 1) * m, 0:1] , np.dot(z[j], u[j]))
-            a = a + np.dot((trainY[j * m:(j + 1) * m, 0:1] - y1[j * m:(j + 1) * m, 0:1] - np.dot(z[j], u[j])).T,
-                           (trainY[j * m:(j + 1) * m, 0:1] - y1[j * m:(j + 1) * m, 0:1] - np.dot(z[j], u[j])))
-         
-
-        a = a / 2
-        #print(a)
-        b = N / 2 + 1
-        if (a==0):
-            σ2 = 0.01
-        else:
-            σ2 = 1 / gamma.rvs(b, scale=1 / a)
-        if (σ2<=0.01):
-            σ2 = 0.01
-        #print(σ2)
-        r = np.empty((n, q, 1))
-        k = 0
 
         l = np.zeros(n)
         c = 0
@@ -113,17 +83,9 @@ def update(trainX, trainY, epoch, n, N, m, D, q, u, σ2, clf, y0, z, M):
                 p = 1
             a = np.random.binomial(1, p, 1)
             if a == 1:
-                d = np.identity(q)
-                mean = np.dot(np.dot(
-                    np.linalg.inv(np.dot(z[j].T, z[j]) + σ2 * np.divide(d, D, out=np.zeros_like(d), where=D != 0)),
-                    z[j].T), trainY[j * m:(j + 1) * m, 0:1] - y1[j * m:(j + 1) * m, 0:1])
-                d = np.identity(q)
-                cov = σ2 * np.linalg.inv(
-                    np.dot(z[j].T, z[j]) + σ2 * np.divide(d, D, out=np.zeros_like(d), where=D != 0))
-                u[j] = np.random.multivariate_normal(mean.reshape(q), cov, size=(1)).reshape(q, 1)
-                #print(mean)
-                r[k] = u[j]
-                k = k + 1
+                v = np.dot(np.dot(z[j], D), z[j].T) + σ2 * np.identity(m)
+                u[j] = np.dot(np.dot(np.dot(D, z[j].T), np.linalg.inv(v)),
+                trainY[j * m:(j + 1) * m, 0:1] - y1[j * m:(j + 1) * m, 0:1])
             else:
                 s = np.delete(l, j)
                 b = np.random.choice(np.arange(n - 1), size=1, replace=True,
@@ -133,34 +95,23 @@ def update(trainX, trainY, epoch, n, N, m, D, q, u, σ2, clf, y0, z, M):
                     u[j] = u[b]
                 else:
                     u[j] = u[b + 1]
-                a = 0
-                for t in range(k):
-                    if (r[t] == u[j]).all():
-                        a = 1
-                        break
-                if a == 0:
-                    r[k] = u[j]
-                    k = k + 1
-        r = r[0:k, :, :].reshape(k, q)
-
-        a = np.dot(r.T, r) / 2
-        b = k / 2 + 1
-        D = 1 / gamma.rvs(b, scale=np.abs(1 / a))
+        σ = 0.0
+        d = np.zeros(q)
+        for j in range(n):
+            v = np.dot(np.dot(z[j], D), z[j].T) + σ2 * np.identity(m)
+            e0 = trainY[j * m:(j + 1) * m, 0:1] - np.dot(z[j], u[j]) - y1[j * m:(j + 1) * m, 0:1]
+            σ = σ + np.dot(e0.T, e0)  # + σ2*(m - σ2*np.trace(v))
+            #print(v,m - σ2*np.trace(v),i)
+            d = d + np.dot(u[j], u[j].T) + D - np.dot(np.dot(np.dot(np.dot(D, z[j].T), np.linalg.inv(v)), z[j]), D)
+        σ2 = σ / N
+        D = d / n
+        
+        if (σ2==0):
+            σ2 = 0.01
+        #print(u)
         #print(D)
-        if (D<math.pow(10,-10)):
-            D = np.identity(q)
-            u[0] = np.random.multivariate_normal(np.zeros(q), D, size=(1)).reshape(q, 1)
-    #print(u)
-            for i in range(n):
-                if i != 0:
-                    j = i + 1
-                    a = np.random.binomial(1, M / (M + j - 1), 1)
-                    if a == 1:
-                        u[i] = np.random.multivariate_normal(np.zeros(q), D, size=(1)).reshape(q, 1)
-                    else:
-                        b = np.random.randint(1, j)
-                        u[i] = u[b - 1]
-    return σ2
+        
+    return u,σ2
 
 
 class REBETModel(Model):
@@ -210,15 +161,22 @@ class REBETModel(Model):
         self.q = 1
         self.D = np.identity(self.q)
         self.u = np.zeros((self.n, 1,1))
-        self.σ2 = 0.1
+        self.σ2 = 1
         
     def fitForUI(self, **kwargs):
         """ 返回结果到前端
         :return:
         """
         # 返回结果为字典形式
-        self.fit(**kwargs)
-        returnDic = {
+        if (self.ga==0):  
+            b,e = self.fit(**kwargs)
+            returnDic = {
+            "随机效应系数": str(b.reshape(self.n,1)),
+            "误差": str(e),
+        }
+        if (self.ga==1):  
+            self.fit(**kwargs)
+            returnDic = {
             "None": "None",
         }
         return returnDic
@@ -272,9 +230,9 @@ class REBETModel(Model):
 
         self.trainX = kwargs["trainX"]
         self.trainY = kwargs["trainY"]
-        self.trainY = self.trainY * 10
+        #self.trainY = self.trainY * 10
             
-        self.clf = tree.DecisionTreeRegressor(criterion='mse',ccp_alpha=0.1, max_depth=(self.trainX.shape[1]))
+        self.clf = tree.DecisionTreeRegressor(criterion='mse', ccp_alpha=0.1, max_depth=(self.trainX.shape[1]))
         N = self.trainX.shape[0]
         self.trainY = self.trainY.reshape(N,1)
         m = int(N / self.n)
@@ -284,13 +242,14 @@ class REBETModel(Model):
                 z[i:i + 1, :, 0:1] = z[i:i + 1, :, 0:1]  + self.trainX[m * i:m * (i + 1), self.k-1:self.k]
         #print(z)
         y0 = np.empty((N, 1))
-        self.σ2 = update(self.trainX, self.trainY, self.epoch, self.n, N, m, self.D, self.q, self.u, self.σ2, self.clf, y0, z, self.M)
+        self.u,self.σ2 = update(self.trainX, self.trainY, self.epoch, self.n, N, m, self.D, self.q, self.u, self.σ2, self.clf, y0, z, self.M)
         for j in range(self.n):
             y0[j * m:(j + 1) * m, 0:1] = self.trainY[j * m:(j + 1) * m, 0:1] - np.dot(z[j], self.u[j])
 
-        self.clf2 = tree.DecisionTreeRegressor(criterion='mse', random_state=0,ccp_alpha=0.1, max_depth=(self.trainX.shape[1]))
+        self.clf2 = tree.DecisionTreeRegressor()
         self.clf2.fit(self.trainX, y0)
         
+        return self.u,self.σ2
         #print(z,self.u,np.dot(z[j], self.u[j]), self.clf2.predict(self.trainX),self.clf2.predict(self.trainX).reshape(N, 1)+np.dot(z[j], self.u[j]))
         
            
@@ -300,10 +259,10 @@ class REBETModel(Model):
         self.testY = kwargs["testY"]
         if (self.ga==1):
             N = 3
-            m = [[50,200],[1,self.trainX.shape[1]],[0.01,100]]
-            precisions = 24
-            N_GENERATIONS = 50
-            POP_SIZE = 50
+            m = [[50,100],[1,self.trainX.shape[1]],[0.1,100]]
+            precisions = 12
+            N_GENERATIONS = 20
+            POP_SIZE = 20
             MUTATION_RATE = 0.005
             CROSSOVER_RATE = 0.8
             model1 = GAModel(n=self.n,testX=self.testX, testY=self.testY, trainX=self.trainX, trainY=self.trainY, N=N, m=m, precisions=precisions, N_GENERATIONS=N_GENERATIONS, 
@@ -319,8 +278,8 @@ class REBETModel(Model):
                     z[i:i + 1, :, 0:1] = z[i:i + 1, :, 0:1]  + self.testX[m * i:m * (i + 1), self.k-1:self.k] 
             x0 = self.clf2.predict(self.testX).reshape(N, 1)
             for j in range(self.n):
-                x0[j * m:(j + 1) * m, 0:1] = x0[j * m:(j + 1) * m, 0:1] + np.dot(z[j], self.u[j]) + self.σ2
-            mse = mean_squared_error(x0/10, self.testY)
+                x0[j * m:(j + 1) * m, 0:1] = x0[j * m:(j + 1) * m, 0:1] + np.dot(z[j], self.u[j])# + self.σ2
+            mse = mean_squared_error(x0, self.testY)
             return x,mse
         N = self.testX.shape[0]
         m = int(N / self.n)
@@ -329,11 +288,11 @@ class REBETModel(Model):
             for i in range(self.n):
                 z[i:i + 1, :, 0:1] = z[i:i + 1, :, 0:1]  + self.testX[m * i:m * (i + 1), self.k-1:self.k]
         x0 = self.clf2.predict(self.testX).reshape(N, 1)
-        #print(x0,self.testX)
-        for j in range(self.n):
-            x0[j * m:(j + 1) * m, 0:1] = x0[j * m:(j + 1) * m, 0:1] + np.dot(z[j], self.u[j]) + self.σ2
         #print(x0)
-        return mean_squared_error(x0/10, self.testY)
+        for j in range(self.n):
+            x0[j * m:(j + 1) * m, 0:1] = x0[j * m:(j + 1) * m, 0:1] + np.dot(z[j], self.u[j])# + self.σ2
+        #print(x0)
+        return mean_squared_error(x0, self.testY)
     
     def predict(self, **kwargs):
         self.predictX = kwargs["predictX"]
@@ -346,7 +305,7 @@ class REBETModel(Model):
         x0 = self.clf2.predict(self.predictX).reshape(N, 1)
         for j in range(self.n):
             x0[j * m:(j + 1) * m, 0:1] = x0[j * m:(j + 1) * m, 0:1] + np.dot(z[j], self.u[j]) + self.σ2
-        return x0/10
+        return x0
 
 
 
@@ -487,7 +446,7 @@ def print_info(n,trainX,trainY,testX,testY,pop, N, precisions, m, POP_SIZE):
 
 def ga(n,trainX,trainY,testX,testY, N, m, precisions, N_GENERATIONS, POP_SIZE, MUTATION_RATE, CROSSOVER_RATE):
     pop = np.random.randint(2, size=(POP_SIZE, precisions * N))
-    for _ in range(N_GENERATIONS):
+    for i in range(N_GENERATIONS):
         pop = np.array(crossover_and_mutation(pop, CROSSOVER_RATE, POP_SIZE, precisions, MUTATION_RATE))
 
         fitness = get_fitness(n,trainX,trainY,testX,testY,pop, N, precisions, m, POP_SIZE)
@@ -565,19 +524,20 @@ class GAModel(Model):
 
 if __name__ == '__main__':
     n = 1
-    epoch = 200
+    epoch = 50
     k = 2
-    M = 1
-    datapath1="../data/rebet/data_train.xlsx"
-    datapath2="../data/rebet/data_test.xlsx"
-    datapath3="../data/rebet/data_predict.xlsx"
+    M = 50
+    datapath1="../data/rebet/data_train1.xlsx"
+    datapath2="../data/rebet/data_test1.xlsx"
+    datapath3="../data/rebet/data_predict1.xlsx"
     dataloader = REBETDataLoader()
     trainX, trainY = dataloader.loadTrainData(train_path=datapath1)
     testX, testY = dataloader.loadTestData(test_path=datapath2)
     predictX = dataloader.loadPredictData(predict_path=datapath3)
-    model = REBETModel(n=n, epoch=epoch, M=M, k=k ,ga=0)
+    model = REBETModel(n=n, epoch=epoch, M=M, k=k ,ga=1)
     model.fitForUI(trainX=trainX, trainY=trainY)
     print(model.testForUI(testX=testX, testY=testY))
     print(model.predictForUI(predictX=predictX))
+    
     
     

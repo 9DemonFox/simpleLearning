@@ -80,6 +80,15 @@ modelTypes2models = {
             }
         },
         {
+            "model_name": ("加入随机森林的混合效应模型", "MERF"),
+            "model_parameters": {
+                "n": ("观测对象种类数量",1),
+                "epoch": ("迭代轮数",50),
+                "k": ("指定第k个变量作为随机效应变量",1),
+                "ga": ("是否进行参数寻优", 0)
+            }
+        },
+        {
             "model_name": ("提升回归机", "IBRT"),
             "model_parameters": {
                 "n_iter": ("迭代次数", 5),
