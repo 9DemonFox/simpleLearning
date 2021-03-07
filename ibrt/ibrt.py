@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import sklearn
 from scipy.optimize import minimize
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
@@ -255,6 +256,8 @@ class IBRTModel(Model):
         # self.eta = 1.0#[]  # 收缩系数, 默认1.0,即不收缩
         self.trees = []
         self.eta_trees = []
+        self.model = sklearn.ensemble.GradientBoostingRegressor(max_depth=max_depth, n_estimators=n_iter, loss='quantile')
+
 
     def calGrad(self, y_pred, y_data):
         # 计算一阶导数，ebcl不敏感损失函数
@@ -282,6 +285,9 @@ class IBRTModel(Model):
         step = 0
         garr = []
 
+        self.model.fit(trainX,trainY)
+
+        '''
         while step < self.n_iter:
             tree = Tree(self.max_depth)
             if step == 0:
@@ -298,17 +304,22 @@ class IBRTModel(Model):
             self.eta_trees.append(tree.calEtaTree(self.trees, garr, trainX, 0.01))
 
             self.trees.append(tree)
-            '''
+            
+            
             for t in self.trees:
                 print('t.sp')
                 print(t.root.sp)
                 print('tree_pre:%f'%t.predict(X_data[0]))
             '''
-            step += 1
+            #step += 1
 
     def predict(self, **kwargs):
         assert "predictX" in kwargs
         X_data = kwargs.get("predictX")
+        #print('pred:', X_data)
+        return self.model.predict(X_data)
+
+        '''
         if self.trees:
             y_pred = []
             # print("et")
@@ -319,7 +330,7 @@ class IBRTModel(Model):
             return np.array(y_pred).flatten()
         else:
             return np.zeros(X_data.shape[0])
-
+        '''
     def fitForUI(self, **kwargs):
         """ 返回结果到前端
         :return:
