@@ -256,7 +256,7 @@ class IBRTModel(Model):
         # self.eta = 1.0#[]  # 收缩系数, 默认1.0,即不收缩
         self.trees = []
         self.eta_trees = []
-        self.model = sklearn.ensemble.GradientBoostingRegressor(max_depth=max_depth, n_estimators=n_iter, loss='quantile')
+        self.model = sklearn.ensemble.GradientBoostingRegressor(max_depth=max_depth, n_estimators=n_iter, loss='huber', max_features=3, max_leaf_nodes=3)
 
 
     def calGrad(self, y_pred, y_data):
