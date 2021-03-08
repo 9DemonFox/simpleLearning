@@ -75,7 +75,7 @@ def train_anfis_with(model, data, optimizer, criterion,
     #      format(epochs, data.dataset.tensors[0].shape[0]))
     for t in range(epochs):
         # Process each mini-batch in turn:
-        count = 0
+
         for x, y_actual in data:
             print('xsize:',x.size())
             print('ysize:',y_actual.size())
@@ -86,11 +86,11 @@ def train_anfis_with(model, data, optimizer, criterion,
             # Zero gradients, perform a backward pass, and update the weights.
             optimizer.zero_grad()
             #if count==0:
-            loss.backward(retain_graph=False)
+            loss.backward()
             #else:
             #    loss.backward()
             optimizer.step()
-            count+=1
+
         # Epoch ending, so now fit the coefficients based on all data:
         x, y_actual = data.dataset.tensors
         with torch.no_grad():
@@ -249,8 +249,8 @@ class FuzzifyLayer(torch.nn.Module):
     '''
 
     def __init__(self, varmfs, varnames=None):
-        print('varmfs')
-        print(varmfs)
+        #print('varmfs')
+        #print(varmfs)
         super(FuzzifyLayer, self).__init__()
         if varmfs!=[]:
             if not varnames:
@@ -291,16 +291,17 @@ class FuzzifyLayer(torch.nn.Module):
             x.shape = n_cases * n_in
             y.shape = n_cases * n_in * n_mfs
         '''
-        print(('em self.varmfs.values()',enumerate(self.varmfs.values())))
-        for i, var in enumerate(self.varmfs.values()):
-            print('i,val:', i, var)
+        #print(('em self.varmfs.values()',enumerate(self.varmfs.values())))
+        #print('fx::', x)
+
+
         assert x.shape[1] == self.num_in, \
             '{} is wrong no. of input values'.format(self.num_in)
         y_pred = torch.stack([var(x[:, i:i + 1])
                               for i, var in enumerate(self.varmfs.values())],
                              dim=1)
-        print('fx::',x)
-        print('fuzzi:', y_pred)
+        #print('fx::',x)
+        #print('fuzzi:', y_pred)
         return y_pred
 
 
@@ -395,14 +396,14 @@ class ConsequentLayer(torch.nn.Module):
         x_plus = torch.cat([x, torch.ones(x.shape[0], 1)], dim=1)
         # Shape of weighted_x is n_cases * n_rules * (n_in+1)
         weighted_x = torch.einsum('bp, bq -> bpq', weights, x_plus)
-        print('w,xp:', weights, x_plus)
-        print('wX:', weighted_x)
+        #print('w,xp:', weights, x_plus)
+        #print('wX:', weighted_x)
         # Can't have value 0 for weights, or LSE won't work:
         weighted_x[weighted_x == 0] = 1e-12
         # Squash x and y down to 2D matrices for gels:
         weighted_x_2d = weighted_x.view(weighted_x.shape[0], -1)
         y_actual_2d = y_actual.view(y_actual.shape[0], -1)
-        print('y_actual_2d, weighted_x_2d', y_actual_2d, weighted_x_2d)
+        #print('y_actual_2d, weighted_x_2d', y_actual_2d, weighted_x_2d)
         # Use gels to do LSE, then pick out the solution rows:
         try:
         #    coeff_2d, _ = torch.gels(y_actual_2d, weighted_x_2d)
@@ -487,14 +488,14 @@ class RF_ANFISModel(torch.nn.Module):
         and then fit_coeff will adjust the TSK coeff using LSE.
     '''
 
-    def __init__(self, x, num_mfs=5, num_out=1, sigma=1, hybrid=True):
+    def __init__(self, x, num_mfs=5, num_out=1, c=1, hybrid=True):
         super(RF_ANFISModel, self).__init__()
         x=torch.from_numpy(x)
         num_invars = x.shape[1]
-        print('typex', type(x))
+        #print('typex', type(x))
         minvals, _ = torch.min(x, dim=0)
         maxvals, _ = torch.max(x, dim=0)
-        print('minmax:',minvals, maxvals)
+        #print('minmax:',minvals, maxvals)
         ranges = maxvals - minvals
         invars = []
         for i in range(num_invars):
@@ -503,10 +504,11 @@ class RF_ANFISModel(torch.nn.Module):
             invars.append(('x{}'.format(i), make_gauss_mfs(sigma, mulist)))
         outvars = ['y{}'.format(i) for i in range(num_out)]
 
-        print("in out:",invars, outvars)
+        #print("in out:",invars, outvars)
 
+        self.c = c
         self.hybrid = hybrid
-        self.sigma = sigma
+
         # self.description = description
         self.invardefs = invars
         self.outvarnames = outvars
@@ -516,7 +518,7 @@ class RF_ANFISModel(torch.nn.Module):
         mfdefs = [FuzzifyVariable(mfs) for _, mfs in self.invardefs]
         self.num_in = len(self.invardefs)
         self.num_rules = np.prod([len(mfs) for _, mfs in self.invardefs])
-        print(self.num_rules)
+        #print(self.num_rules)
         if self.hybrid:
             cl = ConsequentLayer(self.num_in, self.num_rules, self.num_out)
         else:
@@ -541,7 +543,7 @@ class RF_ANFISModel(torch.nn.Module):
     def coeff(self, new_coeff):
         self.layer['consequent'].coeff = new_coeff
 
-    def x_filter(self, x, y, sigma):
+    def x_filter(self, x, y, c):
         x_np = x.T
         y_np = y.T
         # print(x_np.shape,y_np.shape)
@@ -550,7 +552,7 @@ class RF_ANFISModel(torch.nn.Module):
         #print("corr:", corration)
         tobedelete = []
         for i in range(x_np.shape[0]):
-            if np.abs(corration[i, x_np.shape[0]]) <= sigma:
+            if np.abs(corration[i, x_np.shape[0]]) <= c:
                 tobedelete.append(i)
         x_np = np.delete(x_np, tobedelete, axis=0)
         return x_np
@@ -592,11 +594,11 @@ class RF_ANFISModel(torch.nn.Module):
             I save the outputs from each layer to an instance variable,
             as this might be useful for comprehension/debugging.
         '''
-        if not torch.any(torch.isnan(self.layer['fuzzify'](x))):
-            self.fuzzified = self.layer['fuzzify'](x)
+        #if not torch.any(torch.isnan(self.layer['fuzzify'](x))):
+        self.fuzzified = self.layer['fuzzify'](x)
 
         self.raw_weights = self.layer['rules'](self.fuzzified)
-        print('raw-wei', self.raw_weights)
+        #print('raw-wei', self.raw_weights)
 
         self.weights = F.normalize(self.raw_weights, p=1, dim=1)
         self.rule_tsk = self.layer['consequent'](x)
@@ -614,11 +616,11 @@ class RF_ANFISModel(torch.nn.Module):
         self.trainX = kwargs["trainX"]
         #print("tX:", self.trainX.shape)
         self.trainY = kwargs["trainY"]
-        #self.x_filter(self.trainX, self.trainY, self.sigma)
+        self.x_filter(self.trainX, self.trainY, self.c)
         #print("tX1:", self.trainX.shape)
         data = self.trainX, self.trainY
         optimizer = torch.optim.SGD(self.parameters(), lr=1e-4, momentum=0.99)
-        criterion = torch.nn.MSELoss(reduction='mean')
+        criterion = torch.nn.MSELoss(reduction='sum')
         train_anfis_with(self, data, optimizer, criterion, epochs, show_plots)
 
     def predict(self, **kwargs):
@@ -637,7 +639,7 @@ class RF_ANFISModel(torch.nn.Module):
         y_pred = np.array([[0]])
         for batch_x, batch_y in test:
             y_pred_batch = self(batch_x)
-            print(y_pred_batch.detach().numpy().shape)
+            #print(y_pred_batch.detach().numpy().shape)
             y_pred = np.concatenate((y_pred, y_pred_batch.detach().numpy()))
         y_pred = torch.from_numpy(y_pred[1:, :])
         y_pred = y_pred.numpy()
@@ -696,20 +698,20 @@ if __name__ == '__main__' and False:
     model = RF_ANFISModel()
     data = ANFISDataLoader()
     train_data = data.loadTrainData()
-    print(train_data[0].shape, train_data[1].shape)
+    #print(train_data[0].shape, train_data[1].shape)
     test_data = data.loadTestData()
     # train_anfis(model, train_data, 20)
     model.fit(train_data)
-    print(type(train_data))
+    #print(type(train_data))
     predict_y = model.predict(test_data)
 
 if __name__ == "__main__" and False:
     from sklearn.metrics import mean_squared_error
 
-    model = RF_ANFISModel(sigma=0.4)
+    model = RF_ANFISModel(c=0.4)
     data = ANFISDataLoader()
     train_data = data.loadTrainData(train_path='../data/rfanfis/RFANFIS_TRAIN_DATA.xlsx')
-    print("train_data", train_data)
+    #print("train_data", train_data)
     test_data = data.loadTestData(test_path='../data/rfanfis/RFANFIS_TEST_DATA.xlsx')
     predict_data = data.loadPredictData(predict_path='../data/rfanfis/RFANFIS_PREDICT_DATA.xlsx')
     model.fitForUI(train_data=train_data)

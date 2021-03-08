@@ -192,7 +192,7 @@ class rf_anfisTestCase(unittest.TestCase):
         trainX, trainY = dataloader.loadTrainData(train_path="/Users/dssa/Downloads/0305/train_data.xlsx")
         testX = dataloader.loadPredictData(predict_path="/Users/dssa/Downloads/0305/test_data.xlsx")
 
-        re_anfis = RF_ANFISModel(trainX, sigma=1)
+        re_anfis = RF_ANFISModel(trainX,num_mfs=2, c=0.5)
         re_anfis.fit(trainX=trainX, trainY=trainY)
         predictY = re_anfis.predict(predictX= testX)
         print('predictY:',predictY)
