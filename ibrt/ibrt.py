@@ -256,7 +256,7 @@ class IBRTModel(Model):
         # self.eta = 1.0#[]  # 收缩系数, 默认1.0,即不收缩
         self.trees = []
         self.eta_trees = []
-        self.model = sklearn.ensemble.GradientBoostingRegressor(max_depth=max_depth, n_estimators=n_iter, loss='huber', max_features=3, max_leaf_nodes=3)
+        self.model = sklearn.ensemble.GradientBoostingRegressor(max_depth=max_depth, n_estimators=n_iter, loss='huber', max_features=3, max_leaf_nodes=3, subsample=0.8)
 
 
     def calGrad(self, y_pred, y_data):
@@ -339,8 +339,8 @@ class IBRTModel(Model):
         # 返回结果为字典形式
         #excludeFeatures, coefs = self.fit(*args)
         returnDic = {
-            "排除特征": str(None),
-            "系数": str(None)
+            "特征重要性": str(self.model.feature_importances_),
+
         }
         return returnDic
 

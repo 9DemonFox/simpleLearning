@@ -570,12 +570,14 @@ class RF_ANFISModel(torch.nn.Module):
         epochs = 10
         show_plots = False
         self.trainX = kwargs["trainX"]
+        self.num_x_pre = self.trainX.shape[1]
         self.trainY = kwargs["trainY"]
 
 
         ret = self.x_filter(self.trainX, self.trainY, self.c)
         self.trainX = ret[0]
         self.tobedelete = ret[1]
+        self.num_x_after = self.trainX
 
         print("tX:", self.trainX.shape)
 
@@ -656,8 +658,9 @@ class RF_ANFISModel(torch.nn.Module):
         # 返回结果为字典形式
         # excludeFeatures, coefs = self.fit(**kwargs)
         returnDic = {
-            str(None): str(None),
-            str(None): str(None)
+            "初始输入变量数": str(self.num_x_pre),
+            "降维后输入变量数": str(self.num_x_after),
+            "模糊规则数": str(self.num_rules)
         }
         return returnDic
 

@@ -169,7 +169,6 @@ class IBRTTestCase(unittest.TestCase):
         trainX, trainY = dataloader.loadTrainData(train_path="/Users/dssa/Downloads/0305/train_data.xlsx")
         testX = dataloader.loadPredictData(predict_path="/Users/dssa/Downloads/0305/test_data.xlsx")
         print('trainX:', trainX.shape)
-        print('trainY:', trainY)
         print('testX:', testX.shape)
         ibrt = IBRTModel(200, 3)
         ibrt.fit(trainX=trainX, trainY=trainY)
