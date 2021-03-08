@@ -36,26 +36,6 @@ def make_gauss_mfs(sigma, mu_list):
     return [GaussMembFunc(mu, sigma) for mu in mu_list]
 
 
-def make_anfis(x, num_mfs=5, num_out=1):
-    '''
-        Make an ANFIS model, auto-calculating the (Gaussian) MFs.
-        I need the x-vals to calculate a range and spread for the MFs.
-        Variables get named x0, x1, x2,... and y0, y1, y2 etc.
-    '''
-    print('typex',type(x))
-    num_invars = x.shape[1]
-    minvals, _ = torch.min(x, dim=0)
-    maxvals, _ = torch.max(x, dim=0)
-    ranges = maxvals-minvals
-    invars = []
-    for i in range(num_invars):
-        sigma = ranges[i] / num_mfs
-        mulist = torch.linspace(minvals[i], maxvals[i], num_mfs).tolist()
-        invars.append(('x{}'.format(i), make_gauss_mfs(sigma, mulist)))
-    outvars = ['y{}'.format(i) for i in range(num_out)]
-    model = RF_ANFISModel(invars, outvars, sigma=1)
-    return model
-
 def train_anfis_with(model, data, optimizer, criterion,
                      epochs=500, show_plots=False):
     '''
@@ -67,7 +47,7 @@ def train_anfis_with(model, data, optimizer, criterion,
     tensor_y = torch.from_numpy(data[1])
     print(tensor_X.size(0),tensor_y.size(0))
     ds = TensorDataset(tensor_X, tensor_y)
-    data = DataLoader(ds, batch_size=16, shuffle=True)
+    data = DataLoader(ds, batch_size=16, shuffle=False)
 
     errors = []  # Keep a list of these for plotting afterwards
     # optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
@@ -77,12 +57,12 @@ def train_anfis_with(model, data, optimizer, criterion,
         # Process each mini-batch in turn:
 
         for x, y_actual in data:
-            print('xsize:',x.size())
-            print('ysize:',y_actual.size())
+            #print('xsize:',x.size())
+            #print('ysize:',y_actual.size())
             y_pred = model(x)
             # Compute and print loss
             loss = criterion(y_pred, y_actual)
-            print('y_pred, y_actual',y_pred - y_actual)
+            #print('y_pred, y_actual',y_pred - y_actual)
             # Zero gradients, perform a backward pass, and update the weights.
             optimizer.zero_grad()
             #if count==0:
@@ -294,7 +274,7 @@ class FuzzifyLayer(torch.nn.Module):
         #print(('em self.varmfs.values()',enumerate(self.varmfs.values())))
         #print('fx::', x)
 
-
+        print('x.shape[1]',x.shape[1])
         assert x.shape[1] == self.num_in, \
             '{} is wrong no. of input values'.format(self.num_in)
         y_pred = torch.stack([var(x[:, i:i + 1])
@@ -488,48 +468,24 @@ class RF_ANFISModel(torch.nn.Module):
         and then fit_coeff will adjust the TSK coeff using LSE.
     '''
 
-    def __init__(self, x, num_mfs=5, num_out=1, c=1, hybrid=True):
+    def __init__(self, num_mfs=5, num_out=1, c=1, hybrid=True):
         super(RF_ANFISModel, self).__init__()
-        x=torch.from_numpy(x)
-        num_invars = x.shape[1]
-        #print('typex', type(x))
-        minvals, _ = torch.min(x, dim=0)
-        maxvals, _ = torch.max(x, dim=0)
-        #print('minmax:',minvals, maxvals)
-        ranges = maxvals - minvals
-        invars = []
-        for i in range(num_invars):
-            sigma = ranges[i] / num_mfs
-            mulist = torch.linspace(minvals[i], maxvals[i], num_mfs).tolist()
-            invars.append(('x{}'.format(i), make_gauss_mfs(sigma, mulist)))
-        outvars = ['y{}'.format(i) for i in range(num_out)]
+
 
         #print("in out:",invars, outvars)
 
         self.c = c
         self.hybrid = hybrid
-
+        self.num_mfs = num_mfs
+        self.numofout = num_out
+        invars = []
+        outvars = []
         # self.description = description
         self.invardefs = invars
         self.outvarnames = outvars
         #self.hybrid = hybrid
 
-        varnames = [v for v, _ in self.invardefs]
-        mfdefs = [FuzzifyVariable(mfs) for _, mfs in self.invardefs]
-        self.num_in = len(self.invardefs)
-        self.num_rules = np.prod([len(mfs) for _, mfs in self.invardefs])
-        #print(self.num_rules)
-        if self.hybrid:
-            cl = ConsequentLayer(self.num_in, self.num_rules, self.num_out)
-        else:
-            cl = PlainConsequentLayer(self.num_in, self.num_rules, self.num_out)
-        self.layer = torch.nn.ModuleDict(OrderedDict([
-            ('fuzzify', FuzzifyLayer(mfdefs, varnames)),
-            ('rules', AntecedentLayer(mfdefs)),
-            # normalisation layer is just implemented as a function.
-            ('consequent', cl),
-            # weighted-sum layer is just implemented as a function.
-        ]))
+
 
     @property
     def num_out(self):
@@ -555,7 +511,7 @@ class RF_ANFISModel(torch.nn.Module):
             if np.abs(corration[i, x_np.shape[0]]) <= c:
                 tobedelete.append(i)
         x_np = np.delete(x_np, tobedelete, axis=0)
-        return x_np
+        return x_np.T, tobedelete
 
     def fit_coeff(self, x, y_actual):
         '''
@@ -614,9 +570,51 @@ class RF_ANFISModel(torch.nn.Module):
         epochs = 10
         show_plots = False
         self.trainX = kwargs["trainX"]
-        #print("tX:", self.trainX.shape)
         self.trainY = kwargs["trainY"]
-        self.x_filter(self.trainX, self.trainY, self.c)
+
+
+        ret = self.x_filter(self.trainX, self.trainY, self.c)
+        self.trainX = ret[0]
+        self.tobedelete = ret[1]
+
+        print("tX:", self.trainX.shape)
+
+        x = torch.from_numpy(self.trainX)
+        num_invars = x.shape[1]
+        # print('typex', type(x))
+        minvals, _ = torch.min(x, dim=0)
+        maxvals, _ = torch.max(x, dim=0)
+        # print('minmax:',minvals, maxvals)
+        ranges = maxvals - minvals
+        invars = []
+        for i in range(num_invars):
+            sigma = ranges[i] / self.num_mfs
+            mulist = torch.linspace(minvals[i], maxvals[i], self.num_mfs).tolist()
+            invars.append(('x{}'.format(i), make_gauss_mfs(sigma, mulist)))
+        outvars = ['y{}'.format(i) for i in range(self.numofout)]
+
+        self.invardefs = invars
+        self.outvarnames = outvars
+
+        varnames = [v for v, _ in self.invardefs]
+        mfdefs = [FuzzifyVariable(mfs) for _, mfs in self.invardefs]
+        self.num_in = len(self.invardefs)
+        self.num_rules = np.prod([len(mfs) for _, mfs in self.invardefs])
+        # print(self.num_rules)
+        if self.hybrid:
+            cl = ConsequentLayer(self.num_in, self.num_rules, self.num_out)
+        else:
+            cl = PlainConsequentLayer(self.num_in, self.num_rules, self.num_out)
+        self.layer = torch.nn.ModuleDict(OrderedDict([
+            ('fuzzify', FuzzifyLayer(mfdefs, varnames)),
+            ('rules', AntecedentLayer(mfdefs)),
+            # normalisation layer is just implemented as a function.
+            ('consequent', cl),
+            # weighted-sum layer is just implemented as a function.
+        ]))
+
+
+
         #print("tX1:", self.trainX.shape)
         data = self.trainX, self.trainY
         optimizer = torch.optim.SGD(self.parameters(), lr=1e-4, momentum=0.99)
@@ -631,13 +629,14 @@ class RF_ANFISModel(torch.nn.Module):
             tensor_X = torch.from_numpy(kwargs.get("predictX")[0])
             tensor_y = torch.from_numpy(kwargs.get("predictX")[1])'''
 
-        tensor_X = torch.from_numpy(kwargs.get("predictX"))
+        tensor_X = torch.from_numpy(np.delete(kwargs.get("predictX"), self.tobedelete, axis=1))
         tensor_y = torch.from_numpy(kwargs.get("predictX")[:,0])
         ds = TensorDataset(tensor_X, tensor_y)
-        test = DataLoader(ds, batch_size=16, shuffle=True)
+        test = DataLoader(ds, batch_size=16, shuffle=False, drop_last=False)
 
         y_pred = np.array([[0]])
         for batch_x, batch_y in test:
+            print(batch_x.numpy())
             y_pred_batch = self(batch_x)
             #print(y_pred_batch.detach().numpy().shape)
             y_pred = np.concatenate((y_pred, y_pred_batch.detach().numpy()))

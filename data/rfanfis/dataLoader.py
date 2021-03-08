@@ -25,7 +25,7 @@ class ANFISDataLoader(DataLoader):
         #print('trainX',trainX)
         #print('trainY', trainY)
         train_db = TensorDataset(trainX, trainY)
-        train_dl = DataLoader(train_db, batch_size=16, shuffle=True)
+        train_dl = DataLoader(train_db, batch_size=16, shuffle=False)
         trainX = train_dl.dataset.tensors[0].numpy()
         trainY = train_dl.dataset.tensors[1].numpy()
         return trainX, trainY
@@ -35,7 +35,7 @@ class ANFISDataLoader(DataLoader):
         testX, testY = self.__loadExcelData(data_path=kwargs.get("test_path"))
         testX, testY = torch.from_numpy(testX), torch.from_numpy(testY)
         test_db = TensorDataset(testX, testY)
-        test_dl = DataLoader(test_db, batch_size=16, shuffle=True)
+        test_dl = DataLoader(test_db, batch_size=16, shuffle=False)
         testX = test_dl.dataset.tensors[0].numpy()
         testY = test_dl.dataset.tensors[1].numpy()
         return testX, testY
@@ -48,7 +48,7 @@ class ANFISDataLoader(DataLoader):
         predicty = pandas.read_excel(kwargs.get("predict_path"), index_col=0).values[:,0]
         predictX, predicty = torch.from_numpy(predictX), torch.from_numpy(predicty)
         predict_db = TensorDataset(predictX, predicty)
-        predict_dl = DataLoader(predict_db, batch_size=16, shuffle=True)
+        predict_dl = DataLoader(predict_db, batch_size=16, shuffle=False)
         predictX = predict_dl.dataset.tensors[0].numpy()
         return predictX
 
