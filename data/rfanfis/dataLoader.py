@@ -26,8 +26,8 @@ class ANFISDataLoader(DataLoader):
         print('trainY', trainY)
         train_db = TensorDataset(trainX, trainY)
         train_dl = DataLoader(train_db, batch_size=16, shuffle=True)
-        trainX = train_dl.dataset.tensors[0].numpy().reshape(-1, 3)
-        trainY = train_dl.dataset.tensors[1].numpy().reshape(-1, 1)
+        trainX = train_dl.dataset.tensors[0].numpy()
+        trainY = train_dl.dataset.tensors[1].numpy()
         return trainX, trainY
 
     def loadTestData(self, **kwargs):
