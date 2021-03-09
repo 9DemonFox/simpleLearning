@@ -169,7 +169,6 @@ class IBRTTestCase(unittest.TestCase):
         trainX, trainY = dataloader.loadTrainData(train_path="/Users/dssa/Downloads/0305/train_data.xlsx")
         testX = dataloader.loadPredictData(predict_path="/Users/dssa/Downloads/0305/test_data.xlsx")
         print('trainX:', trainX.shape)
-        print('trainY:', trainY)
         print('testX:', testX.shape)
         ibrt = IBRTModel(200, 3)
         ibrt.fit(trainX=trainX, trainY=trainY)
@@ -192,9 +191,10 @@ class rf_anfisTestCase(unittest.TestCase):
         trainX, trainY = dataloader.loadTrainData(train_path="/Users/dssa/Downloads/0305/train_data.xlsx")
         testX = dataloader.loadPredictData(predict_path="/Users/dssa/Downloads/0305/test_data.xlsx")
 
-        re_anfis = RF_ANFISModel(trainX,num_mfs=2, c=0.5)
+        re_anfis = RF_ANFISModel(num_mfs=2, c=0.35)
         re_anfis.fit(trainX=trainX, trainY=trainY)
         predictY = re_anfis.predict(predictX= testX)
+        print('testX:',testX)
         print('predictY:',predictY)
         #assert (mean_squared_error(testY, predictY) < 10)
 

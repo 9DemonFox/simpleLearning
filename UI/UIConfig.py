@@ -100,7 +100,7 @@ modelTypes2models = {
             "model_name": ("通过相关因素构建的自适应神经模糊推理系统", "RF_ANFIS"),
             "model_parameters": {
                 "num_mfs": ("隶属度函数个数", "2"),
-                "c": ("常数c", "0.5"),
+                "c": ("常数c", "0.35"),
             }
         }],
     "决策分析": [
