@@ -274,7 +274,7 @@ class FuzzifyLayer(torch.nn.Module):
         #print(('em self.varmfs.values()',enumerate(self.varmfs.values())))
         #print('fx::', x)
 
-        print('x.shape[1]',x.shape[1])
+        #print('x.shape[1]',x.shape[1])
         assert x.shape[1] == self.num_in, \
             '{} is wrong no. of input values'.format(self.num_in)
         y_pred = torch.stack([var(x[:, i:i + 1])
@@ -579,7 +579,7 @@ class RF_ANFISModel(torch.nn.Module):
         self.tobedelete = ret[1]
         self.num_x_after = self.trainX
 
-        print("tX:", self.trainX.shape)
+        #print("tX:", self.trainX.shape)
 
         x = torch.from_numpy(self.trainX)
         num_invars = x.shape[1]
@@ -638,7 +638,7 @@ class RF_ANFISModel(torch.nn.Module):
 
         y_pred = np.array([[0]])
         for batch_x, batch_y in test:
-            print(batch_x.numpy())
+            #print(batch_x.numpy())
             y_pred_batch = self(batch_x)
             #print(y_pred_batch.detach().numpy().shape)
             y_pred = np.concatenate((y_pred, y_pred_batch.detach().numpy()))
