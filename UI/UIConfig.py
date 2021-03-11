@@ -82,8 +82,8 @@ modelTypes2models = {
         {
             "model_name": ("提升回归机", "IBRT"),
             "model_parameters": {
-                "n_iter": ("迭代次数", 5),
-                "max_depth": ("基本树的最大深度", 2)
+                "n_iter": ("迭代次数", 200),
+                "max_depth": ("基本树的最大深度", 3)
             }
         },
         {
