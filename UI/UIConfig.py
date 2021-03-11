@@ -92,15 +92,15 @@ modelTypes2models = {
         {
             "model_name": ("提升回归机", "IBRT"),
             "model_parameters": {
-                "n_iter": ("迭代次数", 5),
-                "max_depth": ("基本树的最大深度", 2)
+                "n_iter": ("迭代次数", 200),
+                "max_depth": ("基本树的最大深度", 3)
             }
         },
         {
             "model_name": ("通过相关因素构建的自适应神经模糊推理系统", "RF_ANFIS"),
             "model_parameters": {
                 "num_mfs": ("隶属度函数个数", "2"),
-                "c": ("常数c", "0.35"),
+                "c": ("常数c", "0.3"),
             }
         }],
     "决策分析": [
