@@ -80,16 +80,27 @@ modelTypes2models = {
             }
         },
         {
+            "model_name": ("加入随机森林的混合效应模型", "MERF"),
+            "model_parameters": {
+                "n": ("观测对象种类数量",1),
+                "epoch": ("迭代轮数",50),
+                "k": ("指定第k个变量作为随机效应变量",1),
+                "n_estimatorsk": ("随机森林中树的数量",20),
+                "ga": ("是否进行参数寻优", 0)
+            }
+        },
+        {
             "model_name": ("提升回归机", "IBRT"),
             "model_parameters": {
-                "n_iter": ("迭代次数", 5),
-                "max_depth": ("基本树的最大深度", 2)
+                "n_iter": ("迭代次数", 200),
+                "max_depth": ("基本树的最大深度", 3)
             }
         },
         {
             "model_name": ("通过相关因素构建的自适应神经模糊推理系统", "RF_ANFIS"),
             "model_parameters": {
-                "sigma": ("常数c", "1"),
+                "num_mfs": ("隶属度函数个数", "2"),
+                "c": ("常数c", "0.3"),
             }
         }],
     "决策分析": [

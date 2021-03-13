@@ -1,12 +1,15 @@
 
 import pandas as pd 
 import numpy as np
-from data.mert.dataLoder import MERTDataLoader
+from data.merf.dataLoder import MERFDataLoader
 from model import Model
-from mert.mf import MERF
+from merf.mf import MERF
 from sklearn.metrics import mean_squared_error
 
-class MERTModel(Model):  
+
+
+class MERFModel(Model):
+
     def __init__(self, **kwargs):
         """
         
@@ -35,6 +38,10 @@ class MERTModel(Model):
             self.k = 1
         else:
             self.k = kwargs["k"]
+        if "n_estimators" not in kwargs.keys():
+            self.n_estimators = 20
+        else:
+            self.n_estimators = kwargs["n_estimators"]
         if "ga" not in kwargs.keys():
             self.ga = 0
         else:
@@ -52,7 +59,7 @@ class MERTModel(Model):
             "误差": str(e),
         }
         if (self.ga==1):  
-            self.fit(**kwargs)
+            self.fit(**kwargs)  
             returnDic = {
             "None": "None",
         }
@@ -118,9 +125,8 @@ class MERTModel(Model):
                     a = (i+1)*np.ones((m)).astype(int)
                     d = pd.Series(a)
                     c = pd.concat([c,d], ignore_index=True)
-            _,b,e = self.merf.fit(self.trainX, z, c, self.trainY)
+            _,b,e = self.merf.fit(self.trainX, z, c, self.trainY,self.n_estimators)
             return b,e
-        
         
        
 
@@ -131,11 +137,11 @@ class MERTModel(Model):
             score = np.zeros((self.trainX.shape[1]))
             #print(self.trainX.shape)
             for i in range(self.trainX.shape[1]):
-                model1 = MERTModel(n=self.n, k=i+1, ga=0)
+                model1 = MERFModel(n=self.n, k=i+1, ga=0)
                 model1.fit(trainX=self.trainX, trainY=self.trainY)
                 score[i] = model1.test(testX=self.testX, testY=self.testY)     
             self.k = np.argmax(score) + 1  
-            self.model = MERTModel(n=self.n, k=self.k)
+            self.model = MERFModel(n=self.n, k=self.k)
             self.model.fit(trainX=self.trainX, trainY=self.trainY)
             N = self.testX.shape[0]
             x0 = self.model.predict(predictX=self.testX).reshape(N, 1)
@@ -171,7 +177,7 @@ class MERTModel(Model):
                     a = (i+1)*np.ones((m)).astype(int)
                     d = pd.Series(a)
                     c = pd.concat([c,d], ignore_index=True)
-            self.merf.fit(self.trainX, z, c, self.trainY)
+            self.merf.fit(self.trainX, z, c, self.trainY,self.n_estimators)
         N = self.predictX.shape[0]
         m = int(N / self.n)
         z = np.ones((N,1))
@@ -186,17 +192,19 @@ class MERTModel(Model):
         x0 = self.merf.predict(self.predictX, z, c).reshape(N, 1)
         return x0
 
+
 if __name__ == '__main__':
     n = 1
     k = 1
-    datapath1="../data/mert/data_train1.xlsx"
-    datapath2="../data/mert/data_test1.xlsx"
-    datapath3="../data/mert/data_predict1.xlsx"
-    dataloader = MERTDataLoader()
+    n_estimators = 20
+    datapath1="../data/merf/data_train1.xlsx"
+    datapath2="../data/merf/data_test1.xlsx"
+    datapath3="../data/merf/data_predict1.xlsx"
+    dataloader = MERFDataLoader()
     trainX, trainY = dataloader.loadTrainData(train_path=datapath1)
     testX, testY = dataloader.loadTestData(test_path=datapath2)
-    predictX = dataloader.loadPredictData(predict_path=datapath3)
-    model = MERTModel(n=n, k=k ,ga=0)
+    predictX = dataloader.loadPredictData(predict_path=datapath3)  
+    model = MERFModel(n=n, k=k, n_estimators=n_estimators ,ga=0)
     print(model.fitForUI(trainX=trainX, trainY=trainY))
     print(model.testForUI(testX=testX, testY=testY))
     print(model.predictForUI(predictX=predictX))
