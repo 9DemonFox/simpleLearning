@@ -166,15 +166,15 @@ class IBRTTestCase(unittest.TestCase):
 
     def testIBRTModel(self):
         dataloader = IBRTDataLoader()
-        trainX, trainY = dataloader.loadTrainData(train_path="/Users/dssa/Downloads/0305/train_data.xlsx")
-        testX = dataloader.loadPredictData(predict_path="/Users/dssa/Downloads/0305/test_data.xlsx")
+        trainX, trainY = dataloader.loadTrainData(train_path="data/ibrt/IBRT_TRAIN_DATA_n.xlsx")
+        testX,testY = dataloader.loadTestData(test_path="data/ibrt/IBRT_TRAIN_DATA_n.xlsx")
         print('trainX:', trainX.shape)
         print('testX:', testX.shape)
         ibrt = IBRTModel(200, 3)
         ibrt.fit(trainX=trainX, trainY=trainY)
         predictY = ibrt.predict(predictX=testX)
-        print('predictY:', predictY)
-        #assert (mean_squared_error(testY, predictY) < 1)
+        print('cha:', predictY-testY)
+        print(mean_squared_error(testY, predictY))
         pass
 
 
@@ -188,13 +188,13 @@ class rf_anfisTestCase(unittest.TestCase):
 
     def test_rf_anfisModel(self):
         dataloader = ANFISDataLoader()
-        trainX, trainY = dataloader.loadTrainData(train_path="/Users/dssa/Downloads/0305/train_data.xlsx")
-        testX = dataloader.loadPredictData(predict_path="/Users/dssa/Downloads/0305/test_data.xlsx")
+        trainX, trainY = dataloader.loadTrainData(train_path="data/ibrt/IBRT_TRAIN_DATA_n.xlsx")
+        testX, testY = dataloader.loadTestData(test_path="data/ibrt/IBRT_TRAIN_DATA_n.xlsx")
 
-        re_anfis = RF_ANFISModel(num_mfs=2, c=0.35)
+        re_anfis = RF_ANFISModel(num_mfs=3, c=0.15)
         re_anfis.fit(trainX=trainX, trainY=trainY)
         predictY = re_anfis.predict(predictX= testX)
-        print('testX:',testX)
+        print('testY:',testY)
         print('predictY:',predictY)
         #assert (mean_squared_error(testY, predictY) < 10)
 
