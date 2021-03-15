@@ -82,9 +82,10 @@ class GBMModel(Model):
         assert "trainY" in kwargs.keys()
         trainX, trainY = kwargs.get("trainX"), kwargs.get("trainY")
         returnDic = {
-            "None": "None",
+            "特征重要性": None,
         }
         self.fit(trainX, trainY)
+        returnDic["特征重要性"] = str(self.model.feature_importances_)
         return returnDic
 
     def testForUI(self, **kwargs):

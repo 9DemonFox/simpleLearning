@@ -172,8 +172,9 @@ def em_hlm(W, X, Y, iters):
 
     # init params
     gamma = np.zeros((q, 1))
-    sigma_squ = 0.01
+    sigma_squ = 0.0001
     T = np.eye(2, 2)
+    # T = np.array([[0.1, 0.2], [0.3, 0.1]]).reshape(2, 2)
     lm = LinearRegression()
     lm.fit(X[:, 1], Y)
     beta = np.zeros((2, 1))
@@ -183,18 +184,27 @@ def em_hlm(W, X, Y, iters):
         '''estimate gamma'''
         delta = T + sigma_squ * mat_inv(X.T * X)  # shape(2, 2)
 
-        dd = np.diag(delta)  # Delta's diagonal
-        delta = np.diagflat(dd)  # just keep the Delta's diagonal
+        # dd = np.diag(delta)  # Delta's diagonal
+        # delta = np.diagflat(dd)  # just keep the Delta's diagonal
         delta_inv = mat_inv(delta)
+        # print(delta_inv)
 
         gamma_head = W.T * delta_inv * W
         gamma_tail = (W.T * delta_inv) * beta
+
+        gg = np.diag(gamma_head)
+        gamma_head = np.diagflat(gg)
+        # print(gamma_head, gamma_head.shape)
         gamma_hat = mat_inv(gamma_head) * gamma_tail  # shape(2q, 1)
 
         Kesai = T * delta_inv  # shape(2, 2)
 
         '''estimate beta'''
-        beta_hat = Kesai * beta + (np.eye(2, 2) - Kesai) * (W * gamma_hat)  # shape(2, 1)
+        bh_head = np.dot(Kesai, beta)
+        bh_tail = np.dot((np.eye(2, 2) - Kesai), (W * gamma_hat))
+        beta_hat = bh_head + bh_tail  # shape(2, 1)
+        # print("bh_head.shape, bh_tail.shape", bh_head.shape, bh_tail.shape)
+        beta = beta_hat
 
         '''estimate mu'''
         mu_head = X.T * X + sigma_squ * mat_inv(T)
@@ -212,14 +222,14 @@ def em_hlm(W, X, Y, iters):
 
         sigma_squ_head = np.trace(sigma_squ * (X.T * X) * sshead_tmp)  # scalar
         sigma_squ_tail = sstail_tmp.T * sstail_tmp  # shape(1, 1)
-        # print(sigma_squ_tail)
+        # print("sstail", sigma_squ_tail)
         sigma_squ_hat = (sigma_squ_head + sigma_squ_tail.item()) / N
 
         ge, te = np.max(np.abs(gamma_hat - gamma)), np.max(np.abs(T_hat - T))
         sse = np.abs(np.sqrt(sigma_squ_hat) - np.sqrt(sigma_squ))
         III += 1
         if check_precision(ge) or check_precision(te) or check_precision(sse):
-            print("{} iterations, It breaks due to change a little.".format(III))
+            # print("{} iterations, It breaks due to change a little.".format(III))
             break
 
         gamma, T, sigma_squ = gamma_hat, T_hat, sigma_squ_hat
