@@ -197,9 +197,9 @@ if __name__ == '__main__':
     n = 1
     k = 1
     n_estimators = 20
-    datapath1="../data/merf/data_train1.xlsx"
-    datapath2="../data/merf/data_test1.xlsx"
-    datapath3="../data/merf/data_predict1.xlsx"
+    datapath1="../data/merf/data_train.xlsx"
+    datapath2="../data/merf/data_test.xlsx"
+    datapath3="../data/merf/data_predict.xlsx"
     dataloader = MERFDataLoader()
     trainX, trainY = dataloader.loadTrainData(train_path=datapath1)
     testX, testY = dataloader.loadTestData(test_path=datapath2)

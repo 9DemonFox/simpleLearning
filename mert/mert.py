@@ -189,9 +189,9 @@ class MERTModel(Model):
 if __name__ == '__main__':
     n = 1
     k = 1
-    datapath1="../data/mert/data_train1.xlsx"
-    datapath2="../data/mert/data_test1.xlsx"
-    datapath3="../data/mert/data_predict1.xlsx"
+    datapath1="../data/mert/data_train.xlsx"
+    datapath2="../data/mert/data_test.xlsx"
+    datapath3="../data/mert/data_predict.xlsx"
     dataloader = MERTDataLoader()
     trainX, trainY = dataloader.loadTrainData(train_path=datapath1)
     testX, testY = dataloader.loadTestData(test_path=datapath2)

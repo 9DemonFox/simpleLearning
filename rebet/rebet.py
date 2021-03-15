@@ -4,7 +4,6 @@ import sys
 sys.path.append('..')
 from data.rebet.dataLoder import REBETDataLoader
 from model import Model
-from scipy.stats import gamma
 import math
 from scipy import stats
 from sklearn.metrics import mean_squared_error
@@ -50,8 +49,23 @@ def update(trainX, trainY, epoch, n, N, m, D, q, u, σ2, clf, y0, z, M):
             y0[j * m:(j + 1) * m, 0:1] = trainY[j * m:(j + 1) * m, 0:1] - np.dot(z[j], u[j])
         clf.fit(trainX, y0)
         y1 = clf.predict(trainX).reshape(N, 1)
+        a = 0
+        for j in range(n):
+            a = a + np.dot((trainY[j * m:(j + 1) * m, 0:1] - y1[j * m:(j + 1) * m, 0:1] - np.dot(z[j], u[j])).T,
+                           (trainY[j * m:(j + 1) * m, 0:1] - y1[j * m:(j + 1) * m, 0:1] - np.dot(z[j], u[j])))
+         
 
-
+        a = a / 2
+        b = N / 2 + 1
+        if (a==0):
+            σ2 = 0.01
+        else:
+            σ2 = 1/np.random.gamma(b, 1/a)           
+        if (σ2==0):
+            σ2 = 0.01
+            
+        r = np.empty((n, q, 1))
+        k = 0
         l = np.zeros(n)
         c = 0
         for t in range(n):
@@ -69,7 +83,6 @@ def update(trainX, trainY, epoch, n, N, m, D, q, u, σ2, clf, y0, z, M):
             Q = 1/(np.dot(z[j].T, z[j]) / σ2 + 1/D)
 
             U = np.dot(np.dot(z[j], Q), z[j].T) / σ2 - np.identity(m)
-            #print(Q,D)
             I = M * math.pow(σ2 * 2 * math.pi, m / (-2)) * math.pow(np.abs(D), -1 / 2) * math.pow(np.abs(Q), 1 / 2) * math.exp((np.dot(
                 np.dot((trainY[j * m:(j + 1) * m, 0:1] - y1[j * m:(j + 1) * m, 0:1]).T, U),
                 trainY[j * m:(j + 1) * m, 0:1] - y1[j * m:(j + 1) * m, 0:1])) / (2 * σ2))
@@ -83,9 +96,16 @@ def update(trainX, trainY, epoch, n, N, m, D, q, u, σ2, clf, y0, z, M):
                 p = 1
             a = np.random.binomial(1, p, 1)
             if a == 1:
-                v = np.dot(np.dot(z[j], D), z[j].T) + σ2 * np.identity(m)
-                u[j] = np.dot(np.dot(np.dot(D, z[j].T), np.linalg.inv(v)),
-                trainY[j * m:(j + 1) * m, 0:1] - y1[j * m:(j + 1) * m, 0:1])
+                d = np.identity(q)
+                mean = np.dot(np.dot(
+                    np.linalg.inv(np.dot(z[j].T, z[j]) + σ2 * np.divide(d, D, out=np.zeros_like(d), where=D != 0)),
+                    z[j].T), trainY[j * m:(j + 1) * m, 0:1] - y1[j * m:(j + 1) * m, 0:1])
+                d = np.identity(q)
+                cov = σ2 * np.linalg.inv(
+                    np.dot(z[j].T, z[j]) + σ2 * np.divide(d, D, out=np.zeros_like(d), where=D != 0))
+                u[j] = np.random.multivariate_normal(mean.reshape(q), cov, size=(1)).reshape(q, 1)
+                r[k] = u[j]
+                k = k + 1
             else:
                 s = np.delete(l, j)
                 b = np.random.choice(np.arange(n - 1), size=1, replace=True,
@@ -95,21 +115,24 @@ def update(trainX, trainY, epoch, n, N, m, D, q, u, σ2, clf, y0, z, M):
                     u[j] = u[b]
                 else:
                     u[j] = u[b + 1]
-        σ = 0.0
-        d = np.zeros(q)
-        for j in range(n):
-            v = np.dot(np.dot(z[j], D), z[j].T) + σ2 * np.identity(m)
-            e0 = trainY[j * m:(j + 1) * m, 0:1] - np.dot(z[j], u[j]) - y1[j * m:(j + 1) * m, 0:1]
-            σ = σ + np.dot(e0.T, e0)  # + σ2*(m - σ2*np.trace(v))
-            #print(v,m - σ2*np.trace(v),i)
-            d = d + np.dot(u[j], u[j].T) + D - np.dot(np.dot(np.dot(np.dot(D, z[j].T), np.linalg.inv(v)), z[j]), D)
-        σ2 = σ / N
-        D = d / n
+                a = 0
+                for t in range(k):
+                    if (r[t] == u[j]).all():
+                        a = 1
+                        break
+                if a == 0:
+                    r[k] = u[j]
+                    k = k + 1
+        r = r[0:k, :, :].reshape(k, q)
+
+        a = np.dot(r.T, r) / 2
+        if (a==0):
+            a = 0.001
+        b = k / 2 + 1
+        D = 1/np.random.gamma(b, 1/a)
         
-        if (σ2==0):
-            σ2 = 0.01
-        #print(u)
-        #print(D)
+        if (D==0):
+            D = 1
         
     return u,σ2
 
@@ -259,10 +282,10 @@ class REBETModel(Model):
         self.testY = kwargs["testY"]
         if (self.ga==1):
             N = 3
-            m = [[50,100],[1,self.trainX.shape[1]],[0.1,100]]
+            m = [[1,100],[1,self.trainX.shape[1]],[0.1,100]]
             precisions = 12
-            N_GENERATIONS = 20
-            POP_SIZE = 20
+            N_GENERATIONS = 10
+            POP_SIZE = 5
             MUTATION_RATE = 0.005
             CROSSOVER_RATE = 0.8
             model1 = GAModel(n=self.n,testX=self.testX, testY=self.testY, trainX=self.trainX, trainY=self.trainY, N=N, m=m, precisions=precisions, N_GENERATIONS=N_GENERATIONS, 
@@ -524,17 +547,17 @@ class GAModel(Model):
 
 if __name__ == '__main__':
     n = 1
-    epoch = 50
+    epoch = 10
     k = 2
     M = 50
-    datapath1="../data/rebet/data_train1.xlsx"
-    datapath2="../data/rebet/data_test1.xlsx"
-    datapath3="../data/rebet/data_predict1.xlsx"
+    datapath1="../data/rebet/data_train.xlsx"
+    datapath2="../data/rebet/data_test.xlsx"
+    datapath3="../data/rebet/data_predict.xlsx"
     dataloader = REBETDataLoader()
     trainX, trainY = dataloader.loadTrainData(train_path=datapath1)
     testX, testY = dataloader.loadTestData(test_path=datapath2)
     predictX = dataloader.loadPredictData(predict_path=datapath3)
-    model = REBETModel(n=n, epoch=epoch, M=M, k=k ,ga=1)
+    model = REBETModel(n=n, epoch=epoch, M=M, k=k ,ga=0)
     model.fitForUI(trainX=trainX, trainY=trainY)
     print(model.testForUI(testX=testX, testY=testY))
     print(model.predictForUI(predictX=predictX))
