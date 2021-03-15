@@ -579,7 +579,7 @@ class RF_ANFISModel(torch.nn.Module):
         self.tobedelete = ret[1]
         self.num_x_after = self.trainX
 
-        #print("tX:", self.trainX.shape)
+        print("tX:", self.trainX.shape)
 
         x = torch.from_numpy(self.trainX)
         num_invars = x.shape[1]
