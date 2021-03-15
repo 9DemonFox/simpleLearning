@@ -166,8 +166,8 @@ class IBRTTestCase(unittest.TestCase):
 
     def testIBRTModel(self):
         dataloader = IBRTDataLoader()
-        trainX, trainY = dataloader.loadTrainData(train_path="data/ibrt/IBRT_TRAIN_DATA_n.xlsx")
-        testX,testY = dataloader.loadTestData(test_path="data/ibrt/IBRT_TRAIN_DATA_n.xlsx")
+        trainX, trainY = dataloader.loadTrainData(train_path="data/ibrt/IBRT_TRAIN_DATA.xlsx")
+        testX,testY = dataloader.loadTestData(test_path="data/ibrt/IBRT_TRAIN_DATA.xlsx")
         print('trainX:', trainX.shape)
         print('testX:', testX.shape)
         ibrt = IBRTModel(200, 3)
@@ -188,8 +188,8 @@ class rf_anfisTestCase(unittest.TestCase):
 
     def test_rf_anfisModel(self):
         dataloader = ANFISDataLoader()
-        trainX, trainY = dataloader.loadTrainData(train_path="data/ibrt/IBRT_TRAIN_DATA_n.xlsx")
-        testX, testY = dataloader.loadTestData(test_path="data/ibrt/IBRT_TRAIN_DATA_n.xlsx")
+        trainX, trainY = dataloader.loadTrainData(train_path="data/ibrt/IBRT_TRAIN_DATA.xlsx")
+        testX, testY = dataloader.loadTestData(test_path="data/ibrt/IBRT_TRAIN_DATA.xlsx")
 
         re_anfis = RF_ANFISModel(num_mfs=3, c=0.15)
         re_anfis.fit(trainX=trainX, trainY=trainY)
