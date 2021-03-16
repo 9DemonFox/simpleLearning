@@ -191,7 +191,8 @@ class MERF(object):
         self.D_hat_history.append(D_hat)
 
         early_stop_flag = False
-
+        
+        i = 0
         while iteration < self.max_iterations and not early_stop_flag:
             iteration += 1
             logger.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
@@ -307,6 +308,8 @@ class MERF(object):
                 )  # noqa: E127
 
             #logger.info("Training GLL is {} at iteration {}.".format(gll, iteration))
+            print("迭代轮数:%d"%i)
+            i = i+1
             self.gll_history.append(gll)
 
             # Save off the most updated fixed effects model and random effects coefficents
@@ -330,6 +333,7 @@ class MERF(object):
                 logger.info(f"Validation MSE Loss is {val_loss} at iteration {iteration}.")
                 self.val_loss_history.append(val_loss)
 
+        print("已收敛")
         a = self.trained_b.sort_index(ascending=True)
         self.sigma2_hat = sigma2_hat
         return self,a,sigma2_hat

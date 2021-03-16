@@ -74,7 +74,6 @@ modelTypes2models = {
             "model_name": ("加入回归树的混合效应模型", "MERT"),
             "model_parameters": {
                 "n": ("观测对象种类数量",1),
-                "epoch": ("迭代轮数",50),
                 "k": ("指定第k个变量作为随机效应变量",1),
                 "ga": ("是否进行参数寻优", 0)
             }
@@ -83,7 +82,6 @@ modelTypes2models = {
             "model_name": ("加入随机森林的混合效应模型", "MERF"),
             "model_parameters": {
                 "n": ("观测对象种类数量",1),
-                "epoch": ("迭代轮数",50),
                 "k": ("指定第k个变量作为随机效应变量",1),
                 "n_estimatorsk": ("随机森林中树的数量",20),
                 "ga": ("是否进行参数寻优", 0)
