@@ -45,6 +45,7 @@ def update(trainX, trainY, epoch, n, N, m, D, q, u, σ2, clf, y0, z, M):
 
     """
     for i in range(epoch):
+        print("迭代轮数:%d"%i)
         for j in range(n):
             y0[j * m:(j + 1) * m, 0:1] = trainY[j * m:(j + 1) * m, 0:1] - np.dot(z[j], u[j])
         clf.fit(trainX, y0)
