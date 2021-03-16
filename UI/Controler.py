@@ -102,6 +102,13 @@ class Controler:
         else:
             parameterList = list(parameterDict.items())
 
+        # 清除文本框内容
+        try:
+            self.view.main_right_frame_2_txtResult.delete(1.0, END)
+            self.view.main_right_frame_3_txtResult.delete(1.0, END)
+            self.view.main_right_frame_4_txtResult.delete(1.0, END)
+        except:
+            pass
         # 模型配置全局变量
         self.MachineLearningModel["parameters"] = parameterList
         self.MachineLearningModel["model"] = curModel
@@ -274,6 +281,7 @@ class MainRightCommand:
     @staticmethod
     def train(event, C: Controler):
         result = C.model.train_step_2(C.MachineLearningModel.get("train_data_path").get())
+
         C.view.main_right_frame_2_txtResult.delete(1.0, END)
         for k, v in result.items():
             C.view.main_right_frame_2_txtResult.insert(INSERT, k)
