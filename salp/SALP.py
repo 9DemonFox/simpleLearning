@@ -220,10 +220,15 @@ class SALPModel(Model):
         # step3 重选变量
         variable_num = x.shape[1]
         Vote = numpy.zeros(variable_num)  # 对于留下的样本计数
+        import time
+        from UI import Controler
         for L in range(self.k):  # 对于每个贝叶斯数据集
             xL, yL = xs[L], ys[L]  # 取出当前样本
             coef = self.getALPCoef(xL, yL, self.alpha)  # 使用ALP算法获取当前系数
             Vote = self.voteCoef(coef, Vote)
+            time.sleep(0.5)  # 增加训练时间，显示进度条效果
+            Controler.PROGRESS_NOW = int((95 / self.k) * L)
+            print(Controler.PROGRESS_NOW)
 
         def getExcludeIndex(vote, percent=0.5):
             # 按照分位数方法，得出需要排除的index
@@ -247,13 +252,14 @@ class SALPModel(Model):
         modelEnd, _ = self.adap_lasso_with_init_weight(Xstar, std_y, alpha=self.alpha, initWeight=None)
         # 得到模型
         self.model = modelEnd
+        # 最后必须赋值为100
+        Controler.PROGRESS_NOW = 100
         return index[0], self.model.coef_
 
     def fitForUI(self, **kwargs):
         """ 返回结果到前端
         :return:
         """
-        self.fit(**kwargs)
         # 返回结果为字典形式
         excludeFeatures, coefs = self.fit(**kwargs)
         returnDic = {

@@ -1,3 +1,5 @@
+import threading
+import time
 from tkinter import IntVar, RIGHT, YES, BOTH, END, INSERT
 from tkinter import StringVar, filedialog
 
@@ -8,6 +10,8 @@ from UI.Modeler import Modeler
 from UI.R.text import title_string
 from UI.Viewer import Viewer
 from UI.Viewer import tkimg_resized
+
+PROGRESS_NOW = 0  # 当前进度
 
 
 class Controler:
@@ -236,6 +240,26 @@ class Command:
         return text
 
 
+class TrainThread(threading.Thread):
+    """
+    训练线程
+    """
+
+    def __init__(self, controler):
+        threading.Thread.__init__(self)
+        self.controler = controler
+
+    def run(self):
+        self.result = self.controler.model.train_step_2(
+            self.controler.MachineLearningModel.get("train_data_path").get())
+        global PROGRESS_NOW
+        while PROGRESS_NOW < 100:
+            PROGRESS_NOW += 1
+
+    def get_result(self):
+        return self.result
+
+
 class MainRightCommand:
     @staticmethod
     def chooseInputData(event, dataType: str, C: Controler):
@@ -279,8 +303,49 @@ class MainRightCommand:
         pass
 
     @staticmethod
+    class updateValue(threading.Thread):
+        def __init__(self, threadname):
+            threading.Thread.__init__(self, name=threadname)
+            self.threadname = int(threadname)
+
+        def run(self):
+            global now
+            while (now <= 100):
+                time.sleep(0.5)
+                now = now + 1
+
+    @staticmethod
+    class updateProcessBar(threading.Thread):
+        def __init__(self, threadname, processbar):
+            threading.Thread.__init__(self, name=threadname)
+            self.threadname = int(threadname)
+            self.processbar = processbar
+
+        def run(self):
+            global now
+            while (now <= 100):
+                time.sleep(0.1)
+                self.processbar['value'] = now
+
+    @staticmethod
     def train(event, C: Controler):
-        result = C.model.train_step_2(C.MachineLearningModel.get("train_data_path").get())
+
+        # 下面是计算线程
+        # 主线程更新进度条
+
+        train_thread = TrainThread(C)
+        train_thread.start()
+        global PROGRESS_NOW
+        PROGRESS_NOW = 0
+        while (PROGRESS_NOW < 100):
+            print("主线程", PROGRESS_NOW)
+            time.sleep(0.1)
+            C.view.main_right_frame_2_progressBar['value'] = PROGRESS_NOW
+            C.view.win.update()
+        # 更新进度条
+
+        train_thread.join()  # 等待进程结束
+        result = train_thread.get_result()
 
         C.view.main_right_frame_2_txtResult.delete(1.0, END)
         for k, v in result.items():

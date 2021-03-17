@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import ttk
 from tkinter.scrolledtext import ScrolledText
 
 from PIL import Image, ImageTk
@@ -150,6 +151,8 @@ class Viewer:
         row2.pack(fill=tk.X, side=tk.TOP)
         row3 = tk.Frame(self.main_right_frame_2, bg=R.color.UNSelectedColor)
         row3.pack(fill=tk.X, side=tk.TOP)
+        row4 = tk.Frame(self.main_right_frame_2, bg=R.color.UNSelectedColor)
+        row4.pack(fill=tk.X, side=tk.TOP)
 
         tk.Label(row0, text="数据路径：", bg=R.color.UNSelectedColor).pack(side=tk.LEFT)
         self.main_right_frame_2_pathEntry = tk.Entry(row0, width=45)
@@ -164,6 +167,12 @@ class Viewer:
 
         self.main_right_frame_2_btnTrain = tk.Button(row3, text='训练', width=10)
         self.main_right_frame_2_btnTrain.pack(side=tk.RIGHT, padx=232)
+
+        tk.Label(row4, text="训练进度：", bg=R.color.UNSelectedColor).pack(side=tk.LEFT)
+        self.main_right_frame_2_progressBar = ttk.Progressbar(row4, length=300)
+        self.main_right_frame_2_progressBar['maximum'] = 100
+        self.main_right_frame_2_progressBar.pack(side=tk.LEFT)
+
         return self.main_right_frame_2
 
     def main_right_3(self, parent):
