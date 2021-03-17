@@ -45,7 +45,7 @@ class MERF(object):
         #fixed_effects_model=RandomForestRegressor(n_estimators=300, n_jobs=-1),
         fixed_effects_model=tree.DecisionTreeRegressor(criterion='mse',ccp_alpha=0.0001),
         gll_early_stop_threshold=None,
-        max_iterations=20,
+        max_iterations=50,
     ):
         self.gll_early_stop_threshold = gll_early_stop_threshold
         self.max_iterations = max_iterations
@@ -193,8 +193,10 @@ class MERF(object):
         early_stop_flag = False
         
         i = 0
+        from UI import Controler
         while iteration < self.max_iterations and not early_stop_flag:
             iteration += 1
+            Controler.PROGRESS_NOW = int((95 / iteration) * i)
             logger.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
             logger.debug("Iteration: {}".format(iteration))
             logger.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
@@ -333,7 +335,7 @@ class MERF(object):
                 logger.info(f"Validation MSE Loss is {val_loss} at iteration {iteration}.")
                 self.val_loss_history.append(val_loss)
 
-        print("已收敛")
+        Controler.PROGRESS_NOW = 100   
         a = self.trained_b.sort_index(ascending=True)
         self.sigma2_hat = sigma2_hat
         return self,a,sigma2_hat

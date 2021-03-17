@@ -44,7 +44,9 @@ def update(trainX, trainY, epoch, n, N, m, D, q, u, σ2, clf, y0, z, M):
     None.
 
     """
+    from UI import Controler
     for i in range(epoch):
+        Controler.PROGRESS_NOW = int((95 / epoch) * i)
         print("迭代轮数:%d"%i)
         for j in range(n):
             y0[j * m:(j + 1) * m, 0:1] = trainY[j * m:(j + 1) * m, 0:1] - np.dot(z[j], u[j])
@@ -134,7 +136,8 @@ def update(trainX, trainY, epoch, n, N, m, D, q, u, σ2, clf, y0, z, M):
         
         if (D==0):
             D = 1
-        
+     
+    Controler.PROGRESS_NOW = 100   
     return u,σ2
 
 
