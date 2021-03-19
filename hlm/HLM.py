@@ -167,6 +167,9 @@ def em_hlm(W, X, Y, iters):
 
     :return: gamma, sigma_squ, T.
     """
+    import time
+    from UI import Controler
+
     X, W, Y = np.mat(X), np.mat(W), np.mat(Y)
     p, q, N = X.shape[1], W.shape[1], Y.shape[0]
 
@@ -181,6 +184,10 @@ def em_hlm(W, X, Y, iters):
     beta[0, 0], beta[1, 0] = lm.intercept_.item(), lm.coef_.item()
     III = 0
     for i in range(iters):
+        '''Add progress bar'''
+        time.sleep(0.24)  # 增加训练时间, 显示进度条效果
+        Controler.PROGRESS_NOW = int((95 / iters) * i)
+
         '''estimate gamma'''
         delta = T + sigma_squ * mat_inv(X.T * X)  # shape(2, 2)
 
@@ -233,6 +240,8 @@ def em_hlm(W, X, Y, iters):
             break
 
         gamma, T, sigma_squ = gamma_hat, T_hat, sigma_squ_hat
+
+    Controler.PROGRESS_NOW = 100
 
     return gamma, sigma_squ, T, beta
 
