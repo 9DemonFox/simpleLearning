@@ -53,9 +53,15 @@ def train_anfis_with(model, data, optimizer, criterion,
     # optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
     # print('### Training for {} epochs, training size = {} cases'.
     #      format(epochs, data.dataset.tensors[0].shape[0]))
+
+    import time
+    from UI import Controler
+
     for t in range(epochs):
         # Process each mini-batch in turn:
-
+        time.sleep(0.5)  # 增加训练时间，显示进度条效果
+        Controler.PROGRESS_NOW = int((95 / epochs) * t)
+        print(Controler.PROGRESS_NOW)
         for x, y_actual in data:
             #print('xsize:',x.size())
             #print('ysize:',y_actual.size())
@@ -622,6 +628,9 @@ class RF_ANFISModel(torch.nn.Module):
         optimizer = torch.optim.SGD(self.parameters(), lr=1e-4, momentum=0.99)
         criterion = torch.nn.MSELoss(reduction='sum')
         train_anfis_with(self, data, optimizer, criterion, epochs, show_plots)
+        # 最后必须赋值为100
+        from UI import Controler
+        Controler.PROGRESS_NOW = 100
 
     def predict(self, **kwargs):
         # Get the error rate for the whole batch:
