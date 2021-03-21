@@ -181,7 +181,7 @@ def gradientBoosting(round, data0, alpha, fra, ebcl):
 
     for i in range(1,round):
 
-        time.sleep(0.5)  # 增加训练时间，显示进度条效果
+        #time.sleep(0.5)  # 增加训练时间，显示进度条效果
         Controler.PROGRESS_NOW = int((95 / round) * i)
         print(Controler.PROGRESS_NOW)
         # 更新样本值，rmi=yi-fmx
@@ -384,14 +384,10 @@ class IBRTModel(Model):
         acc_num = 0  # 正确个数
         y_predict = []
         for i in range(len(testX)):
-            print('testing ***', i)
             x = testX[i]
-            y_pred = pre(x)
+            y_pred = pre(x, self.tree_list, self.alpha)
             y_predict.append(y_pred)
-            if y_pred / testX[i] < 1.25 and y_pred / testY[i] > 0.8:
-                acc_num += 1
-            print(f'testing {i}th data :y_pred={y_pred},y={testY[i]}')
-            print('now_acc=', acc_num / (i + 1))
+
         mse = mean_squared_error(y_predict, testY)
         mae = mean_absolute_error(y_predict, testY)
         returnDic["预测结果"] = str(y_predict)
