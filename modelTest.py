@@ -167,12 +167,14 @@ class IBRTTestCase(unittest.TestCase):
     def testIBRTModel(self):
         dataloader = IBRTDataLoader()
         trainX, trainY = dataloader.loadTrainData(train_path="data/ibrt/IBRT_TRAIN_DATA.xlsx")
-        testX,testY = dataloader.loadTestData(test_path="data/ibrt/IBRT_TRAIN_DATA.xlsx")
+        testX,testY = dataloader.loadTestData(test_path="data/ibrt/IBRT_TEST_DATA.xlsx")
         print('trainX:', trainX.shape)
         print('testX:', testX.shape)
-        ibrt = IBRTModel(200, 3)
+        ibrt = IBRTModel(20, 3, 0.12, 3, 0.2)
         ibrt.fit(trainX=trainX, trainY=trainY)
         predictY = ibrt.predict(predictX=testX)
+        print("predictY:",predictY)
+        print("testY:", testY)
         print('cha:', predictY-testY)
         print(mean_squared_error(testY, predictY))
         pass
