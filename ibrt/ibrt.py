@@ -20,7 +20,6 @@ def fra_Data(data, fra):  # fra为正整数
 
 def findBestFeatureAndPoint(node, ebcl):
     '''
-    依据MSE准则，找到最佳切分特征和最佳切分点
     :param node: 进行分裂的节点, 一个矩阵
     :return: 切分特征与切分点
     '''
@@ -108,7 +107,6 @@ def findBestFeatureAndPoint(node, ebcl):
 
 def createCART(data,deep,max_deep=2, ebcl=0.2):
     '''
-    创建回归树，分裂准则MSE（最小均方误差）
     :param deep: 树的当前深度
     :param max_deep:  树的最大深度（从0开始），默认为2，即产生4个叶子节点
     :param data: 训练样本，其中data中的最后一列值为上一轮训练之后的残差
@@ -386,15 +384,6 @@ class IBRTModel(Model):
         returnDic["mean_squared_error"] = str(mse)
         return returnDic
 
-        '''
-        predictResult = self.predict(predictX=testX)
-        mse = mean_squared_error(predictResult, testY)
-        mae = mean_absolute_error(predictResult, testY)
-        
-        returnDic["预测结果"] = str(predictResult)
-        returnDic["mean_absolute_error"] = str(mae)
-        returnDic["mean_squared_error"] = str(mse)
-        '''
         return returnDic
 
     def predictForUI(self, **kwargs):
