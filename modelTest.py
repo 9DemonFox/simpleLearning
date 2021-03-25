@@ -195,6 +195,7 @@ class rf_anfisTestCase(unittest.TestCase):
 
         re_anfis = RF_ANFISModel(num_mfs=3, c=0.01)
         re_anfis.fit(trainX=trainX, trainY=trainY)
+        re_anfis.testForUI(predictX=testX, predictY=testY)
         predictY = re_anfis.predict(predictX= testX)
         print('testY:',testY)
         print('predictY:',predictY)
