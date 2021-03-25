@@ -190,10 +190,10 @@ class rf_anfisTestCase(unittest.TestCase):
 
     def test_rf_anfisModel(self):
         dataloader = ANFISDataLoader()
-        trainX, trainY = dataloader.loadTrainData(train_path="data/ibrt/IBRT_TRAIN_DATA.xlsx")
-        testX, testY = dataloader.loadTestData(test_path="data/ibrt/IBRT_TRAIN_DATA.xlsx")
+        trainX, trainY = dataloader.loadTrainData(train_path="data/rfanfis/RFANFIS_TRAIN_DATA.xlsx")
+        testX, testY = dataloader.loadTestData(test_path="data/rfanfis/RFANFIS_TEST_DATA.xlsx")
 
-        re_anfis = RF_ANFISModel(num_mfs=3, c=0.15)
+        re_anfis = RF_ANFISModel(num_mfs=3, c=0.01)
         re_anfis.fit(trainX=trainX, trainY=trainY)
         predictY = re_anfis.predict(predictX= testX)
         print('testY:',testY)
