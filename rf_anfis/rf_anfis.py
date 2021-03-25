@@ -510,7 +510,7 @@ class RF_ANFISModel(torch.nn.Module):
         print("c:", c)
         x_np = x.T
         y_np = y.T
-        # print(x_np.shape,y_np.shape)
+        print(x_np,y_np)
         # for i in x_np:
         corration = np.corrcoef(x_np, y_np)
         print("corr:", corration)
@@ -685,9 +685,9 @@ class RF_ANFISModel(torch.nn.Module):
             "mean_squared_error": None,
             "mean_absolute_error": None
         }
-        testX = kwargs.get("predictX")
+        testX = kwargs.get("testX")
         predictResult = self.predict(predictX=testX)
-        testY = kwargs.get("predictY")
+        testY = kwargs.get("testY")
         mse = mean_squared_error(predictResult, testY)
         mae = mean_absolute_error(predictResult, testY)
         returnDic["预测结果"] = str(predictResult)
