@@ -6,6 +6,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
 from torch.utils.data import TensorDataset, DataLoader
 
 from data.rfanfis.dataLoader import ANFISDataLoader
