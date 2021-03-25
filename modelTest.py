@@ -195,8 +195,9 @@ class rf_anfisTestCase(unittest.TestCase):
 
         re_anfis = RF_ANFISModel(num_mfs=3, c=0.01)
         re_anfis.fit(trainX=trainX, trainY=trainY)
-        re_anfis.testForUI(predictX=testX, predictY=testY)
+        r = re_anfis.testForUI(testX=testX, testY=testY)
         predictY = re_anfis.predict(predictX= testX)
+        print('r:',r)
         print('testY:',testY)
         print('predictY:',predictY)
         #assert (mean_squared_error(testY, predictY) < 10)
