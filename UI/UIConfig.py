@@ -90,8 +90,11 @@ modelTypes2models = {
         {
             "model_name": ("提升回归机", "IBRT"),
             "model_parameters": {
-                "n_iter": ("迭代次数", 200),
-                "max_depth": ("基本树的最大深度", 3)
+                "n_iter": ("迭代次数", 50),
+                "max_depth": ("基本树的最大深度", 3),
+                "alpha": ("正则化系数", 0.12),
+                "fra": ("每次训练样本倍数", 5),
+                "ebcl": ("容忍系数", 0.1)
             }
         },
         {

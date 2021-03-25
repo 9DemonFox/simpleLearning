@@ -67,7 +67,11 @@ def findBestFeatureAndPoint(node, ebcl):
         for point in split_point:
             # 尝试切分
             left=column[column<=point]
+            #if np.size(left) is 0:
+            #    print('nan')
             right=column[column>point]
+            #if np.size(right) is 0:
+            #    print('nan')
 
             # 左右两边的需要预测的真实值
             y_left=y[column<=point]
@@ -85,11 +89,11 @@ def findBestFeatureAndPoint(node, ebcl):
             rr = y_right - c_right
             for r in np.abs(rr):
                 if r < ebcl:
-                    l = 0
+                    r = 0
 
 
-            #loss=np.sum(np.square(y_left-c_left))+np.sum(np.square(y_right-c_right))
-            loss = np.sum(np.abs(y_left-c_left))+np.sum(np.abs(y_right-c_right))
+            # loss=np.sum(np.square(y_left-c_left))+np.sum(np.square(y_right-c_right))
+            loss = np.sum(ll)+np.sum(rr)
 
             if loss<min_loss:
                 min_loss=loss
@@ -105,7 +109,7 @@ def findBestFeatureAndPoint(node, ebcl):
 
 
 
-def createCART(data,deep,max_deep=2, ebcl=0.2):
+def createCART(data,deep,max_deep=2, ebcl=0.1):
     '''
     :param deep: 树的当前深度
     :param max_deep:  树的最大深度（从0开始），默认为2，即产生4个叶子节点
@@ -162,9 +166,9 @@ def gradientBoosting(round, data0, alpha, fra, ebcl):
     :param alpha: 防止过拟合，每一棵树的正则化系数
     :return:
     '''
-    #print('data:',data.shape)
-    # 扩充样本，7倍
-    data = fra_Data(data0, 7)
+    #print('data0:',data0)
+    # 扩充样本，15倍
+    data = fra_Data(data0, 15)
     tree_list=[]
     # 第一步，初始化fx0，即找到使得损失函数最小的c
     # -1 代表没有切分特征，所有值均预测为样本点均值
@@ -177,25 +181,32 @@ def gradientBoosting(round, data0, alpha, fra, ebcl):
 
     for i in range(1,round):
 
-        time.sleep(0.5)  # 增加训练时间，显示进度条效果
+        #time.sleep(0.5)  # 增加训练时间，显示进度条效果
         Controler.PROGRESS_NOW = int((95 / round) * i)
         print(Controler.PROGRESS_NOW)
         # 更新样本值，rmi=yi-fmx
-
 
         print('Step ', i)
         #print(data0.shape[0],)
         # 每轮随机进行采样
         choice_ind = random.sample(range(0,data.shape[0]), int(fra * data0.shape[0]))
         data = data[choice_ind,:]
+        #print('datashape:', data)
         if i==1:
             data[:,-1]=data[:,-1]-fx0[-1]
+            '''
+            for data in data[:,-1]:
+                if data[:-1]<ebcl:
+                    data = 0
+            '''
+
         else:
             for i in range(len(data)):
                 # 注意，这里穿的列表是tree_list中最后一个
                 # 因为我们只需要对残差进行拟合，data[:,-1]每一轮都进行了更新，所以我们只要减去上一颗提升树的预测结果就是残差了
+                #data[i, -1] = data[i, -1] - predict_for_rm(data[i], tree_list[-1], alpha)
                 data[i, -1] = data[i, -1] - predict_for_rm(data[i], tree_list[-1], alpha)
-        # 上面已经将样本值变为了残差，下面对残差拟合一颗回归树
+                # 上面已经将样本值变为了残差，下面对残差拟合一颗回归树
         fx = createCART(data, deep=0, max_deep=4, ebcl=ebcl)
         #
         # 将树添加到列表
@@ -246,7 +257,6 @@ def pre(data, tree_list, alpha):
     :return: 预测值
     '''
     #print("输入Xdata:", data)
-    #print('输入treelist:', tree_list)
     #print('alpha:', alpha)
     m=len(tree_list)
     fmx=0
@@ -256,7 +266,8 @@ def pre(data, tree_list, alpha):
         if i==0:
             #  fx0={-1:np.average(data[:,-1])}
             # fx0是一个叶节点，只有一个预测值，树的深度为0
-            fmx+=tree[-1]
+            fmx += tree[-1]
+
         else:
             while True:
                 # 遍历该棵树，直到叶节点
@@ -265,6 +276,7 @@ def pre(data, tree_list, alpha):
                 # tree={3:{'left':{4:{'left':23.1,'right':19.6},'point':0},'right':{6:{'left':23.1,'right':19.6},'point':4.5}},'point':10.4}
                 #
                 if type(tree).__name__=='dict':
+
                     # 如果是字典，那么这是一颗子树,
                     point=tree['point']
                     # tree.keys()=dict_keys([3, 'point'])
@@ -272,11 +284,14 @@ def pre(data, tree_list, alpha):
                     feature=list(tree.keys())[0] if type(list(tree.keys())[0]).__name__=='int' else list(tree.keys())[1]
                     if data[feature]<=point:
                         tree=tree[feature]['left']
+                        #print("tl:",tree)
                     else:
                         tree=tree[feature]['right']
+                        #print("tr:", tree)
                 else:
                     # 当tree中没有切分点point，证明这是一个叶节点，tree就是预测值，返回获得预测值
-                    fmx+= alpha * tree
+                    if not np.isnan(tree):
+                        fmx += alpha * tree
                     break
     return fmx
 
@@ -308,6 +323,7 @@ class IBRTModel(Model):
         #self.eta_trees = []
         self.alpha = alpha
         self.ebcl = ebcl
+        self.tree_list = []
 
 
 
@@ -315,7 +331,6 @@ class IBRTModel(Model):
 
         trainX = kwargs["trainX"]
         trainY = kwargs["trainY"]
-
         datay = trainY.reshape((-1, 1))
         data = np.concatenate((trainX, datay), axis=1)
 
@@ -369,14 +384,10 @@ class IBRTModel(Model):
         acc_num = 0  # 正确个数
         y_predict = []
         for i in range(len(testX)):
-            print('testing ***', i)
             x = testX[i]
-            y_pred = pre(x)
+            y_pred = pre(x, self.tree_list, self.alpha)
             y_predict.append(y_pred)
-            if y_pred / testX[i] < 1.25 and y_pred / testY[i] > 0.8:
-                acc_num += 1
-            print(f'testing {i}th data :y_pred={y_pred},y={testY[i]}')
-            print('now_acc=', acc_num / (i + 1))
+
         mse = mean_squared_error(y_predict, testY)
         mae = mean_absolute_error(y_predict, testY)
         returnDic["预测结果"] = str(y_predict)
