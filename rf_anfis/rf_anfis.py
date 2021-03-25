@@ -506,15 +506,16 @@ class RF_ANFISModel(torch.nn.Module):
         self.layer['consequent'].coeff = new_coeff
 
     def x_filter(self, x, y, c):
+        print("c:", c)
         x_np = x.T
         y_np = y.T
         # print(x_np.shape,y_np.shape)
         # for i in x_np:
         corration = np.corrcoef(x_np, y_np)
-        #print("corr:", corration)
+        print("corr:", corration)
         tobedelete = []
         for i in range(x_np.shape[0]):
-            if np.abs(corration[i, x_np.shape[0]]) <= c:
+            if np.abs(corration[i, x_np.shape[0]]) < c:
                 tobedelete.append(i)
         x_np = np.delete(x_np, tobedelete, axis=0)
         return x_np.T, tobedelete
@@ -576,6 +577,7 @@ class RF_ANFISModel(torch.nn.Module):
         epochs = 10
         show_plots = False
         self.trainX = kwargs["trainX"]
+        print("tX:", self.trainX.shape)
         self.num_x_pre = self.trainX.shape[1]
         self.trainY = kwargs["trainY"]
 
