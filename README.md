@@ -1,4 +1,4 @@
-#  模型演示 前端时纯tkinter写的
+#  模型演示 前端是纯tkinter写的
 
 ##  配置模型
 
@@ -10,7 +10,7 @@
 
 ##  测试模型
 
-![测试模型](C:/Users/9DemonFox/Documents/Bandicam/测试模型.gif)
+![测试模型](assets/测试模型-1617950420153.gif)
 
 ##  使用模型预测
 
